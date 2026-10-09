@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="An optical half adder built from polarisation and interference, folded onto a silicon photonic chip and followed out through an ATTILA-style GPU to a frame on a monitor.">
+<meta name="description" content="An optical half adder built from polarisation and interference, folded onto a silicon photonic chip, simulated at circuit level, and followed out through an ATTILA-style GPU to a frame on a monitor.">
 <meta name="author" content="Atharv Dubey">
 <meta name="theme-color" content="#0a1013">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23111a1e'/%3E%3Cpath d='M8 40 L28 24 L56 24' stroke='%23ff5a47' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='28' cy='24' r='5' fill='%23eba340'/%3E%3C/svg%3E">
@@ -161,7 +161,40 @@ cite{font-style:normal;color:var(--fg)}
 .tier{display:grid;grid-template-columns:86px 1fr;gap:12px;align-items:baseline}
 .tier p{margin:0;font-size:.92rem}
 .tag{justify-self:start;padding:4px 7px;border:1px solid currentColor;border-radius:4px;font:600 10px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
-.tag.b{color:var(--petg)} .tag.s{color:var(--beam)} .tag.p{color:var(--laser)}
+.tag.b{color:var(--petg)} .tag.m{color:var(--beam)} .tag.s{color:var(--muted)} .tag.p{color:var(--laser)}
+.simt{width:100%;margin:12px 0 4px;border-collapse:collapse;font:500 12px/1.2 var(--f-mono);font-variant-numeric:tabular-nums}
+.simt th{padding:0 10px 7px 0;border-bottom:1px solid var(--line);font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:right}
+.simt td{padding:6px 10px 6px 0;border-bottom:1px solid rgba(34,49,58,.65);text-align:right;color:var(--fg)}
+.simt th:first-child,.simt td:first-child{text-align:left}
+.simt td small{color:var(--faint);font-size:10px}
+.simt td.o{color:var(--petg)}
+.simt tr:last-child td{border-bottom:0}
+figure.chart{position:relative;margin:14px 0 6px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible;outline:none;touch-action:pan-y}
+.chart svg:focus-visible{outline:2px solid var(--beam);outline-offset:4px;border-radius:4px}
+.chart .lg{display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 6px;font:500 10.5px/1.3 var(--f-mono);color:var(--muted)}
+.chart .lg span{display:inline-flex;align-items:center;gap:6px}
+.chart .lg i{width:14px;height:2px;border-radius:1px}
+.chart figcaption{margin-top:4px;font-size:.8rem;line-height:1.45;color:var(--muted)}
+.tip{position:absolute;z-index:2;pointer-events:none;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:rgba(10,16,19,.96);font:500 11px/1.5 var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tip .h{color:var(--muted);margin-bottom:2px}
+.tip .r{display:flex;align-items:center;gap:7px}
+.tip .r b{color:var(--fg);font-weight:600}
+.tip .r i{width:12px;height:2px;border-radius:1px}
+details.data{margin:2px 0 12px;font-size:.8rem;color:var(--muted)}
+details.data summary{cursor:pointer;font:500 10.5px/1.4 var(--f-mono);letter-spacing:.08em;text-transform:uppercase}
+details.data .tbl{max-height:190px;overflow:auto;margin:8px 0 0}
+details.data table{width:100%;border-collapse:collapse;font:500 11px/1.3 var(--f-mono);font-variant-numeric:tabular-nums}
+details.data th,details.data td{padding:3px 10px 3px 0;text-align:right;border-bottom:1px solid rgba(34,49,58,.5)}
+details.data th{color:var(--muted);font-weight:500}
+details.data td{color:var(--fg)}
+.ctl{display:grid;gap:12px;margin:14px 0 12px}
+.ctl .row{display:grid;gap:5px}
+.ctl label{display:flex;justify-content:space-between;gap:10px;font:500 11.5px/1.2 var(--f-mono);color:var(--muted)}
+.ctl output{color:var(--fg);font-variant-numeric:tabular-nums}
+.ctl input[type=range]{width:100%;margin:0;accent-color:var(--petg)}
+.toggle{justify-self:start;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--ink-2);font:600 11.5px/1 var(--f-mono);color:var(--fg);cursor:pointer}
+.toggle[aria-pressed="true"]{border-color:var(--petg);color:var(--petg)}
 .credits{margin-top:16px;padding-top:12px;border-top:1px solid var(--line);font-size:.84rem;line-height:1.5;color:var(--muted)}
 .credits p{margin:0 0 8px}
 .links{display:flex;flex-wrap:wrap;gap:6px 16px;font:500 12px/1.4 var(--f-mono)}
@@ -199,12 +232,14 @@ cite{font-style:normal;color:var(--fg)}
     <li><button type="button" data-go="1"><span class="d"></span><span class="n">Carry</span><span class="s">AND</span></button></li>
     <li><button type="button" data-go="2"><span class="d"></span><span class="n">Sum</span><span class="s">XOR</span></button></li>
     <li><button type="button" data-go="3"><span class="d"></span><span class="n">Silicon cell</span><span class="s">0.4 mm</span></button></li>
-    <li><button type="button" data-go="4"><span class="d"></span><span class="n">Optical tiles</span><span class="s">3 mm</span></button></li>
-    <li><button type="button" data-go="5"><span class="d"></span><span class="n">Shader cluster</span><span class="s">7 mm</span></button></li>
-    <li><button type="button" data-go="6"><span class="d"></span><span class="n">GPU die</span><span class="s">20 mm</span></button></li>
-    <li><button type="button" data-go="7"><span class="d"></span><span class="n">Card</span><span class="s">27 cm</span></button></li>
-    <li><button type="button" data-go="8"><span class="d"></span><span class="n">Desk</span><span class="s">1.5 m</span></button></li>
-    <li><button type="button" data-go="9"><span class="d"></span><span class="n">What is real</span><span class="s">notes</span></button></li>
+    <li><button type="button" data-go="4"><span class="d"></span><span class="n">Cell simulation</span><span class="s">sim</span></button></li>
+    <li><button type="button" data-go="5"><span class="d"></span><span class="n">Optical tiles</span><span class="s">3 mm</span></button></li>
+    <li><button type="button" data-go="6"><span class="d"></span><span class="n">Shader cluster</span><span class="s">7 mm</span></button></li>
+    <li><button type="button" data-go="7"><span class="d"></span><span class="n">GPU die</span><span class="s">20 mm</span></button></li>
+    <li><button type="button" data-go="8"><span class="d"></span><span class="n">Card</span><span class="s">27 cm</span></button></li>
+    <li><button type="button" data-go="9"><span class="d"></span><span class="n">Desk</span><span class="s">1.5 m</span></button></li>
+    <li><button type="button" data-go="10"><span class="d"></span><span class="n">Optical pixels</span><span class="s">sim</span></button></li>
+    <li><button type="button" data-go="11"><span class="d"></span><span class="n">What is real</span><span class="s">notes</span></button></li>
   </ol>
 </nav>
 
@@ -295,6 +330,23 @@ else
     </div>
   </section>
 
+  <section class="ch" id="cellsim">
+    <div class="card wide">
+      <p class="kick">Simulated · half-adder cell</p>
+      <h2>The cell, simulated at circuit level</h2>
+      <p>Each part of the cell is modelled by its transfer function: MMI splitters, ring modulators, attenuators, loop mirrors and germanium photodiodes, with shot, amplifier and laser noise. The inputs run at 1 Gb/s with 1 mW of laser light entering the cell.</p>
+      <table class="simt" id="cellTable">
+        <thead><tr><th>A B</th><th>Carry µA</th><th>Sum µA</th><th>Out S C</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <figure class="chart" id="xorChart"><figcaption>Sum photocurrent as the XOR's bias phase drifts. The shaded band is where errors stay below one in 10¹².</figcaption></figure>
+      <details class="data"><summary>Chart data</summary><div class="tbl"><table id="xorData"></table></div></details>
+      <p>Noise is no longer the problem the photoresistor was: the carry decision sits at Q = <span data-sim="carryQ">56</span> and the sum at Q = <span data-sim="sumQ">9</span>, where 7 already means one error in 10¹². The XOR uses the most light, because its output passes each ring twice and leaves through a quarter-power port, so below <span data-sim="minP">0.78</span> mW its error rate rises past one in 10¹².</p>
+      <p>The real limit is phase. The dark output holds only while the arms stay within ±<span data-sim="tol">19</span>° of their bias, about <span data-sim="tolK">2.2</span> K of temperature difference between 100 µm arms, so a heater with feedback has to hold it. The paper found the same sensitivity in its fringe pattern on the bench.</p>
+      <p class="note">Assumed values, all typical for silicon photonics at 1550 nm: ring radius 5 µm with 40 dB/cm doped loss and 40 pm/V drive, MMI excess loss 0.2 dB, loop mirrors 0.3 dB, photodiode 0.9 A/W, amplifier noise 20 pA/√Hz, laser noise −140 dB/Hz. The code is in the repo's <code>sim/optical_sim.py</code>.</p>
+    </div>
+  </section>
+
   <section class="ch" id="tiles">
     <div class="card">
       <p class="kick">0.4 mm → 3 mm</p>
@@ -302,7 +354,10 @@ else
       <p>The paper already treats AND as multiplication and sums polariser-weighted beams on one photoresistor. Read that as arithmetic: the carry gate splits a beam, weights each copy and sums the copies on one detector, which is y = w<sub>A</sub>·A + w<sub>B</sub>·B computed in a single pass of light. Give it four modulated inputs and four detectors and it multiplies a 4-vector by a 4×4 matrix: sixteen multiply-adds at once.</p>
       <div class="formula"><span class="y">y<sub>i</sub></span> = Σ<sub>j</sub> <span class="w">w<sub>ij</sub></span> · <span class="x">x<sub>j</sub></span> &nbsp; (i, j = 0…3)</div>
       <p>GPUs run these sums constantly. Every vertex is multiplied by a 4×4 matrix, and every lit pixel takes a dot product between its surface normal and the light direction. Each neighbouring tile is that 4×4 multiplier: ring modulators on the left, amber weights at the crossings, photodiodes along the bottom. Sixty-four tiles make one block.</p>
-      <p class="note">Analog light carries roughly 4 to 8 bits per pass. Lighting and colour maths tolerate that. Vertex positions need 32-bit floats, so they would be split into bit-slices over several passes or stay on the electronic ALUs.</p>
+      <p>We simulated one tile with four wavelength channels 200 GHz apart, ring inputs driven by 6-bit DACs, 8-bit heater weights and an 8-bit ADC. At 0.5 mW per channel and 5 GS/s the result carries <span data-sim="enob">5.6</span> effective bits, and noise sets that limit. More light helps until laser intensity noise and the input DACs cap it near 7 bits.</p>
+      <figure class="chart" id="enobChart"><figcaption>Effective bits of a 4×4 tile's output against laser power per channel, from a Monte Carlo of the circuit model.</figcaption></figure>
+      <details class="data"><summary>Chart data</summary><div class="tbl"><table id="enobData"></table></div></details>
+      <p class="note">Vertex positions need 32-bit floats, far beyond 7 bits, so they would be split into bit-slices over several passes or stay on the electronic ALUs. Lighting tolerates a few bits; the monitor chapter shows how many.</p>
     </div>
   </section>
 
@@ -360,17 +415,38 @@ else
     </div>
   </section>
 
+  <section class="ch" id="pixels">
+    <div class="card">
+      <p class="kick">Simulated · on the monitor</p>
+      <h2>Pixels lit through the optical tile</h2>
+      <p>The right half of the screen computes each pixel's diffuse lighting, the dot product N·L, through a model of the tile fitted to the circuit simulation. It covers input DAC steps, ring drift, weight error, detector and laser noise, and ADC steps. The left half uses ordinary 32-bit floats.</p>
+      <div class="ctl">
+        <div class="row"><label for="optP">Laser power per channel <output id="optPv" for="optP">2.00 mW</output></label><input type="range" id="optP" min="-1.3" max="0.7" step="0.01" value="0.301"></div>
+        <div class="row"><label for="optAdc">ADC bits <output id="optAdcv" for="optAdc">8</output></label><input type="range" id="optAdc" min="4" max="10" step="1" value="8"></div>
+        <div class="row"><label for="optT">Ring temperature error <output id="optTv" for="optT">0.000 K</output></label><input type="range" id="optT" min="0" max="0.2" step="0.005" value="0"></div>
+        <button type="button" class="toggle" id="optErr" aria-pressed="false">Show error ×8</button>
+      </div>
+      <dl class="stats">
+        <dt>N·L error, RMS</dt><dd class="l" data-live="nlerr">–</dd>
+        <dt>Effective bits</dt><dd data-live="nlbits">–</dd>
+        <dt>Check at 0.5 mW</dt><dd data-live="nlcheck">–</dd>
+      </dl>
+      <p class="note">Symbol rate is fixed at 5 GS/s. Lighting keeps about two bits fewer than the tile's raw output, because signed values need offset encoding and two balanced columns. A ring temperature error of 0.1 K already costs more than the noise does, which is why ring modulators need active thermal locking. The check compares this page's model with the full circuit simulation.</p>
+    </div>
+  </section>
+
   <section class="ch last" id="notes">
     <div class="card wide">
       <p class="kick">Built · standard · proposed</p>
       <h2>What on this page is real</h2>
       <div class="tiers">
         <div class="tier"><span class="tag b">Built</span><p>Optical AND, OR and XOR gates, a half adder that was correct for every input, and a full adder limited by photoresistor sensitivity, misalignment and bulk. Published in the Student Research Journal 2024.</p></div>
+        <div class="tier"><span class="tag m">Simulated</span><p>Circuit-level models of the half-adder cell and a 4×4 tile, with stated foundry-typical assumptions. The code and results are in the repo's <code>sim/</code> folder.</p></div>
         <div class="tier"><span class="tag s">Standard</span><p>MMI splitters, micro-ring modulators, variable attenuators, loop mirrors and germanium photodiodes are offered by silicon photonics foundries.</p></div>
-        <div class="tier"><span class="tag p">Proposed</span><p>The 4×4 optical tile and its place inside an ATTILA-style shader cluster. It has not been simulated or fabricated.</p></div>
+        <div class="tier"><span class="tag p">Proposed</span><p>The tile's place inside an ATTILA-style shader cluster. Nothing has been fabricated or simulated at the electromagnetic level, and every simulated number depends on the assumed parameters.</p></div>
       </div>
       <h3>Open problems</h3>
-      <p>Every pass converts values into light and back, and those DACs and ADCs cost energy and area. Precision is a few bits per pass. A ring modulator is about 10 µm across, hundreds of times wider than a transistor, so tiles are far less dense than logic. Laser power and waveguide loss limit how many tiles one source can feed.</p>
+      <p>Every pass converts values into light and back, and those DACs and ADCs cost energy and area. Precision is 5 to 7 bits per pass in our model. A ring modulator is about 10 µm across, hundreds of times wider than a transistor, so tiles are far less dense than logic. Laser power and waveguide loss limit how many tiles one source can feed.</p>
       <p>Light helps by doing many multiply-adds in one pass. Electronics still schedules, stores and converts.</p>
       <div class="credits">
         <p>Paper: <cite>Using Polarisation and Interference for Optical Computing</cite>, Atharv Dubey, Sanya Davalbhakta and Proteep Mallik, Student Research Journal 2024, Azim Premji University. GPU model: ATTILA by V. Moya, C. González, J. Roca, A. Fernández and R. Espasa, Universitat Politècnica de Catalunya.</p>
@@ -385,6 +461,7 @@ else
 
 </main>
 
+<script type="application/json" id="simdata">{"cell":{"levels":[{"a":0,"b":0,"c":2.45,"cs":0.45,"s":0.02,"ss":0.45},{"a":0,"b":1,"c":89.78,"cs":0.5,"s":8.059,"ss":0.45},{"a":1,"b":0,"c":60.67,"cs":0.48,"s":8.244,"ss":0.45},{"a":1,"b":1,"c":147.99,"cs":0.53,"s":0.021,"ss":0.45}],"carryThr":118.9,"sumThr":4.04,"carryQ":56.3,"sumQ":9.0,"tol":19.0,"minP_uW":780.0,"ext_dB":38.9,"degPerK":8.64,"sweep":{"ph":[-90.0,-87.0,-84.0,-81.0,-78.0,-75.0,-72.0,-69.0,-66.0,-63.0,-60.0,-57.0,-54.0,-51.0,-48.0,-45.0,-42.0,-39.0,-36.0,-33.0,-30.0,-27.0,-24.0,-21.0,-18.0,-15.0,-12.0,-9.0,-6.0,-3.0,0.0,3.0,6.0,9.0,12.0,15.0,18.0,21.0,24.0,27.0,30.0,33.0,36.0,39.0,42.0,45.0,48.0,51.0,54.0,57.0,60.0,63.0,66.0,69.0,72.0,75.0,78.0,81.0,84.0,87.0,90.0],"one":[8.409,8.413,8.416,8.419,8.421,8.422,8.423,8.423,8.422,8.42,8.418,8.415,8.411,8.407,8.402,8.396,8.389,8.382,8.375,8.366,8.358,8.348,8.338,8.328,8.317,8.306,8.294,8.282,8.27,8.257,8.244,8.231,8.217,8.204,8.19,8.176,8.162,8.149,8.135,8.121,8.107,8.094,8.08,8.067,8.054,8.042,8.03,8.018,8.006,7.995,7.984,7.974,7.965,7.955,7.947,7.939,7.931,7.925,7.919,7.913,7.908],"both":[16.108,15.266,14.426,13.591,12.763,11.944,11.137,10.343,9.565,8.804,8.064,7.346,6.652,5.984,5.344,4.733,4.153,3.606,3.093,2.616,2.176,1.774,1.412,1.09,0.808,0.569,0.373,0.219,0.109,0.043,0.021,0.043,0.109,0.219,0.373,0.569,0.808,1.09,1.412,1.774,2.176,2.616,3.093,3.606,4.153,4.733,5.344,5.984,6.652,7.346,8.064,8.804,9.565,10.343,11.137,11.944,12.763,13.591,14.426,15.266,16.108],"thr":4.04}},"tile":{"p":[0.01,0.0134,0.0181,0.0243,0.0327,0.0439,0.059,0.0794,0.1067,0.1435,0.1929,0.2593,0.3486,0.4686,0.63,0.8469,1.1386,1.5307,2.0578,2.7665,3.7192,5.0],"enob":{"1":[1.391,1.788,2.198,2.612,3.034,3.445,3.883,4.297,4.703,5.103,5.485,5.834,6.152,6.404,6.6,6.747,6.831,6.884,6.912,6.948,6.943,6.963],"5":[0.404,0.75,1.108,1.486,1.897,2.31,2.72,3.14,3.573,3.98,4.397,4.796,5.187,5.562,5.883,6.159,6.391,6.562,6.682,6.75,6.791,6.819],"10":[0.047,0.341,0.681,1.046,1.422,1.827,2.233,2.651,3.059,3.487,3.903,4.32,4.722,5.098,5.467,5.796,6.075,6.295,6.453,6.56,6.645,6.677]},"design":{"p":0.5,"rate":5,"enob":5.61},"budget":{"noise":5.75,"dac":7.74,"weights":7.33,"adc":7.99}},"light":{"p":[0.01,0.0134,0.0181,0.0243,0.0327,0.0439,0.059,0.0794,0.1067,0.1435,0.1929,0.2593,0.3486,0.4686,0.63,0.8469,1.1386,1.5307,2.0578,2.7665,3.7192,5.0],"sy":[1.452575,1.084013,0.810018,0.597142,0.449337,0.334523,0.247167,0.185195,0.1376,0.102368,0.075705,0.056572,0.042382,0.031457,0.023616,0.017714,0.013569,0.010376,0.00821,0.006487,0.005421,0.004697],"dT":[0.0,0.02,0.04,0.06,0.08,0.1,0.12,0.14,0.16,0.18,0.2,0.22,0.24,0.26,0.28,0.3,0.32,0.34,0.36,0.38,0.4,0.42,0.44,0.46,0.48,0.5],"drift":[[-0.0,0.0,-0.0],[-0.01461,-0.02234,0.02419],[-0.02857,-0.04678,0.04962],[-0.04183,-0.07338,0.07628],[-0.05436,-0.10214,0.10418],[-0.06613,-0.13311,0.13329],[-0.07709,-0.1663,0.16359],[-0.08723,-0.20171,0.19505],[-0.09649,-0.23934,0.22762],[-0.10487,-0.27919,0.26128],[-0.11232,-0.32124,0.29595],[-0.11883,-0.36544,0.33159],[-0.12436,-0.41177,0.36811],[-0.1289,-0.46017,0.40544],[-0.13243,-0.51057,0.4435],[-0.13494,-0.56291,0.48218],[-0.1364,-0.61708,0.52138],[-0.13682,-0.673,0.561],[-0.13618,-0.73055,0.6009],[-0.13449,-0.78962,0.64097],[-0.13174,-0.85007,0.68107],[-0.12794,-0.91175,0.72106],[-0.12309,-0.97452,0.76079],[-0.11721,-1.03821,0.80012],[-0.11031,-1.10266,0.83889],[-0.1024,-1.16768,0.87695]],"sw":0.00518,"dac":6,"val":{"circuit_rms_NL_error_default":0.0627,"browser_rms_NL_error_default":0.0618,"circuit_rms_NL_error_dT_0.1K":0.1883,"browser_rms_NL_error_dT_0.1K":0.1886}},"ring":{"round_trip_amplitude_a":0.9856,"fwhm_pm":183.2349,"loaded_Q":8459.088,"photon_lifetime_bandwidth_GHz":22.8647,"fsr_nm":18.2081,"T_on_resonance":0.0072,"T_detuned_by_swing":0.4367,"binary_extinction_dB":17.8413,"binary_insertion_loss_dB":3.5984}}</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
@@ -427,6 +504,156 @@ syncUI();
   setInterval(() => { if (S.pinned || document.hidden) return; step = (step + 1) % 4; [S.a, S.b] = seq[step]; syncUI(); }, REDUCE ? 4200 : 2800);
 }
 
+/* ===================== simulation results (from sim/optical_sim.py) ===================== */
+const SIM = JSON.parse($("#simdata").textContent);
+const NS = "http://www.w3.org/2000/svg";
+const svgEl = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+/* line chart with crosshair tooltip, keyboard focus and a legend (dark surface only) */
+function lineChart(fig, o){
+  const W = 470, Hh = o.h || 210, m = { l: 42, r: 16, t: 12, b: 36 };
+  const lg = document.createElement("div"); lg.className = "lg";
+  o.series.forEach(se => { const sp = document.createElement("span"), i = document.createElement("i"); i.style.background = se.color; sp.append(i, document.createTextNode(se.name)); lg.appendChild(sp); });
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${Hh}`, role: "img", "aria-label": o.aria, tabindex: "0" });
+  fig.insertBefore(lg, fig.firstChild); fig.insertBefore(svg, lg.nextSibling);
+  const tx = v => o.xLog ? Math.log10(v) : v;
+  const X = v => m.l + (tx(v) - tx(o.xMin)) / (tx(o.xMax) - tx(o.xMin)) * (W - m.l - m.r);
+  const Y = v => Hh - m.b - (v - o.yMin) / (o.yMax - o.yMin) * (Hh - m.t - m.b);
+  const grid = svgEl("g", {}, svg);
+  o.yTicks.forEach(v => { svgEl("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: "#1a282e", "stroke-width": 1 }, grid);
+    const t = svgEl("text", { x: m.l - 7, y: Y(v) + 3.5, "text-anchor": "end", fill: "#8b9ea5", "font-size": 10, "font-family": "JetBrains Mono, monospace" }, grid); t.textContent = o.yFmt(v); });
+  o.xTicks.forEach(v => { const t = svgEl("text", { x: X(v), y: Hh - m.b + 15, "text-anchor": "middle", fill: "#8b9ea5", "font-size": 10, "font-family": "JetBrains Mono, monospace" }, grid); t.textContent = o.xFmt(v); });
+  svgEl("line", { x1: m.l, x2: W - m.r, y1: Y(o.yMin), y2: Y(o.yMin), stroke: "#33464f", "stroke-width": 1 }, grid);
+  const xt = svgEl("text", { x: (m.l + W - m.r) / 2, y: Hh - 4, "text-anchor": "middle", fill: "#8b9ea5", "font-size": 10.5, "font-family": "IBM Plex Sans, sans-serif" }, grid); xt.textContent = o.xLabel;
+  const yt = svgEl("text", { x: 11, y: (m.t + Hh - m.b) / 2, "text-anchor": "middle", fill: "#8b9ea5", "font-size": 10.5, "font-family": "IBM Plex Sans, sans-serif", transform: `rotate(-90 11 ${(m.t + Hh - m.b) / 2})` }, grid); yt.textContent = o.yLabel;
+  (o.bands || []).forEach(b => { svgEl("rect", { x: X(b.x0), y: m.t, width: X(b.x1) - X(b.x0), height: Hh - m.t - m.b, fill: "rgba(235,163,64,.10)" }, grid);
+    const t = svgEl("text", { x: (X(b.x0) + X(b.x1)) / 2, y: m.t + 11, "text-anchor": "middle", fill: "#e3ebed", "font-size": 10, "font-family": "JetBrains Mono, monospace" }, grid); t.textContent = b.label; });
+  (o.refs || []).forEach(r => { svgEl("line", { x1: m.l, x2: W - m.r, y1: Y(r.y), y2: Y(r.y), stroke: "#8b9ea5", "stroke-width": 1, opacity: .7 }, grid);
+    const t = svgEl("text", { x: m.l + 4, y: Y(r.y) - 4, fill: "#8b9ea5", "font-size": 10, "font-family": "JetBrains Mono, monospace" }, grid); t.textContent = r.label; });
+  o.series.forEach(se => svgEl("path", { d: o.xs.map((x, i) => (i ? "L" : "M") + X(x).toFixed(1) + " " + Y(se.ys[i]).toFixed(1)).join(""), fill: "none", stroke: se.color, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg));
+  (o.marks || []).forEach(mk => { svgEl("circle", { cx: X(mk.x), cy: Y(mk.y), r: 5, fill: mk.color, stroke: "#0c1417", "stroke-width": 2 }, svg);
+    const t = svgEl("text", { x: X(mk.x) + 9, y: Y(mk.y) + 16, fill: "#e3ebed", "font-size": 10, "font-family": "JetBrains Mono, monospace" }, svg); t.textContent = mk.label; });
+  const hair = svgEl("line", { y1: m.t, y2: Hh - m.b, stroke: "#8b9ea5", "stroke-width": 1, visibility: "hidden" }, svg);
+  const dots = o.series.map(se => svgEl("circle", { r: 4.5, fill: se.color, stroke: "#0c1417", "stroke-width": 2, visibility: "hidden" }, svg));
+  const tip = document.createElement("div"); tip.className = "tip"; tip.hidden = true; fig.appendChild(tip);
+  let cur = -1;
+  const show = i => {
+    cur = i; const x = X(o.xs[i]);
+    hair.setAttribute("x1", x); hair.setAttribute("x2", x); hair.setAttribute("visibility", "visible");
+    dots.forEach((d, k) => { d.setAttribute("cx", x); d.setAttribute("cy", Y(o.series[k].ys[i])); d.setAttribute("visibility", "visible"); });
+    tip.textContent = "";
+    const h = document.createElement("div"); h.className = "h"; h.textContent = o.tipX(o.xs[i]); tip.appendChild(h);
+    o.series.forEach(se => { const r = document.createElement("div"); r.className = "r"; const k = document.createElement("i"); k.style.background = se.color; const b = document.createElement("b"); b.textContent = o.tipY(se.ys[i]); r.append(k, b, document.createTextNode(se.name)); tip.appendChild(r); });
+    tip.hidden = false;
+    const sr = svg.getBoundingClientRect(), fr = fig.getBoundingClientRect();
+    const px = sr.left - fr.left + x / W * sr.width, tw = tip.offsetWidth;
+    tip.style.left = Math.max(0, Math.min(fr.width - tw, px + (px > fr.width / 2 ? -tw - 12 : 12))) + "px";
+    tip.style.top = (sr.top - fr.top + 8) + "px";
+  };
+  const hide = () => { cur = -1; tip.hidden = true; hair.setAttribute("visibility", "hidden"); dots.forEach(d => d.setAttribute("visibility", "hidden")); };
+  const nearest = vx => { let best = 0, bd = 1e9; o.xs.forEach((x, i) => { const d = Math.abs(X(x) - vx); if (d < bd){ bd = d; best = i; } }); return best; };
+  svg.addEventListener("pointermove", e => { const r = svg.getBoundingClientRect(); show(nearest((e.clientX - r.left) / r.width * W)); });
+  svg.addEventListener("pointerleave", hide);
+  svg.addEventListener("focus", () => show(cur < 0 ? Math.floor(o.xs.length / 2) : cur));
+  svg.addEventListener("blur", hide);
+  svg.addEventListener("keydown", e => { if (e.key === "ArrowRight" || e.key === "ArrowLeft"){ e.preventDefault(); show(clamp((cur < 0 ? 0 : cur) + (e.key === "ArrowRight" ? 1 : -1), 0, o.xs.length - 1)); } });
+}
+function dataTable(tbl, head, rows){
+  const tr = document.createElement("tr"); head.forEach(h => { const th = document.createElement("th"); th.textContent = h; tr.appendChild(th); });
+  const th = document.createElement("thead"); th.appendChild(tr); tbl.appendChild(th);
+  const tb = document.createElement("tbody");
+  rows.forEach(r => { const t = document.createElement("tr"); r.forEach(v => { const td = document.createElement("td"); td.textContent = v; t.appendChild(td); }); tb.appendChild(t); });
+  tbl.appendChild(tb);
+}
+{
+  const cs = SIM.cell;
+  const body = $("#cellTable tbody");
+  cs.levels.slice().sort((p, q2) => (p.a * 2 + p.b) - (q2.a * 2 + q2.b)).forEach(l => {
+    const tr = document.createElement("tr");
+    const cells = [`${l.a} ${l.b}`, `${l.c.toFixed(1)} `, `${l.s.toFixed(2)} `, `${l.a ^ l.b} ${l.a & l.b}`];
+    cells.forEach((v, i) => { const td = document.createElement("td"); td.textContent = v;
+      if (i === 1 || i === 2){ const sm = document.createElement("small"); sm.textContent = "±" + (i === 1 ? l.cs : l.ss).toFixed(2); td.appendChild(sm); }
+      if (i === 3) td.className = "o"; tr.appendChild(td); });
+    body.appendChild(tr);
+  });
+  const set = (k, v) => $$(`[data-sim="${k}"]`).forEach(e => { e.textContent = v; });
+  set("carryQ", Math.round(cs.carryQ)); set("sumQ", cs.sumQ.toFixed(0)); set("minP", (cs.minP_uW / 1000).toFixed(2));
+  set("tol", Math.round(cs.tol)); set("tolK", (cs.tol / cs.degPerK).toFixed(1)); set("enob", SIM.tile.design.enob.toFixed(1));
+  const sw = cs.sweep;
+  lineChart($("#xorChart"), {
+    aria: `Sum photocurrent against XOR bias phase error. With both arms open the current stays under the ${sw.thr} microamp threshold within plus or minus ${Math.round(cs.tol)} degrees.`,
+    xs: sw.ph, xMin: -90, xMax: 90, yMin: 0, yMax: 18,
+    series: [{ name: "One arm open, sum should read 1", color: "#e5503f", ys: sw.one }, { name: "Both arms open, sum should read 0", color: "#2c9fd6", ys: sw.both }],
+    xTicks: [-90, -45, 0, 45, 90], yTicks: [0, 6, 12, 18], xFmt: v => (v > 0 ? "+" : "") + v + "°", yFmt: v => String(v),
+    xLabel: "Bias phase error", yLabel: "Sum photocurrent (µA)",
+    refs: [{ y: sw.thr, label: `threshold ${sw.thr.toFixed(1)} µA` }],
+    bands: [{ x0: -cs.tol, x1: cs.tol, label: `±${Math.round(cs.tol)}°` }],
+    tipX: v => `phase error ${v > 0 ? "+" : ""}${v}°`, tipY: v => v.toFixed(2) + " µA"
+  });
+  dataTable($("#xorData"), ["Phase error", "One arm open (µA)", "Both open (µA)"], sw.ph.map((ph, i) => [ph + "°", sw.one[i].toFixed(2), sw.both[i].toFixed(2)]).filter((_, i) => i % 2 === 0));
+  const tl = SIM.tile;
+  const rates = [["1", "#8fd3f0"], ["5", "#3fa3d6"], ["10", "#1f6fa3"]];
+  lineChart($("#enobChart"), {
+    aria: `Effective bits against laser power per channel for 1, 5 and 10 gigasamples per second. At 0.5 milliwatts and 5 gigasamples per second the tile gives ${tl.design.enob.toFixed(1)} bits.`,
+    xs: tl.p, xLog: true, xMin: 0.01, xMax: 5, yMin: 0, yMax: 8,
+    series: rates.map(([r, c]) => ({ name: `${r} GS/s`, color: c, ys: tl.enob[r] })),
+    xTicks: [0.01, 0.1, 1], yTicks: [0, 2, 4, 6, 8], xFmt: v => v < 1 ? Math.round(v * 1000) + " µW" : v + " mW", yFmt: v => String(v),
+    xLabel: "Laser power per channel", yLabel: "Effective bits",
+    marks: [{ x: tl.design.p, y: tl.design.enob, color: "#3fa3d6", label: `${tl.design.enob.toFixed(1)} bits at 0.5 mW` }],
+    tipX: v => v < 1 ? (v * 1000).toFixed(0) + " µW per channel" : v.toFixed(2) + " mW per channel", tipY: v => v.toFixed(2) + " bits"
+  });
+  dataTable($("#enobData"), ["mW / channel", "1 GS/s", "5 GS/s", "10 GS/s"], tl.p.map((p, i) => [p < 0.1 ? p.toFixed(3) : p.toFixed(2), tl.enob["1"][i].toFixed(2), tl.enob["5"][i].toFixed(2), tl.enob["10"][i].toFixed(2)]));
+}
+
+/* ---------- the optical lighting model the monitor uses (mirrors browser_model() in the Python) ---------- */
+const OPT = { p: 2.0, adc: 8, dT: 0, err: false, rms: 0, bits: 0, dirty: true };
+const LS = SIM.light;
+function interpLogLog(x, xs, ys){
+  const lx = Math.log10(x), L = xs.map(v => Math.log10(v));
+  let i = 0; while (i < L.length - 2 && L[i + 1] < lx) i++;
+  const f = clamp((lx - L[i]) / (L[i + 1] - L[i]), 0, 1);
+  return Math.pow(10, lerp(Math.log10(ys[i]), Math.log10(ys[i + 1]), f));
+}
+function driftAt(t){
+  const xs = LS.dT; let i = 0; while (i < xs.length - 2 && xs[i + 1] < t) i++;
+  const f = clamp((t - xs[i]) / (xs[i + 1] - xs[i]), 0, 1);
+  return [0, 1, 2].map(k => lerp(LS.drift[i][k], LS.drift[i + 1][k], f));
+}
+const gaussR = () => { let u = 0; while (u === 0) u = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * Math.random()); };
+function opticalError(p, adc, dT, n = 6000){
+  const sy = interpLogLog(p, LS.p, LS.sy), [c0, c1, c2] = driftAt(dT), dac = Math.pow(2, LS.dac) - 1, lv = Math.pow(2, adc) - 1, S3 = Math.sqrt(3);
+  let se = 0;
+  for (let k = 0; k < n; k++){
+    const nv = [gaussR(), gaussR(), gaussR()], lt = [gaussR(), gaussR(), gaussR()];
+    const nn = Math.hypot(...nv), ln = Math.hypot(...lt);
+    let y = 0, sl = 0, truth = 0;
+    for (let j = 0; j < 3; j++){
+      const n1 = nv[j] / nn, l1 = lt[j] / ln;
+      let x = Math.round((n1 + 1) / 2 * dac) / dac; x = x + c0 + c1 * x + c2 * x * x;
+      y += (l1 + LS.sw * gaussR()) * x; sl += l1; truth += n1 * l1;
+    }
+    y += sy * gaussR();
+    y = Math.round((clamp(y, -S3, S3) + S3) / (2 * S3) * lv) / lv * 2 * S3 - S3;
+    const e = 2 * y - sl - truth; se += e * e;
+  }
+  return Math.sqrt(se / n);
+}
+{
+  const pEl = $("#optP"), aEl = $("#optAdc"), tEl = $("#optT"), eEl = $("#optErr");
+  const out = { p: $("#optPv"), a: $("#optAdcv"), t: $("#optTv"), err: $('[data-live="nlerr"]'), bits: $('[data-live="nlbits"]'), chk: $('[data-live="nlcheck"]') };
+  const recompute = () => {
+    OPT.p = Math.pow(10, +pEl.value); OPT.adc = +aEl.value; OPT.dT = +tEl.value;
+    out.p.textContent = OPT.p.toFixed(2) + " mW"; out.a.textContent = OPT.adc; out.t.textContent = OPT.dT.toFixed(3) + " K";
+    OPT.rms = opticalError(OPT.p, OPT.adc, OPT.dT);
+    OPT.bits = -Math.log2(Math.sqrt(12) * OPT.rms / 2);
+    out.err.textContent = OPT.rms.toFixed(4); out.bits.textContent = OPT.bits.toFixed(1) + " bits";
+    OPT.dirty = true;
+  };
+  [pEl, aEl, tEl].forEach(el => el.addEventListener("input", recompute));
+  eEl.addEventListener("click", () => { OPT.err = !OPT.err; eEl.setAttribute("aria-pressed", OPT.err ? "true" : "false"); OPT.dirty = true; });
+  out.chk.textContent = `circuit ${LS.val.circuit_rms_NL_error_default.toFixed(3)} · page ${opticalError(0.5, 8, 0, 20000).toFixed(3)}`;
+  recompute();
+}
+
 /* ===================== scroll → story key (section i centred = key i) ===================== */
 const secs = $$(".ch");
 const NK = secs.length;
@@ -466,8 +693,6 @@ renderer.setPixelRatio(DPR);
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const MAX_ANISO = renderer.capabilities.getMaxAnisotropy();
 
 const BG = 0x0a1013;
@@ -1016,7 +1241,7 @@ function buildArrays(){
   });
   return {
     update(t, key, dist, ourCell){
-      const vis = key > 2.85, fade = sstep(2.95, 3.4, key), det = 1 - sstep(260, 900, dist);
+      const vis = key > 2.85, fade = sstep(3.95, 4.4, key), det = 1 - sstep(260, 900, dist);
       us.forEach((a, i) => {
         a.mesh.visible = vis;
         a.u.uTime.value = t; a.u.uFade.value = i === 0 ? fade : 1; a.u.uDetail.value = det;
@@ -1133,12 +1358,12 @@ function buildDie(){
   points.frustumCulled = false; root.add(points);
 
   function update(t, key, dist){
-    root.visible = key > 2.95;
+    root.visible = key > 3.95;
     if (!root.visible) return;
-    lines.visible = key < 7.4;
+    lines.visible = key < 8.4;
     treeU.forEach(u => { u.uTime.value = t; });
     lightIn.material.opacity = .55 + .2 * Math.sin(t * 3);
-    points.visible = key > 4.3;
+    points.visible = key > 5.3;
     if (points.visible){
       ptU.uScale.value = renderer.domElement.height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
       parts.forEach((p, i) => {
@@ -1283,24 +1508,68 @@ function buildDesk(cardInfo){
   return { root, screenMat, screenCenter: V3(D.x + MX, DESK + 5400, D.z + MZ + 181) };
 }
 
-/* ===================== 7 · the scene on the monitor ===================== */
+/* ===================== 7 · the scene on the monitor: float32 on the left, the optical tile model on the right ===================== */
+const MON_VS = `uniform vec2 uRepeat; varying vec3 vN; varying vec3 vW; varying vec2 vUv;
+void main(){ vUv = uv * uRepeat; vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vN = normalize(mat3(modelMatrix) * normal); gl_Position = projectionMatrix * viewMatrix * w; }`;
+const MON_FS = `uniform vec3 uColor; uniform sampler2D uMap; uniform float uUseMap; uniform vec3 uL; uniform vec3 uCam; uniform float uShin; uniform float uSpec;
+uniform float uSplit; uniform float uErr; uniform float uDac; uniform float uAdc; uniform float uSigY; uniform vec3 uDrift; uniform vec3 uLw; uniform float uSeed; uniform vec3 uFog;
+varying vec3 vN; varying vec3 vW; varying vec2 vUv;
+float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+float gauss(vec2 p){ float u1 = max(hash(p), 0.0001); float u2 = hash(p + vec2(17.31, 5.17)); return sqrt(-2.0 * log(u1)) * cos(6.2831853 * u2); }
+/* N.L through the tile: offset-encoded normal, 6-bit input DAC, ring drift, realised weights, noise, ADC */
+float opticalNL(vec3 n){
+  vec3 x = (n + 1.0) * 0.5;
+  x = floor(x * uDac + 0.5) / uDac;
+  x = x + uDrift.x + uDrift.y * x + uDrift.z * x * x;
+  float y = dot(uLw, x) + uSigY * gauss(gl_FragCoord.xy * 0.731 + vec2(uSeed, uSeed * 0.37));
+  y = clamp(y, -1.7320508, 1.7320508);
+  y = floor((y + 1.7320508) / 3.4641016 * uAdc + 0.5) / uAdc * 3.4641016 - 1.7320508;
+  return 2.0 * y - (uL.x + uL.y + uL.z);
+}
+void main(){
+  vec3 n = normalize(vN);
+  vec3 base = uColor; if (uUseMap > 0.5) base *= pow(texture2D(uMap, vUv).rgb, vec3(2.2));
+  float ndlT = dot(n, uL);
+  bool opt = gl_FragCoord.x > uSplit;
+  float ndl = opt ? opticalNL(n) : ndlT;
+  vec3 V = normalize(uCam - vW); vec3 Hv = normalize(uL + V);
+  float spec = pow(max(dot(n, Hv), 0.0), uShin) * uSpec * step(0.0, ndlT);
+  vec3 amb = mix(vec3(0.05, 0.045, 0.04), vec3(0.16, 0.21, 0.26), 0.5 + 0.5 * n.y);
+  vec3 col = base * (amb + vec3(1.0, 0.92, 0.82) * 0.95 * max(ndl, 0.0)) + vec3(spec);
+  col = mix(col, uFog, smoothstep(14.0, 40.0, length(uCam - vW)));
+  if (uErr > 0.5 && opt){ float e = clamp(abs(ndl - ndlT) * 8.0, 0.0, 1.0); col = mix(vec3(0.004, 0.006, 0.008), vec3(0.83, 0.36, 0.05), e); }
+  gl_FragColor = vec4(col, 1.0);
+}`;
 function buildMonitorScene(){
   const W = 768, Hh = 480;
   const target = new THREE.WebGLRenderTarget(W, Hh, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat });
-  const ms = new THREE.Scene(); ms.background = new THREE.Color(0x203040); ms.fog = new THREE.Fog(0x203040, 14, 38);
+  const FOG = new THREE.Color(0x1d2c3a).convertSRGBToLinear();
+  const ms = new THREE.Scene(); ms.background = FOG.clone();
   const mc = new THREE.PerspectiveCamera(42, W / Hh, .1, 100);
-  ms.add(new THREE.HemisphereLight(0xc0d6e2, 0x2b2620, .55));
-  const sun = new THREE.DirectionalLight(0xfff0dc, 1.05); sun.position.set(5, 9, 4); sun.castShadow = true;
-  sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 1, far: 30 }); ms.add(sun);
-  const chk = canvasTex(256, 256, (x) => { for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++){ x.fillStyle = (i + j) % 2 ? "#b8b1a2" : "#545a5e"; x.fillRect(i * 32, j * 32, 32, 32); } });
-  chk.wrapS = chk.wrapT = THREE.RepeatWrapping; chk.repeat.set(12, 12);
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(48, 48), new THREE.MeshPhongMaterial({ map: chk, shininess: 8 })); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; ms.add(floor);
+  const shared = {
+    uL: { value: V3(0, 1, 0) }, uCam: { value: V3() }, uSplit: { value: W / 2 }, uErr: { value: 0 },
+    uDac: { value: Math.pow(2, LS.dac) - 1 }, uAdc: { value: 255 }, uSigY: { value: 0 }, uDrift: { value: V3() },
+    uLw: { value: V3(0, 1, 0) }, uSeed: { value: 0 }, uFog: { value: V3(FOG.r, FOG.g, FOG.b) }
+  };
+  const mat = (color, o = {}) => new THREE.ShaderMaterial({
+    uniforms: Object.assign({ uColor: { value: new THREE.Color(color).convertSRGBToLinear() }, uMap: { value: o.map || null }, uUseMap: { value: o.map ? 1 : 0 }, uRepeat: { value: new THREE.Vector2(o.rep || 1, o.rep || 1) }, uShin: { value: o.shin || 40 }, uSpec: { value: o.spec === undefined ? .35 : o.spec } }, shared),
+    vertexShader: MON_VS, fragmentShader: MON_FS
+  });
+  const chk = canvasTex(256, 256, (x) => { for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++){ x.fillStyle = (i + j) % 2 ? "#b8b1a2" : "#545a5e"; x.fillRect(i * 32, j * 32, 32, 32); } }, false);
+  chk.wrapS = chk.wrapT = THREE.RepeatWrapping;
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(48, 48), mat(0xffffff, { map: chk, rep: 12, spec: .05, shin: 8 })); floor.rotation.x = -Math.PI / 2; ms.add(floor);
   const tg = new THREE.TeapotGeometry(1.25, 10); tg.computeBoundingBox();
-  const teapot = new THREE.Mesh(tg, new THREE.MeshPhongMaterial({ color: 0xe9e2d4, shininess: 70, specular: 0x555555 })); teapot.position.y = -tg.boundingBox.min.y; teapot.castShadow = true; ms.add(teapot);
-  const cube = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.1, 1.1), new THREE.MeshPhongMaterial({ color: 0xeba340, shininess: 30 })); cube.position.set(-2.9, .55, 1.2); cube.castShadow = true; ms.add(cube);
-  const ball = new THREE.Mesh(new THREE.SphereGeometry(.7, 24, 16), new THREE.MeshPhongMaterial({ color: 0x8fe3ff, shininess: 90 })); ball.position.set(2.8, .7, 1.5); ball.castShadow = true; ms.add(ball);
+  const teapot = new THREE.Mesh(tg, mat(0xe9e2d4, { shin: 70, spec: .45 })); teapot.position.y = -tg.boundingBox.min.y; ms.add(teapot);
+  const cube = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.1, 1.1), mat(0xeba340, { shin: 30, spec: .25 })); cube.position.set(-2.9, .55, 1.2); ms.add(cube);
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(.7, 32, 20), mat(0x8fe3ff, { shin: 90, spec: .5 })); ball.position.set(2.8, .7, 1.5); ms.add(ball);
+  // soft contact shadows
+  const blobTex = canvasTex(128, 128, (x) => { const g = x.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, "rgba(0,0,0,.55)"); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.fillRect(0, 0, 128, 128); }, false);
+  const blob = (sx, sz, p) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(sx, sz), new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.set(p[0], .01, p[2]); ms.add(m); return m; };
+  blob(4.6, 3.2, [0, 0, 0]); blob(2, 2, [-2.9, 0, 1.2]); const ballBlob = blob(1.8, 1.8, [2.8, 0, 1.5]);
   const verts = [tg, cube.geometry, ball.geometry, floor.geometry].reduce((a, gg) => a + gg.attributes.position.count, 0);
   const pix = W * Hh;
+  // per-calibration weight error: a fixed random offset of the realised light vector
+  const wErr = V3(gaussR(), gaussR(), gaussR()).multiplyScalar(LS.sw);
   // HUD drawn on top of the frame
   const hc = document.createElement("canvas"); hc.width = W; hc.height = Hh;
   const hx = hc.getContext("2d");
@@ -1309,27 +1578,42 @@ function buildMonitorScene(){
   hudScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({ map: hudTex, transparent: true, depthTest: false, toneMapped: false })));
   const hudCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
   let frame = 0, hudT = 0;
+  const box = (x, y, w, h) => { hx.fillStyle = "rgba(6,10,12,.62)"; hx.fillRect(x, y, w, h); };
   const drawHud = () => {
     hx.clearRect(0, 0, W, Hh);
-    hx.fillStyle = "rgba(6,10,12,.55)"; hx.fillRect(14, 14, 330, 52); hx.fillRect(14, Hh - 82, 380, 68);
-    hx.font = "600 15px 'JetBrains Mono', monospace"; hx.fillStyle = "#eba340"; hx.fillText("ATTILA-CLASS GPU · 4 OPTICAL SHADERS", 24, 36);
-    hx.font = "500 13px 'JetBrains Mono', monospace"; hx.fillStyle = "#c9d4d8"; hx.fillText(`frame ${String(frame).padStart(6, "0")} · 768×480 · DVI`, 24, 56);
-    hx.fillStyle = "#ff6a58"; hx.fillText(`vertex DP4 in light   ${fmtInt(verts * 4).padStart(9)}`, 24, Hh - 56);
-    hx.fillText(`pixel DP3 in light    ${fmtInt(pix).padStart(9)}`, 24, Hh - 32);
+    hx.fillStyle = "rgba(230,236,238,.85)"; hx.fillRect(W / 2 - 1, 0, 2, Hh);
+    box(12, 12, 170, 44); box(W / 2 + 12, 12, 250, 44);
+    hx.font = "600 14px 'JetBrains Mono', monospace"; hx.fillStyle = "#e3ebed"; hx.fillText("FLOAT32", 22, 32);
+    hx.fillStyle = "#eba340"; hx.fillText("OPTICAL TILE MODEL", W / 2 + 22, 32);
+    hx.font = "500 12px 'JetBrains Mono', monospace"; hx.fillStyle = "#9fb0b6"; hx.fillText("electronic ALU", 22, 49);
+    hx.fillText(`${OPT.p.toFixed(2)} mW/ch · ${OPT.adc}-bit ADC · 5 GS/s`, W / 2 + 22, 49);
+    box(12, Hh - 40, 300, 28); box(W / 2 + 12, Hh - 40, 300, 28);
+    hx.fillStyle = "#9fb0b6"; hx.fillText(`frame ${String(frame).padStart(6, "0")} · 768×480 · DVI`, 22, Hh - 21);
+    hx.fillStyle = "#ff7a68"; hx.fillText(`N·L error ${OPT.rms.toFixed(3)} RMS · ${OPT.bits.toFixed(1)} bits`, W / 2 + 22, Hh - 21);
+    if (OPT.err){ hx.fillStyle = "#eba340"; hx.fillText("showing |error| × 8", W / 2 + 22, Hh - 56); }
     hudTex.needsUpdate = true;
   };
   drawHud();
   const live = { verts: $('[data-live="verts"]'), dp4: $('[data-live="dp4"]'), pix: $('[data-live="pix"]'), dp3: $('[data-live="dp3"]'), frame: $('[data-live="frame"]') };
   live.verts.textContent = fmtInt(verts); live.dp4.textContent = fmtInt(verts * 4); live.pix.textContent = fmtInt(pix); live.dp3.textContent = fmtInt(pix);
   let ang = .6;
+  const sun = V3();
   return {
     texture: target.texture,
     render(dt){
       ang += dt * (REDUCE ? .08 : .22); frame++;
       mc.position.set(Math.sin(ang) * 8.4, 3.6, Math.cos(ang) * 8.4); mc.lookAt(0, 1, 0);
-      teapot.rotation.y += dt * .5; ball.position.y = .7 + Math.abs(Math.sin(frame * .03)) * .5 * (REDUCE ? 0 : 1);
-      sun.position.set(Math.sin(ang * .7 + 1) * 6, 9, Math.cos(ang * .7 + 1) * 6);
-      hudT += dt; if (hudT > .25){ hudT = 0; drawHud(); live.frame.textContent = fmtInt(frame); }
+      teapot.rotation.y += dt * .5;
+      ball.position.y = .7 + Math.abs(Math.sin(frame * .03)) * .5 * (REDUCE ? 0 : 1);
+      ballBlob.scale.setScalar(1 - (ball.position.y - .7) * .5);
+      sun.set(Math.sin(ang * .7 + 1) * 6, 9, Math.cos(ang * .7 + 1) * 6).normalize();
+      shared.uL.value.copy(sun); shared.uLw.value.copy(sun).add(wErr); shared.uCam.value.copy(mc.position);
+      shared.uSeed.value = (frame * 7.13) % 97;
+      shared.uSigY.value = interpLogLog(OPT.p, LS.p, LS.sy);
+      shared.uAdc.value = Math.pow(2, OPT.adc) - 1;
+      const dc = driftAt(OPT.dT); shared.uDrift.value.set(dc[0], dc[1], dc[2]);
+      shared.uErr.value = OPT.err ? 1 : 0;
+      hudT += dt; if (hudT > .25 || OPT.dirty){ hudT = 0; OPT.dirty = false; drawHud(); live.frame.textContent = fmtInt(frame); }
       renderer.setRenderTarget(target); renderer.render(ms, mc);
       renderer.autoClear = false; renderer.clearDepth(); renderer.render(hudScene, hudCam); renderer.autoClear = true;
       renderer.setRenderTarget(null);
@@ -1353,12 +1637,14 @@ const KF = [
   { t: V3(-1.05, .45, -1.9), d: 7.6, az: .1, el: .74 },
   { t: V3(1.3, .5, -.6), d: 7.8, az: .62, el: .6 },
   { t: V3(-.1, 0, -.95), d: 10.8, az: .28, el: 1.0 },
+  { t: V3(.4, 0, -1.3), d: 9.2, az: -.12, el: 1.12 },
   { t: V3(4.5, 0, -6), d: 74, az: .3, el: .95 },
   { t: V3(D.x - 99, 0, D.z - 73), d: 215, az: .3, el: .95 },
   { t: V3(D.x, 0, D.z), d: 640, az: .3, el: .9 },
   { t: V3(D.x - 90, PCB_TOP, D.z + 70), d: 7600, az: .38, el: .82 },
   { t: V3(D.x - 2900, DESK + 2700, D.z - 4200), d: 27500, az: .16, el: .3 },
-  { t: desk.screenCenter.clone(), d: 15800, az: .04, el: .1 }
+  { t: desk.screenCenter.clone().add(V3(2300, 0, 0)), d: 21000, az: .02, el: .06 },
+  { t: desk.screenCenter.clone().add(V3(0, -900, 1500)), d: 21000, az: .26, el: .16 }
 ];
 function pose(k){
   const i = Math.min(KF.length - 2, Math.max(0, Math.floor(k))), f = ease(clamp(k - i, 0, 1));
@@ -1394,44 +1680,44 @@ label("Two lenses (8) enlarge the fringes", [P.l2[0] - .25, H + .45, P.l2[1]], 1
 label("Screen (11), hole on a dark fringe", [P.scr[0], H + .95, P.scr[1]], 1.55, 2.2);
 label("Sum photoresistor behind the hole", [P.ldrS[0] + .35, .5, P.ldrS[1]], 1.55, 2.2, "light");
 // silicon cell
-label("III–V laser", [P.laser[0], .2, 0], 2.9, 3.45, "light");
-label("MMI splitters", [P.s2[0], .1, P.s2[1]], 2.9, 3.45);
-label("Ring modulators · inputs", [P.fA[0] - .2, .1, P.fA[1]], 2.9, 3.45);
-label("Attenuators · weights", [P.pB[0] + .1, .1, P.pB[1]], 2.9, 3.45);
-label("Loop mirrors", [P.mA[0] + .2, .1, P.mA[1]], 2.9, 3.45);
-label("Ge photodiode · carry", [P.ldrC[0], .1, P.ldrC[1]], 2.9, 3.45, "light");
-label("Ge photodiode · sum", [P.ldrS[0], .1, P.ldrS[1]], 2.9, 3.45, "light");
-label("TIA + comparator", [P.ard[0], .1, P.ard[1]], 2.9, 3.45, "data");
-label("Input pads A, B", [-1.65, .05, 2.9], 2.9, 3.45, "data");
+label("III–V laser", [P.laser[0], .2, 0], 2.9, 4.45, "light");
+label("MMI splitters", [P.s2[0], .1, P.s2[1]], 2.9, 4.45);
+label("Ring modulators · inputs", [P.fA[0] - .2, .1, P.fA[1]], 2.9, 4.45);
+label("Attenuators · weights", [P.pB[0] + .1, .1, P.pB[1]], 2.9, 4.45);
+label("Loop mirrors", [P.mA[0] + .2, .1, P.mA[1]], 2.9, 4.45);
+label("Ge photodiode · carry", [P.ldrC[0], .1, P.ldrC[1]], 2.9, 4.45, "light");
+label("Ge photodiode · sum", [P.ldrS[0], .1, P.ldrS[1]], 2.9, 4.45, "light");
+label("TIA + comparator", [P.ard[0], .1, P.ard[1]], 2.9, 4.45, "data");
+label("Input pads A, B", [-1.65, .05, 2.9], 2.9, 4.45, "data");
 // tiles
 { const nx = AC.x + (OUR.ix + 1 - 3.5) * TILE, nz = AC.z + (OUR.iz - 3.5) * TILE;
-  label("Our adder cell", [C.x, .2, C.z], 3.6, 4.5, "light");
-  label("4×4 dot-product tile", [nx, .2, nz], 3.6, 4.5);
-  label("Input ring modulators", [nx - 3.3, .2, nz - 1], 3.6, 4.5, "light");
-  label("Weights", [nx - .9, .2, nz - 1.6], 3.6, 4.5);
-  label("Photodiodes → ADCs", [nx + 1.2, .2, nz + 3.3], 3.6, 4.5, "data"); }
+  label("Our adder cell", [C.x, .2, C.z], 4.6, 5.5, "light");
+  label("4×4 dot-product tile", [nx, .2, nz], 4.6, 5.5);
+  label("Input ring modulators", [nx - 3.3, .2, nz - 1], 4.6, 5.5, "light");
+  label("Weights", [nx - .9, .2, nz - 1.6], 4.6, 5.5);
+  label("Photodiodes → ADCs", [nx + 1.2, .2, nz + 3.3], 4.6, 5.5, "data"); }
 // cluster and die
 die.blocks.forEach(b => {
   const inCluster = ["Texture unit", "Texture L1", "Fetch · decode · schedule", "Register file", "Drivers + DACs", "TIAs + ADCs"].includes(b.name);
-  if (inCluster) label(b.name, [D.x + b.x, 1.5, D.z + b.z], 4.6, 5.5, b.name.includes("DAC") || b.name.includes("ADC") ? "data" : "");
-  else label(b.name, [D.x + b.x, 1.5, D.z + b.z], 5.6, 6.35);
+  if (inCluster) label(b.name, [D.x + b.x, 1.5, D.z + b.z], 5.6, 6.5, b.name.includes("DAC") || b.name.includes("ADC") ? "data" : "");
+  else label(b.name, [D.x + b.x, 1.5, D.z + b.z], 6.6, 7.35);
 });
-label("64 optical tiles", [D.x + CL[0].x + ARR.x, 1.5, D.z + CL[0].z + ARR.z - 12], 4.6, 5.5, "light");
-CL.forEach((cl, i) => label(`Shader ${i}`, [D.x + cl.x - 44, 1.5, D.z + cl.z - 40], 5.6, 6.35, "light"));
-label("Light in from fibre", [D.x + 196, 2, D.z - 2], 5.6, 6.35, "light");
+label("64 optical tiles", [D.x + CL[0].x + ARR.x, 1.5, D.z + CL[0].z + ARR.z - 12], 5.6, 6.5, "light");
+CL.forEach((cl, i) => label(`Shader ${i}`, [D.x + cl.x - 44, 1.5, D.z + cl.z - 40], 6.6, 7.35, "light"));
+label("Light in from fibre", [D.x + 196, 2, D.z - 2], 6.6, 7.35, "light");
 // card
-label("Optical GPU", [D.x, 10, D.z], 6.6, 7.5, "light");
-label("GDDR3 memory", [D.x - 820, PCB_TOP + 30, D.z + 300], 6.6, 7.5);
-label("Laser module", [D.x + 620, PCB_TOP + 230, D.z + 900], 6.6, 7.5, "light");
-label("Power stage", [D.x - 100, PCB_TOP + 200, D.z + 1900], 6.6, 7.5);
-label("Dual DVI", [D.x - 250, PCB_TOP + 330, D.z - 2620], 6.6, 7.5, "data");
-label("PCIe ×16 edge", [D.x - 1180, PCB_TOP, D.z - 1510], 6.6, 7.5, "data");
+label("Optical GPU", [D.x, 10, D.z], 7.6, 8.5, "light");
+label("GDDR3 memory", [D.x - 820, PCB_TOP + 30, D.z + 300], 7.6, 8.5);
+label("Laser module", [D.x + 620, PCB_TOP + 230, D.z + 900], 7.6, 8.5, "light");
+label("Power stage", [D.x - 100, PCB_TOP + 200, D.z + 1900], 7.6, 8.5);
+label("Dual DVI", [D.x - 250, PCB_TOP + 330, D.z - 2620], 7.6, 8.5, "data");
+label("PCIe ×16 edge", [D.x - 1180, PCB_TOP, D.z - 1510], 7.6, 8.5, "data");
 // desk
-label("22-inch LCD over DVI", [D.x + MX - 3500, DESK + 8700, D.z + MZ], 7.6, 8.55, "data");
-label("Optical GPU card", [D.x, PCB_TOP + 300, D.z + 900], 7.6, 8.55, "light");
-label("Host board + CPU", [D.x - 5900, DESK + 1500, D.z - 2700], 7.6, 8.55);
-label("PCIe riser", [D.x - 2300, DESK + 1200, D.z - 1510], 7.6, 8.55, "data");
-label("Power supply", [D.x - 6300, DESK + 1900, D.z - 7300], 7.6, 8.55);
+label("22-inch LCD over DVI", [D.x + MX - 3500, DESK + 8700, D.z + MZ], 8.6, 9.55, "data");
+label("Optical GPU card", [D.x, PCB_TOP + 300, D.z + 900], 8.6, 9.55, "light");
+label("Host board + CPU", [D.x - 5900, DESK + 1500, D.z - 2700], 8.6, 9.55);
+label("PCIe riser", [D.x - 2300, DESK + 1200, D.z - 1510], 8.6, 9.55, "data");
+label("Power supply", [D.x - 6300, DESK + 1900, D.z - 7300], 8.6, 9.55);
 
 const _v = V3();
 function updateLabels(key){
@@ -1521,14 +1807,14 @@ function frame(now){
   camera.near = ps.d / 200; camera.far = ps.d * 40; camera.updateProjectionMatrix();
   scene.fog.near = ps.d * 1.5; scene.fog.far = ps.d * 5;
 
-  const ourCell = key < 4.75;
+  const ourCell = key < 5.75;
   bench.update(T, dt, lv, fold);
   cell.update(T, lv, fold, ourCell);
   arrays.update(T, key, ps.d, ourCell);
   die.update(T, key, ps.d);
-  card.root.visible = key > 5.5;
-  desk.root.visible = key > 6.3;
-  if (key > 6.4) monitor.render(dt);
+  card.root.visible = key > 6.5;
+  desk.root.visible = key > 7.3;
+  if (key > 7.4) monitor.render(dt);
 
   updateLabels(key);
   updateScale(ps.d, fold);
