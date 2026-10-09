@@ -1,0 +1,1544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="An optical half adder built from polarisation and interference, folded onto a silicon photonic chip and followed out through an ATTILA-style GPU to a frame on a monitor.">
+<meta name="author" content="Atharv Dubey">
+<meta name="theme-color" content="#0a1013">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23111a1e'/%3E%3Cpath d='M8 40 L28 24 L56 24' stroke='%23ff5a47' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='28' cy='24' r='5' fill='%23eba340'/%3E%3C/svg%3E">
+<title>Bench to Pixel</title>
+<style>/* base reset (the artifact host supplied this before) */
+body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a fixed WebGL scene fills the window; story cards scroll over it on the left (bottom sheet on phones); a chapter rail with real sizes docks right; a map-style scale bar sits bottom-right.
+   One dark look, carried over from the F²R site: a lab with the lights off. Red is light, cyan is electrical data, amber is the F²R accent and the optical weights. */
+:root{
+  --ink:#0a1013;
+  --ink-2:#111a1e;
+  --glass:rgba(11,18,21,.84);
+  --line:#22313a;
+  --fg:#e3ebed;
+  --muted:#8b9ea5;
+  --faint:#5d6f77;
+  --petg:#eba340;
+  --beam:#8fe3ff;
+  --laser:#ff5a47;
+  --f-display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --card-w:440px;
+  color-scheme:dark;
+}
+html{background:var(--ink)}
+body{background:var(--ink);color:var(--fg);font-family:var(--f-body);font-size:15.5px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--fg);text-decoration-color:rgba(235,163,64,.7);text-underline-offset:3px}
+a:hover{color:var(--petg)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--beam);outline-offset:2px;border-radius:4px}
+
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0;cursor:grab;touch-action:pan-y}
+#gl.drag{cursor:grabbing}
+.vignette{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(120% 95% at 62% 46%,rgba(10,16,19,0) 52%,rgba(5,8,10,.6) 100%)}
+#loader{position:fixed;inset:0;z-index:1;display:grid;place-items:center;pointer-events:none;transition:opacity .9s ease}
+#loader span{font:500 11px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+#loader.off{opacity:0}
+#glfail{position:fixed;right:max(16px,4vw);top:40%;z-index:2;max-width:320px;font-size:.9rem;color:var(--muted)}
+
+#labels{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.lbl{position:absolute;left:0;top:0;display:flex;align-items:center;gap:7px;font:500 10.5px/1.2 var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--fg);white-space:nowrap;visibility:hidden;opacity:0;will-change:transform}
+.lbl i{flex:none;width:6px;height:6px;border-radius:50%;background:var(--petg);box-shadow:0 0 0 3px rgba(235,163,64,.18)}
+.lbl.light i{background:var(--laser);box-shadow:0 0 0 3px rgba(255,90,71,.2)}
+.lbl.data i{background:var(--beam);box-shadow:0 0 0 3px rgba(143,227,255,.18)}
+.lbl span{padding:3px 7px;border-radius:4px;background:rgba(10,16,19,.74);border:1px solid rgba(34,49,58,.9)}
+
+.brand{position:fixed;z-index:6;left:max(16px,env(safe-area-inset-left,0px));top:calc(14px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:10px;font:600 12px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--fg);text-decoration:none}
+.brand svg{width:26px;height:26px;flex:none}
+.brand .t{color:var(--muted);font-weight:500}
+.brand:hover{color:var(--fg)}
+
+.rail{position:fixed;z-index:6;right:max(18px,env(safe-area-inset-right,0px));top:50%;transform:translateY(-50%);padding:8px 6px;border-radius:12px;background:rgba(10,16,19,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.rail ol{position:relative;list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.rail ol::before{content:"";position:absolute;left:12px;top:15px;bottom:15px;width:1px;background:var(--line)}
+.rail ol{z-index:1}
+.rail .fill{position:absolute;z-index:2;left:18px;top:23px;width:1px;height:calc((100% - 46px) * var(--p,0));background:var(--laser);box-shadow:0 0 6px var(--laser)}
+.rail button{position:relative;display:grid;grid-template-columns:9px 1fr auto;align-items:center;gap:12px;width:100%;padding:6px 8px;background:none;border:0;border-radius:6px;color:var(--muted);cursor:pointer;text-align:left}
+.rail button:hover{color:var(--fg);background:rgba(17,26,30,.6)}
+.rail .d{width:9px;height:9px;border-radius:50%;border:1px solid #47575f;background:var(--ink);box-sizing:border-box}
+.rail .n{font:500 12.5px/1.2 var(--f-body)}
+.rail .s{font:500 10.5px/1 var(--f-mono);letter-spacing:.04em;color:var(--faint);font-variant-numeric:tabular-nums;min-width:50px;text-align:right}
+.rail button.done .d{background:var(--laser);border-color:var(--laser)}
+.rail button.on{color:var(--fg)}
+.rail button.on .d{background:var(--petg);border-color:var(--petg);box-shadow:0 0 0 4px rgba(235,163,64,.16)}
+.rail button.on .s{color:var(--petg)}
+
+.scale{position:fixed;z-index:6;right:max(18px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));display:grid;justify-items:end;gap:6px;font:500 11px/1 var(--f-mono);letter-spacing:.04em;color:var(--muted);font-variant-numeric:tabular-nums;pointer-events:none}
+.scale b{color:var(--fg);font-weight:500}
+.ruler{height:7px;width:100px;border:1.5px solid var(--fg);border-top:0;box-sizing:border-box}
+
+#story{position:relative;z-index:3;pointer-events:none}
+.ch{min-height:120vh;display:flex;align-items:center;padding-inline:max(16px,5vw);padding-block:14vh;box-sizing:border-box}
+.ch.first{min-height:100vh;padding-block:12vh 8vh}
+.ch.last{min-height:130vh}
+.card{pointer-events:auto;width:min(var(--card-w),100%);box-sizing:border-box;background:var(--glass);-webkit-backdrop-filter:blur(14px) saturate(120%);backdrop-filter:blur(14px) saturate(120%);border:1px solid var(--line);border-radius:14px;padding:22px 24px 20px;box-shadow:0 24px 70px -34px rgba(0,0,0,.85)}
+.card.hero{background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;width:min(540px,100%)}
+.card.wide{width:min(520px,100%)}
+.card > :last-child{margin-bottom:0}
+
+.kick{display:flex;align-items:center;gap:10px;margin:0 0 12px;font:500 11px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--petg)}
+.kick .ray{display:inline-block;width:34px;height:2px;border-radius:1px;background:var(--laser);box-shadow:0 0 8px var(--laser),0 0 2px var(--laser)}
+h1{margin:0 0 18px;font:700 clamp(2.9rem,6.4vw,5.1rem)/.94 var(--f-display);font-variation-settings:"wdth" 82;letter-spacing:-.03em;text-wrap:balance}
+h1 em{font:500 .26em/1 var(--f-mono);font-style:normal;letter-spacing:.14em;text-transform:uppercase;color:var(--laser);vertical-align:.95em;margin:0 .35em}
+h2{margin:0 0 12px;font:650 clamp(1.5rem,2.3vw,1.9rem)/1.12 var(--f-display);font-variation-settings:"wdth" 88;letter-spacing:-.012em;text-wrap:balance}
+h3{margin:16px 0 6px;font:600 .8rem/1.3 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+p{margin:0 0 12px;max-width:64ch}
+.lede{font-size:1.07rem;line-height:1.58}
+.note{font-size:.84rem;line-height:1.5;color:var(--muted)}
+.hints{display:flex;flex-wrap:wrap;gap:8px 18px;margin:18px 0 16px;font:500 11px/1.2 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fg)}
+.hints span{display:inline-flex;align-items:center;gap:8px}
+.hints span::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--petg)}
+.byline{font-size:.86rem;color:var(--muted);max-width:52ch}
+cite{font-style:normal;color:var(--fg)}
+.code{margin:12px 0 8px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#0c1417;font:500 11.5px/1.55 var(--f-mono);color:var(--fg);overflow-x:auto;white-space:pre}
+.code code{font:inherit}
+
+.bits{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:16px 0 12px}
+.bit{display:inline-flex;align-items:center;gap:9px;padding:7px 12px 7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--ink-2);font:600 13px/1 var(--f-mono);cursor:pointer}
+.bit:hover{border-color:#3a5560}
+.bit b{display:grid;place-items:center;width:22px;height:22px;border-radius:5px;background:#1b252a;color:var(--muted);font-weight:600}
+.bit[aria-pressed="true"] b{background:var(--laser);color:#1b0c09}
+.auto{margin-left:auto;padding:6px 2px;background:none;border:0;font:500 10.5px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer}
+.auto[aria-pressed="true"]{color:var(--petg)}
+.meter{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin:8px 0;font:500 11px/1.2 var(--f-mono);color:var(--muted)}
+.bar{position:relative;height:8px;border-radius:4px;background:#1a2328}
+.bar i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:4px;background:var(--laser);opacity:.7;transition:width .35s ease}
+.bar i.over{background:var(--petg);opacity:1}
+.bar s{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;border-radius:1px;background:var(--fg)}
+.mv{min-width:66px;text-align:right;color:var(--fg);font-variant-numeric:tabular-nums}
+.readout{display:flex;justify-content:space-between;gap:12px;margin:8px 0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:500 11.5px/1.3 var(--f-mono);color:var(--muted)}
+.readout b{font-weight:500;color:var(--fg);text-align:right}
+.truth{width:100%;margin-top:10px;border-collapse:collapse;font:500 12px/1 var(--f-mono);font-variant-numeric:tabular-nums}
+.truth th{padding:0 0 7px;border-bottom:1px solid var(--line);font-size:10px;font-weight:500;letter-spacing:.1em;color:var(--muted);text-align:center}
+.truth td{padding:7px 0;text-align:center;color:var(--faint)}
+.truth tr.on td{color:var(--fg);background:rgba(235,163,64,.09)}
+.truth tr.on td.o{color:var(--petg)}
+
+.tbl{margin:14px 0 12px;overflow-x:auto}
+.map{width:100%;border-collapse:collapse;font-size:.875rem;line-height:1.35}
+.map th{padding:0 10px 7px 0;border-bottom:1px solid var(--line);font:500 10px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left}
+.map td{padding:6px 10px 6px 0;border-bottom:1px solid rgba(34,49,58,.65);vertical-align:top}
+.map td:first-child{color:var(--muted);width:44%}
+.map tr:last-child td{border-bottom:0}
+
+.formula{margin:12px 0;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#0c1417;font:500 13px/1.5 var(--f-mono);color:var(--fg);overflow-x:auto;white-space:nowrap}
+.formula .w{color:var(--petg)} .formula .x{color:var(--laser)} .formula .y{color:var(--beam)}
+
+.parts{list-style:none;margin:12px 0;padding:0;display:grid;gap:7px;font-size:.92rem}
+.parts li{display:grid;grid-template-columns:10px 1fr;gap:10px;align-items:baseline}
+.parts li::before{content:"";width:7px;height:7px;border-radius:2px;background:var(--faint);transform:translateY(-1px)}
+.parts li.o::before{background:var(--laser);box-shadow:0 0 6px var(--laser)}
+.parts li.d::before{background:var(--beam)}
+
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:12px 0;font:500 10.5px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{width:14px;height:3px;border-radius:2px}
+.pipe{counter-reset:s;list-style:none;margin:12px 0 14px;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.pipe li{counter-increment:s;display:inline-flex;align-items:center;gap:6px;padding:4px 9px 4px 7px;border:1px solid var(--line);border-radius:999px;font:500 11.5px/1.3 var(--f-mono);color:var(--fg)}
+.pipe li::before{content:counter(s,decimal-leading-zero);color:var(--faint);font-size:10px}
+.pipe li.o{border-color:rgba(255,90,71,.6);box-shadow:inset 0 0 0 1px rgba(255,90,71,.12)}
+.pipe li.o::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--laser);box-shadow:0 0 6px var(--laser)}
+
+.stats{display:grid;grid-template-columns:1fr auto;gap:7px 16px;margin:14px 0 12px;padding:12px;border:1px solid var(--line);border-radius:8px;font:500 12px/1.3 var(--f-mono);font-variant-numeric:tabular-nums}
+.stats dt{color:var(--muted)}
+.stats dd{margin:0;text-align:right;color:var(--fg)}
+.stats dd.l{color:var(--laser)}
+
+.tiers{display:grid;gap:12px;margin:14px 0 6px}
+.tier{display:grid;grid-template-columns:86px 1fr;gap:12px;align-items:baseline}
+.tier p{margin:0;font-size:.92rem}
+.tag{justify-self:start;padding:4px 7px;border:1px solid currentColor;border-radius:4px;font:600 10px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.tag.b{color:var(--petg)} .tag.s{color:var(--beam)} .tag.p{color:var(--laser)}
+.credits{margin-top:16px;padding-top:12px;border-top:1px solid var(--line);font-size:.84rem;line-height:1.5;color:var(--muted)}
+.credits p{margin:0 0 8px}
+.links{display:flex;flex-wrap:wrap;gap:6px 16px;font:500 12px/1.4 var(--f-mono)}
+
+@media (max-width:899px){
+  .rail{display:none}
+  .scale{top:calc(16px + env(safe-area-inset-top,0px));bottom:auto}
+  .ch{align-items:flex-end;min-height:118vh;padding-block:46vh 7vh}
+  .ch.first{min-height:100vh;padding-block:40vh 6vh}
+  .card.hero{padding:26px 2px 6px;background:linear-gradient(180deg,rgba(10,16,19,0),rgba(10,16,19,.88) 26%)}
+  .card{padding:18px 18px 16px}
+  .tier{grid-template-columns:1fr;gap:6px}
+}
+@media (prefers-reduced-motion:reduce){
+  .bar i,#loader{transition:none}
+}
+</style>
+</head>
+<body>
+<canvas id="gl" aria-label="3D model of an optical half adder on a breadboard that folds onto a silicon chip inside a GPU, which drives a monitor on a desk"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+<div id="loader" aria-hidden="true"><span>Aligning the laser</span></div>
+<p id="glfail" hidden>This browser could not start WebGL, so the 3D model is unavailable. The text below still walks through every step.</p>
+<div id="labels" aria-hidden="true"></div>
+
+<a class="brand" href="https://f2r.site" target="_blank" rel="noopener">
+  <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#111a1e"/><path d="M8 40 L28 24 L56 24" stroke="#ff5a47" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="28" cy="24" r="5" fill="#eba340"/></svg>
+  <span>F²R</span><span class="t">Bench to Pixel</span>
+</a>
+
+<nav class="rail" aria-label="Chapters">
+  <span class="fill" aria-hidden="true"></span>
+  <ol>
+    <li><button type="button" data-go="0"><span class="d"></span><span class="n">Bench</span><span class="s">table</span></button></li>
+    <li><button type="button" data-go="1"><span class="d"></span><span class="n">Carry</span><span class="s">AND</span></button></li>
+    <li><button type="button" data-go="2"><span class="d"></span><span class="n">Sum</span><span class="s">XOR</span></button></li>
+    <li><button type="button" data-go="3"><span class="d"></span><span class="n">Silicon cell</span><span class="s">0.4 mm</span></button></li>
+    <li><button type="button" data-go="4"><span class="d"></span><span class="n">Optical tiles</span><span class="s">3 mm</span></button></li>
+    <li><button type="button" data-go="5"><span class="d"></span><span class="n">Shader cluster</span><span class="s">7 mm</span></button></li>
+    <li><button type="button" data-go="6"><span class="d"></span><span class="n">GPU die</span><span class="s">20 mm</span></button></li>
+    <li><button type="button" data-go="7"><span class="d"></span><span class="n">Card</span><span class="s">27 cm</span></button></li>
+    <li><button type="button" data-go="8"><span class="d"></span><span class="n">Desk</span><span class="s">1.5 m</span></button></li>
+    <li><button type="button" data-go="9"><span class="d"></span><span class="n">What is real</span><span class="s">notes</span></button></li>
+  </ol>
+</nav>
+
+<div class="scale" aria-hidden="true">
+  <span>Field <b id="fieldv">1.5 m</b></span>
+  <div class="ruler" id="ruler"></div>
+  <span id="rulerv">20 cm</span>
+</div>
+
+<main id="story">
+
+  <section class="ch first" id="bench">
+    <div class="card hero">
+      <p class="kick"><span class="ray" aria-hidden="true"></span>F²R · Optical computing</p>
+      <h1>Bench <em>to</em> Pixel</h1>
+      <p class="lede">In 2024 we built a half adder out of light on the physics lab's optical breadboard: a linearly polarised laser, three beamsplitters, two polarisers, a Michelson interferometer and photoresistors as detectors, with an Arduino applying the threshold. This page folds that bench onto a silicon chip, then zooms out until the chip is drawing a frame on a monitor.</p>
+      <div class="hints"><span>Scroll to zoom out</span><span>Drag to look around</span></div>
+      <p class="byline"><cite>Using Polarisation and Interference for Optical Computing</cite>, Atharv Dubey, Sanya Davalbhakta and Proteep Mallik. Student Research Journal 2024, Azim Premji University; also presented at the Science Undergraduate Research Conference 2024. Numbers in brackets on the model follow the paper's Figure 14.</p>
+    </div>
+  </section>
+
+  <section class="ch" id="carry">
+    <div class="card">
+      <p class="kick">On the bench · carry</p>
+      <h2>An AND gate that adds intensities</h2>
+      <p>Beamsplitter S1 (5) splits off the beam for input A and S2 (6) the beam for input B, and blocking a beam sets that input to 0. Our laser is linearly polarised, so polarisers (3, 4) turned to different angles give the two beams different powers, and mirrors (1, 2) bring both onto one photoresistor. With this intensity marking every combination of beams sums to a distinct reading, and only A and B together cross the Arduino's threshold.</p>
+      <div class="bits">
+        <button type="button" class="bit" data-bit="a" aria-pressed="false">A <b>0</b></button>
+        <button type="button" class="bit" data-bit="b" aria-pressed="false">B <b>0</b></button>
+        <button type="button" class="auto" data-live="auto" aria-pressed="true">Cycling inputs</button>
+      </div>
+      <div class="meter"><span>Carry photoresistor</span><div class="bar"><i data-live="cbar"></i><s></s></div><span class="mv" data-live="cval">0.00</span></div>
+      <table class="truth">
+        <thead><tr><th>A</th><th>B</th><th>SUM</th><th>CARRY</th></tr></thead>
+        <tbody>
+          <tr data-row="00"><td>0</td><td>0</td><td class="o">0</td><td class="o">0</td></tr>
+          <tr data-row="10"><td>1</td><td>0</td><td class="o">1</td><td class="o">0</td></tr>
+          <tr data-row="01"><td>0</td><td>1</td><td class="o">1</td><td class="o">0</td></tr>
+          <tr data-row="11"><td>1</td><td>1</td><td class="o">0</td><td class="o">1</td></tr>
+        </tbody>
+      </table>
+      <pre class="code"><code>int light = analogRead(photoPin);  // A0
+if (light == 111 || light == 11 || light == 112 || light == 113)
+  Serial.println("0");  // marked intensities
+else
+  Serial.println("1");</code></pre>
+      <p class="note">Condensed from the paper's Arduino sketch (Code 1): readings marked 11, 111, 112 and 113 print 0, anything else prints 1. The meter above is illustrative.</p>
+    </div>
+  </section>
+
+  <section class="ch" id="sum">
+    <div class="card">
+      <p class="kick">On the bench · sum</p>
+      <h2>An XOR gate from a dark fringe</h2>
+      <p>The light that passes S2 reaches S3 (7), which splits it between mirrors (9) and (10) and recombines the returns into an interference pattern. Two lenses close together (8) enlarge it on a screen (11), and we cut a hole where a dark fringe falls. Blocking an arm sets that input to 0. With both arms open the fringes form and the hole stays dark. With one arm blocked the fringes vanish and light reaches the photoresistor behind the hole, the paper's "light from no light".</p>
+      <div class="bits">
+        <button type="button" class="bit" data-bit="a" aria-pressed="false">A <b>0</b></button>
+        <button type="button" class="bit" data-bit="b" aria-pressed="false">B <b>0</b></button>
+        <button type="button" class="auto" data-live="auto" aria-pressed="true">Cycling inputs</button>
+      </div>
+      <div class="readout"><span>Sum aperture</span><b data-live="sval">no light → 0</b></div>
+      <p>The two gates make a half adder, which gave the right output for all four input pairs. The full adder added a carry-in beam and used six beamsplitters, two interferometers and two AND gates feeding one photoresistor. That photoresistor could not reliably tell dark fringes from bright ones, and misalignment in the bulky setup lost light.</p>
+    </div>
+  </section>
+
+  <section class="ch" id="silicon">
+    <div class="card wide">
+      <p class="kick">≈1 m → 0.4 mm</p>
+      <h2>The same circuit in silicon</h2>
+      <p>The bench flattens into a photonic circuit with the same layout. The paper's future-scope section pointed here: smaller setups with precise optics, then chips made with lithography. Every part has a standard counterpart in a silicon photonics process, and the light stays inside waveguides, which removes the three problems the full adder hit: weak detectors, misalignment and bulk.</p>
+      <div class="tbl">
+        <table class="map">
+          <thead><tr><th>On the bench</th><th>On the chip</th></tr></thead>
+          <tbody>
+            <tr><td>Linearly polarised laser</td><td>III–V laser bonded to the chip</td></tr>
+            <tr><td>Beamsplitter cubes (5, 6, 7)</td><td>Multimode interference (MMI) splitters</td></tr>
+            <tr><td>Blocking a beam to set a bit</td><td>Micro-ring modulator</td></tr>
+            <tr><td>Polarisers marking intensity (3, 4)</td><td>Variable optical attenuators</td></tr>
+            <tr><td>Mirrors (1, 2)</td><td>Waveguide bends</td></tr>
+            <tr><td>Michelson mirrors (9, 10)</td><td>Loop mirrors</td></tr>
+            <tr><td>Lenses (8), screen (11), hole on a dark fringe</td><td>Interferometer port biased to cancel</td></tr>
+            <tr><td>Photoresistor</td><td>Germanium photodiode</td></tr>
+            <tr><td>Arduino threshold</td><td>Transimpedance amplifier and comparator</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Silicon photonics runs at 1310 or 1550 nm, which is invisible, so red stands in for it here. Waveguides are drawn wider than life. A photoresistor takes milliseconds to respond; ring modulators and germanium photodiodes work at tens of gigahertz.</p>
+    </div>
+  </section>
+
+  <section class="ch" id="tiles">
+    <div class="card">
+      <p class="kick">0.4 mm → 3 mm</p>
+      <h2>The carry gate is a dot product</h2>
+      <p>The paper already treats AND as multiplication and sums polariser-weighted beams on one photoresistor. Read that as arithmetic: the carry gate splits a beam, weights each copy and sums the copies on one detector, which is y = w<sub>A</sub>·A + w<sub>B</sub>·B computed in a single pass of light. Give it four modulated inputs and four detectors and it multiplies a 4-vector by a 4×4 matrix: sixteen multiply-adds at once.</p>
+      <div class="formula"><span class="y">y<sub>i</sub></span> = Σ<sub>j</sub> <span class="w">w<sub>ij</sub></span> · <span class="x">x<sub>j</sub></span> &nbsp; (i, j = 0…3)</div>
+      <p>GPUs run these sums constantly. Every vertex is multiplied by a 4×4 matrix, and every lit pixel takes a dot product between its surface normal and the light direction. Each neighbouring tile is that 4×4 multiplier: ring modulators on the left, amber weights at the crossings, photodiodes along the bottom. Sixty-four tiles make one block.</p>
+      <p class="note">Analog light carries roughly 4 to 8 bits per pass. Lighting and colour maths tolerate that. Vertex positions need 32-bit floats, so they would be split into bit-slices over several passes or stay on the electronic ALUs.</p>
+    </div>
+  </section>
+
+  <section class="ch" id="cluster">
+    <div class="card">
+      <p class="kick">3 mm → 7 mm</p>
+      <h2>Inside a unified shader</h2>
+      <p>The GPU around the tiles follows ATTILA, an open-source model of a Direct3D 9–era unified-shader GPU from the Universitat Politècnica de Catalunya (ISPASS 2006, source released under a BSD-style licence). Its shader units run instructions such as DP3, DP4 and MAD, the dot products and multiply-adds the tiles are built for.</p>
+      <ul class="parts">
+        <li>Fetch, decode and scheduling stay electronic.</li>
+        <li class="d">The register file sends operands to drivers and DACs that set the ring modulators.</li>
+        <li class="o">The 64-tile block does the dot products in light.</li>
+        <li class="d">Photodiode currents return through TIAs and ADCs to the register file.</li>
+        <li>Texture sampling stays electronic.</li>
+      </ul>
+      <p class="note">In ATTILA's R600-style configuration each shader unit is a 16-lane SIMD array of four-wide vector ALUs plus a scalar ALU. A four-wide ALU does one DP4 per cycle; one optical tile does four per pass.</p>
+    </div>
+  </section>
+
+  <section class="ch" id="die">
+    <div class="card wide">
+      <p class="kick">≈20 mm die</p>
+      <h2>The whole pipeline on one die</h2>
+      <p>ATTILA's fixed-function blocks run down the middle in pipeline order. The four shader clusters take the vertex work and later the pixel work. Light enters at the right edge from a fibre and branches out to the four tile blocks.</p>
+      <div class="legend"><span><i style="background:var(--laser)"></i>Light</span><span><i style="background:var(--beam)"></i>Digital data</span><span><i style="background:var(--petg)"></i>Optical weights</span></div>
+      <ol class="pipe">
+        <li>Command processor</li><li>Streamer</li><li class="o">Shaders · vertices</li><li>Primitive assembly</li><li>Clipper</li><li>Triangle setup</li><li>Fragment generation</li><li>Hierarchical Z</li><li>Interpolator</li><li class="o">Shaders · pixels</li><li>Z/stencil + colour write</li><li>Memory controller</li><li>DAC · display</li>
+      </ol>
+      <p class="note">Block counts follow ATTILA's R600-style configuration from 2008: four shader units, four ROP pipelines and four 64-bit memory channels at 500 MHz.</p>
+    </div>
+  </section>
+
+  <section class="ch" id="card">
+    <div class="card">
+      <p class="kick">≈27 cm card</p>
+      <h2>A 2008 graphics card, plus a laser</h2>
+      <p>The parts around the package are the usual ones for the period: GDDR3 memory, a power stage, a PCIe ×16 edge and dual DVI. The new part is a laser module that feeds the GPU through an optical fibre, the way co-packaged optical switches are fed today.</p>
+      <p class="note">The cooler is off so the die stays visible.</p>
+    </div>
+  </section>
+
+  <section class="ch" id="desk">
+    <div class="card">
+      <p class="kick">≈1.5 m desk</p>
+      <h2>A frame on the monitor</h2>
+      <p>The card sits on an open test bench, linked to the host board by a PCIe riser and to a 22-inch monitor by DVI. The counters show how many dot products each frame of the teapot scene would hand to the optical tiles.</p>
+      <dl class="stats">
+        <dt>Vertices per frame</dt><dd data-live="verts">–</dd>
+        <dt>DP4 for transforms</dt><dd class="l" data-live="dp4">–</dd>
+        <dt>Pixels per frame</dt><dd data-live="pix">–</dd>
+        <dt>DP3 for lighting</dt><dd class="l" data-live="dp3">–</dd>
+        <dt>Frame</dt><dd data-live="frame">–</dd>
+      </dl>
+      <p class="note">Your own GPU draws the teapot. The counts describe the work the proposed design would move into light.</p>
+    </div>
+  </section>
+
+  <section class="ch last" id="notes">
+    <div class="card wide">
+      <p class="kick">Built · standard · proposed</p>
+      <h2>What on this page is real</h2>
+      <div class="tiers">
+        <div class="tier"><span class="tag b">Built</span><p>Optical AND, OR and XOR gates, a half adder that was correct for every input, and a full adder limited by photoresistor sensitivity, misalignment and bulk. Published in the Student Research Journal 2024.</p></div>
+        <div class="tier"><span class="tag s">Standard</span><p>MMI splitters, micro-ring modulators, variable attenuators, loop mirrors and germanium photodiodes are offered by silicon photonics foundries.</p></div>
+        <div class="tier"><span class="tag p">Proposed</span><p>The 4×4 optical tile and its place inside an ATTILA-style shader cluster. It has not been simulated or fabricated.</p></div>
+      </div>
+      <h3>Open problems</h3>
+      <p>Every pass converts values into light and back, and those DACs and ADCs cost energy and area. Precision is a few bits per pass. A ring modulator is about 10 µm across, hundreds of times wider than a transistor, so tiles are far less dense than logic. Laser power and waveguide loss limit how many tiles one source can feed.</p>
+      <p>Light helps by doing many multiply-adds in one pass. Electronics still schedules, stores and converts.</p>
+      <div class="credits">
+        <p>Paper: <cite>Using Polarisation and Interference for Optical Computing</cite>, Atharv Dubey, Sanya Davalbhakta and Proteep Mallik, Student Research Journal 2024, Azim Premji University. GPU model: ATTILA by V. Moya, C. González, J. Roca, A. Fernández and R. Espasa, Universitat Politècnica de Catalunya.</p>
+        <div class="links">
+          <a href="https://hgpu.org/?p=2152" target="_blank" rel="noopener">ATTILA paper, ISPASS 2006</a>
+          <a href="https://github.com/cooperyuan/attila" target="_blank" rel="noopener">ATTILA source mirror</a>
+          <a href="https://f2r.site" target="_blank" rel="noopener">f2r.site</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/GammaCorrectionShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/TeapotGeometry.js"></script>
+<script>
+(() => {
+"use strict";
+const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const fmtInt = n => Math.round(n).toLocaleString("en-US");
+
+/* ===================== the two input bits (shared by every widget and the model) ===================== */
+const S = { a: 0, b: 0, pinned: false };
+const IA = .45, IB = .75, THR = .9;   // carry powers and threshold, as in the bench model
+function syncUI(){
+  $$("[data-bit]").forEach(b => { const v = S[b.dataset.bit]; b.setAttribute("aria-pressed", v ? "true" : "false"); b.querySelector("b").textContent = v; });
+  $$("[data-row]").forEach(r => r.classList.toggle("on", r.dataset.row === `${S.a}${S.b}`));
+  const c = IA * S.a + IB * S.b;
+  $$('[data-live="cbar"]').forEach(el => { el.style.width = (c / 1.2 * 100).toFixed(1) + "%"; el.classList.toggle("over", c > THR); });
+  $$('[data-live="cval"]').forEach(el => { el.textContent = c.toFixed(2) + (c > THR ? " → 1" : " → 0"); });
+  $$('[data-live="sval"]').forEach(el => { el.textContent = !(S.a || S.b) ? "no light → 0" : (S.a && S.b ? "fringes, hole dark → 0" : "no fringes, light through → 1"); });
+  $$('[data-live="auto"]').forEach(el => { el.setAttribute("aria-pressed", S.pinned ? "false" : "true"); el.textContent = S.pinned ? "Resume cycling" : "Cycling inputs"; });
+}
+$$("[data-bit]").forEach(b => b.addEventListener("click", () => { S.pinned = true; S[b.dataset.bit] ^= 1; syncUI(); }));
+$$('[data-live="auto"]').forEach(b => b.addEventListener("click", () => { S.pinned = !S.pinned; syncUI(); }));
+$$(".meter s").forEach(s => { s.style.left = (THR / 1.2 * 100) + "%"; });
+syncUI();
+{
+  const seq = [[0, 0], [1, 0], [0, 1], [1, 1]]; let step = 0;
+  setInterval(() => { if (S.pinned || document.hidden) return; step = (step + 1) % 4; [S.a, S.b] = seq[step]; syncUI(); }, REDUCE ? 4200 : 2800);
+}
+
+/* ===================== scroll → story key (section i centred = key i) ===================== */
+const secs = $$(".ch");
+const NK = secs.length;
+let centers = [];
+function measure(){ centers = secs.map(s => { const r = s.getBoundingClientRect(); return r.top + scrollY + r.height / 2; }); }
+function scrollKey(){
+  const v = scrollY + innerHeight / 2;
+  if (!centers.length || v <= centers[0]) return 0;
+  for (let i = 0; i < centers.length - 1; i++) if (v < centers[i + 1]) return i + (v - centers[i]) / (centers[i + 1] - centers[i]);
+  return NK - 1;
+}
+measure();
+addEventListener("load", measure);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+const railBtns = $$(".rail button");
+railBtns.forEach(b => b.addEventListener("click", () => { measure(); const i = +b.dataset.go; scrollTo({ top: centers[i] - innerHeight / 2, behavior: REDUCE ? "auto" : "smooth" }); }));
+const railOl = $(".rail");
+let railIdx = -1;
+function updateRail(k){
+  railOl.style.setProperty("--p", (k / (NK - 1)).toFixed(4));
+  const i = Math.round(k);
+  if (i === railIdx) return; railIdx = i;
+  railBtns.forEach((b, j) => { b.classList.toggle("on", j === i); b.classList.toggle("done", j < i); if (j === i) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current"); });
+}
+updateRail(0);
+
+/* ===================== WebGL ===================== */
+const canvas = $("#gl");
+const fail = () => { $("#glfail").hidden = false; $("#loader").classList.add("off"); addEventListener("scroll", () => updateRail(scrollKey()), { passive: true }); };
+if (typeof THREE === "undefined" || !THREE.EffectComposer || !THREE.UnrealBloomPass) { fail(); return; }
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" }); }
+catch (e) { fail(); return; }
+
+const DPR = Math.min(window.devicePixelRatio || 1, 1.75);
+renderer.setPixelRatio(DPR);
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const MAX_ANISO = renderer.capabilities.getMaxAnisotropy();
+
+const BG = 0x0a1013;
+const scene = new THREE.Scene();
+const BGL = new THREE.Color(BG).convertSRGBToLinear();
+scene.background = BGL;
+scene.fog = new THREE.Fog(BGL.getHex(), 20, 80);
+const camera = new THREE.PerspectiveCamera(34, 1, .05, 1000);
+
+/* reflections: a dim room with a softbox and two coloured strips */
+{
+  const pm = new THREE.PMREMGenerator(renderer);
+  const env = new THREE.Scene();
+  env.add(new THREE.Mesh(new THREE.BoxGeometry(24, 12, 24), new THREE.MeshBasicMaterial({ color: 0x131b1f, side: THREE.BackSide })));
+  const panel = (w, h, c, p, r) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: c, side: THREE.DoubleSide })); m.position.set(p[0], p[1], p[2]); m.rotation.set(r[0], r[1], r[2]); env.add(m); };
+  panel(9, 3.2, 0xc6d4d8, [0, 5.9, 0], [Math.PI / 2, 0, 0]);
+  panel(12, .6, 0x5fa9c4, [-11.9, 2.5, 0], [0, Math.PI / 2, 0]);
+  panel(12, .6, 0xb98238, [11.9, 1.5, 0], [0, -Math.PI / 2, 0]);
+  scene.environment = pm.fromScene(env, .04).texture;
+  pm.dispose();
+}
+scene.add(new THREE.HemisphereLight(0x9fb4bd, 0x0b1013, .6));
+const keyLight = new THREE.DirectionalLight(0xfff1e4, 1.35); keyLight.position.set(3, 7, 4.5); scene.add(keyLight);
+const rimLight = new THREE.DirectionalLight(0x8fd8f0, .4); rimLight.position.set(-5, 3, -6); scene.add(rimLight);
+
+/* ---------- helpers ---------- */
+const V3 = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
+const UP = V3(0, 1, 0);
+const std = (c, m, r, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color: c, metalness: m, roughness: r }, o));
+const stdL = (c, m, r, o = {}) => { const mm = std(c, m, r, o); mm.color.convertSRGBToLinear(); return mm; };
+const glowMat = (hex, k = 2, o = {}) => new THREE.MeshBasicMaterial(Object.assign({ color: new THREE.Color(hex).multiplyScalar(k), toneMapped: false }, o));
+function add(parent, geo, mat, p = [0, 0, 0], r = [0, 0, 0]){ const m = new THREE.Mesh(geo, mat); m.position.set(p[0], p[1], p[2]); m.rotation.set(r[0], r[1], r[2]); parent.add(m); return m; }
+const cyl = (r, h, seg = 24, r2) => new THREE.CylinderGeometry(r2 === undefined ? r : r2, r, h, seg);
+function rod(parent, a, b, r, mat, seg = 8){
+  const d = V3().subVectors(b, a), len = d.length();
+  const g = new THREE.CylinderGeometry(r, r, len, seg, 1, true); g.translate(0, len / 2, 0);
+  const m = new THREE.Mesh(g, mat); m.position.copy(a); m.quaternion.setFromUnitVectors(UP, d.normalize()); parent.add(m); return m;
+}
+function tube(parent, pts, r, mat, seg = 64, radial = 8){
+  const curve = new THREE.CatmullRomCurve3(pts.map(p => V3(p[0], p[1], p[2])));
+  const m = new THREE.Mesh(new THREE.TubeGeometry(curve, seg, r, radial, false), mat); parent.add(m); return m;
+}
+function canvasTex(w, h, draw, srgb = true){
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d"); draw(x, w, h);
+  const t = new THREE.CanvasTexture(c); if (srgb) t.encoding = THREE.sRGBEncoding; t.anisotropy = MAX_ANISO;
+  return t;
+}
+function rng(seed){ let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const GLOW = canvasTex(128, 128, (x) => {
+  const g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(.25, "rgba(255,255,255,.45)"); g.addColorStop(1, "rgba(255,255,255,0)");
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+});
+function glow(parent, hex, scale, opacity = .8, p = [0, 0, 0]){
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: hex, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
+  s.scale.setScalar(scale); s.position.set(p[0], p[1], p[2]); parent.add(s); return s;
+}
+/* round the corners of a 2D polyline [[x,z],…] */
+function roundPath(pts, r){
+  if (pts.length < 3) return pts.map(p => p.slice());
+  const out = [pts[0].slice()];
+  for (let i = 1; i < pts.length - 1; i++){
+    const p0 = pts[i - 1], p1 = pts[i], p2 = pts[i + 1];
+    const d0 = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]), d2 = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+    const rr = Math.min(r, d0 * .5, d2 * .5);
+    const a = [p1[0] + (p0[0] - p1[0]) / d0 * rr, p1[1] + (p0[1] - p1[1]) / d0 * rr];
+    const b = [p1[0] + (p2[0] - p1[0]) / d2 * rr, p1[1] + (p2[1] - p1[1]) / d2 * rr];
+    for (let k = 0; k <= 8; k++){ const t = k / 8, u = 1 - t; out.push([u * u * a[0] + 2 * u * t * p1[0] + t * t * b[0], u * u * a[1] + 2 * u * t * p1[1] + t * t * b[1]]); }
+  }
+  out.push(pts[pts.length - 1].slice());
+  return out;
+}
+/* flat ribbon along a 2D path at height y, with arc-length attributes for the light shader */
+function ribbonGeo(path, w, y){
+  const n = path.length, pos = [], at = [], as = [], idx = [];
+  const L = [0];
+  for (let i = 1; i < n; i++) L.push(L[i - 1] + Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]));
+  const tot = L[n - 1] || 1;
+  for (let i = 0; i < n; i++){
+    const pa = path[Math.max(0, i - 1)], pb = path[Math.min(n - 1, i + 1)];
+    let tx = pb[0] - pa[0], tz = pb[1] - pa[1]; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl;
+    const nx = -tz * w / 2, nz = tx * w / 2;
+    pos.push(path[i][0] + nx, y, path[i][1] + nz, path[i][0] - nx, y, path[i][1] - nz);
+    at.push(L[i] / tot, L[i] / tot); as.push(L[i], L[i]);
+    if (i < n - 1){ const k = i * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute("aT", new THREE.Float32BufferAttribute(at, 1));
+  g.setAttribute("aS", new THREE.Float32BufferAttribute(as, 1));
+  g.setIndex(idx);
+  return g;
+}
+
+/* ---------- shaders ---------- */
+const UV_VS = `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
+const SI_GLSL = `vec3 silicon(vec2 q){ vec2 g = abs(fract(q * 24.0) - 0.5); float m = step(0.44, max(g.x, g.y)); return vec3(0.034, 0.046, 0.055) + m * vec3(0.009, 0.012, 0.015); }`;
+const SUB_FS = `uniform float uOpacity; varying vec2 vUv; ${SI_GLSL}
+void main(){
+  vec3 c = silicon(vUv);
+  float e = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
+  c = mix(c, vec3(0.085, 0.105, 0.12), (1.0 - smoothstep(0.0, 0.01, e)) * 0.8);
+  gl_FragColor = vec4(c, uOpacity);
+}`;
+const WG_VS = `attribute float aT; attribute float aS; varying float vT; varying float vS;
+void main(){ vT = aT; vS = aS; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
+const WG_FS = `uniform vec3 uColor; uniform vec3 uRib; uniform float uI; uniform float uReveal; uniform float uTime; uniform float uFreq;
+varying float vT; varying float vS;
+void main(){
+  if (vT > uReveal + 0.0001) discard;
+  float flow = 0.78 + 0.22 * sin(vS * uFreq - uTime * 5.0);
+  vec3 c = mix(uRib, uColor * 2.6 * flow, clamp(uI, 0.0, 1.0));
+  gl_FragColor = vec4(c, 1.0);
+}`;
+const PT_VS = `attribute float aA; varying float vA; uniform float uSize; uniform float uScale;
+void main(){ vA = aA; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = clamp(uSize * uScale / -mv.z, 1.5, 26.0); gl_Position = projectionMatrix * mv; }`;
+const PT_FS = `uniform vec3 uColor; varying float vA;
+void main(){ vec2 d = gl_PointCoord - 0.5; float a = smoothstep(0.5, 0.0, length(d)); a *= a; gl_FragColor = vec4(uColor * 2.4 * a * vA, a * vA); }`;
+/* one 8×8 block of 4×4 optical dot-product tiles, drawn procedurally */
+const ARRAY_FS = `uniform float uTime; uniform float uFade; uniform float uDetail; uniform float uSeed; uniform vec2 uHole;
+varying vec2 vUv;
+float h1(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float ln(float d, float w){ float aa = max(fwidth(d), 0.0001); return 1.0 - smoothstep(w - aa, w + aa, d); }
+${SI_GLSL}
+void main(){
+  vec2 tc = vUv * 8.0; vec2 id = floor(tc); vec2 f = fract(tc);
+  if (abs(id.x - uHole.x) < 0.5 && abs(id.y - uHole.y) < 0.5) discard;
+  vec3 base = silicon(f);
+  float edge = min(min(f.x, 1.0 - f.x), min(f.y, 1.0 - f.y));
+  base = mix(base, vec3(0.085, 0.105, 0.12), ln(edge, 0.006) * 0.8);
+  vec3 RED = vec3(1.0, 0.16, 0.10); vec3 AMB = vec3(0.92, 0.60, 0.22); vec3 CY = vec3(0.50, 0.86, 1.0);
+  float T = uTime * 0.5 + h1(id + uSeed) * 9.0;
+  float k0 = floor(T); float kf = smoothstep(0.2, 0.8, fract(T));
+  vec3 col = base; vec3 lit = vec3(0.0);
+  float s0 = 0.0; float s1 = 0.0; float s2 = 0.0; float s3 = 0.0; float busSum = 0.0;
+  for (int r = 0; r < 4; r++){
+    float fr = float(r);
+    float yr = 0.30 + 0.16 * fr;
+    float xa = h1(id * 1.7 + vec2(fr, k0)); float xb = h1(id * 1.7 + vec2(fr, k0 + 1.0));
+    float xi = mix(step(0.4, xa) * (0.5 + 0.5 * xa), step(0.4, xb) * (0.5 + 0.5 * xb), kf);
+    busSum += xi;
+    float onBus = step(0.12, f.x) * step(f.x, 0.88);
+    float taps = clamp(floor((f.x - 0.30) / 0.17) + 1.0, 0.0, 4.0);
+    float lb = ln(abs(f.y - yr), 0.0055) * onBus;
+    col = mix(col, vec3(0.06, 0.08, 0.095), lb);
+    lit += RED * lb * xi * (1.0 - 0.2 * taps) * 1.7;
+    float lr = ln(abs(length(f - vec2(0.085, yr)) - 0.026), 0.0045);
+    col = mix(col, vec3(0.26, 0.30, 0.34), lr);
+    lit += RED * lr * (1.0 - xi) * 0.9;
+    for (int c = 0; c < 4; c++){
+      float fc = float(c);
+      float xc = 0.30 + 0.17 * fc;
+      float w = 0.25 + 0.75 * h1(id * 3.1 + vec2(fr * 4.0 + fc, 7.0));
+      vec2 dq = abs(f - vec2(xc, yr));
+      float sq = 1.0 - smoothstep(0.015, 0.015 + max(fwidth(f.x), 0.0001), max(dq.x, dq.y));
+      col = mix(col, AMB * (0.22 + 0.45 * w), sq);
+      lit += AMB * sq * w * 0.5;
+      float contrib = xi * w * 0.25;
+      float lc = ln(abs(f.x - xc), 0.0045) * step(0.11, f.y) * step(f.y, yr);
+      col = mix(col, vec3(0.06, 0.08, 0.095), lc);
+      lit += RED * lc * contrib * 2.6;
+      if (c == 0) s0 += contrib; else if (c == 1) s1 += contrib; else if (c == 2) s2 += contrib; else s3 += contrib;
+    }
+  }
+  for (int c = 0; c < 4; c++){
+    float fc = float(c); float xc = 0.30 + 0.17 * fc;
+    float s = (c == 0) ? s0 : ((c == 1) ? s1 : ((c == 2) ? s2 : s3));
+    vec2 dq = abs(f - vec2(xc, 0.085)) - vec2(0.045, 0.022);
+    float pd = 1.0 - smoothstep(0.0, max(fwidth(f.x), 0.0001), max(dq.x, dq.y));
+    col = mix(col, vec3(0.17, 0.18, 0.2), pd);
+    lit += RED * pd * s * 2.2;
+    float lo = ln(abs(f.x - xc), 0.004) * step(0.015, f.y) * step(f.y, 0.06);
+    lit += CY * lo * (0.12 + s * 2.0);
+  }
+  lit += RED * ln(abs(f.x - 0.04), 0.005) * step(0.27, f.y) * step(f.y, 0.81) * 0.6;
+  vec3 nearC = col + lit;
+  vec3 farC = base + RED * 0.10 * busSum + CY * 0.04 * (s0 + s1 + s2 + s3);
+  gl_FragColor = vec4(mix(base, mix(farC, nearC, uDetail), uFade), 1.0);
+}`;
+
+/* ---------- materials ---------- */
+const M = {
+  black: std(0x101416, .25, .62),
+  steel: std(0x9aa3a8, .9, .32),
+  alu: std(0xc8d0d4, .95, .26),
+  mirror: std(0xe8eef0, 1, .04),
+  white: std(0xdfe4e6, 0, .5),
+  flag: std(0x111417, .3, .7),
+  glass: new THREE.MeshPhysicalMaterial({ color: 0xbfe6f0, metalness: 0, roughness: .06, transparent: true, opacity: .32, depthWrite: false }),
+  bsCoat: std(0xdde8ee, 1, .1, { transparent: true, opacity: .5, side: THREE.DoubleSide, depthWrite: false }),
+  polar: new THREE.MeshPhysicalMaterial({ color: 0x4f6d8c, transparent: true, opacity: .5, roughness: .1, depthWrite: false }),
+  gold: std(0xd9a54c, 1, .3),
+  heater: std(0xd8963a, .8, .35, { emissive: 0x3a1e05 }),
+  siDev: std(0x8796a2, .45, .3),
+  siDev2: std(0x39444c, .4, .4),
+  ge: std(0x6c6f74, .6, .35),
+  inp: std(0x6d4c3b, .5, .42),
+  plastic: std(0x15191b, .1, .55),
+  gloss: std(0x0b0e10, .3, .22),
+  pcbEdge: std(0x0d1a1f, .2, .6),
+  ic: std(0x16191c, .15, .5),
+  copper: std(0xc9773f, 1, .3),
+  cap: std(0x9aa3a8, .85, .35)
+};
+
+/* ===================== world layout (1 unit = 50 µm once the bench is folded) ===================== */
+const H = .9;
+const P = {
+  laser: [-3.15, 0], s1: [-1.8, 0], s2: [-.4, 0], s3: [1.2, 0],
+  fA: [-1.8, -.5], pA: [-1.8, -1.05], m1: [-1.8, -1.95],
+  fB: [-.4, -.5], pB: [-.4, -1.05], m2: [-.4, -1.95], ldrC: [-1.1, -3.25],
+  fA2: [2.05, 0], mA: [2.95, 0], fB2: [1.2, .55], mB: [1.2, 1.05],
+  l1: [1.2, -.72], l2: [1.2, -.92], scr: [1.2, -2.15], ldrS: [1.2, -2.55], ard: [2.75, -2.55]
+};
+const C = V3(-.1, 0, -.85);                         // centre of the setup = centre of its silicon tile
+const TILE = 8, OUR = { ix: 2, iz: 5 };
+const AC = V3(C.x + (3.5 - OUR.ix) * TILE, 0, C.z + (3.5 - OUR.iz) * TILE);   // centre of its 64-tile block
+const CL = [{ x: -111, z: -73 }, { x: 111, z: -73 }, { x: -111, z: 68 }, { x: 111, z: 68 }]; // shader clusters on the die
+const ARR = { x: 36, z: 2 };                         // tile block inside a cluster
+const D = V3(AC.x - (CL[0].x + ARR.x), 0, AC.z - (CL[0].z + ARR.z));          // die centre
+const PKG_TOP = -6.8, PCB_TOP = -50.8, PCB_BOT = -82.8, DESK = -382.8;
+const MX = -3200, MZ = -9400;                        // monitor, relative to the die
+const XMIN = -3.4, XMAX = 3.4;
+
+/* ===================== 1 · the bench (geometry from the paper's half adder) ===================== */
+function buildBench(){
+  const root = new THREE.Group(); scene.add(root);
+  const RED = 0xff3b2f;
+  const parts = [];
+  const part = x => { const g = new THREE.Group(); root.add(g); const p = { g, x, k: 1 }; parts.push(p); return p; };
+  const holder = (g, x, z, h) => { add(g, cyl(.15, .36, 20), M.black, [x, .18, z]); add(g, cyl(.055, h, 12), M.steel, [x, h / 2 + .02, z]); };
+  const F = k => V3(P[k][0], H, P[k][1]);
+
+  // breadboard with M6 holes on a 25 mm pitch, on a dark lab table
+  const bw = 7.6, bd = 6.3;
+  const boardTex = canvasTex(1024, 848, (x, w, h) => {
+    x.fillStyle = "#2a3034"; x.fillRect(0, 0, w, h);
+    const n = Math.round(bw / .208), m = Math.round(bd / .208);
+    for (let i = 0; i < n; i++) for (let j = 0; j < m; j++){
+      const cx = (i + .5) / n * w, cy = (j + .5) / m * h;
+      x.fillStyle = "#0e1214"; x.beginPath(); x.arc(cx, cy, 5, 0, 7); x.fill();
+      x.strokeStyle = "rgba(255,255,255,.08)"; x.lineWidth = 1; x.beginPath(); x.arc(cx, cy + .8, 5.6, .3, 2.8); x.stroke();
+    }
+  });
+  const side = std(0x1b2023, .5, .5);
+  const board = new THREE.Mesh(new THREE.BoxGeometry(bw, .25, bd), [side, side, std(0xffffff, .45, .55, { map: boardTex }), side, side, side]);
+  board.position.set(C.x, -.125, C.z); root.add(board);
+  const tableMat = std(0x040607, 0, 1, { transparent: true, envMapIntensity: .25 });
+  const table = add(root, new THREE.PlaneGeometry(90, 90), tableMat, [C.x, -.252, C.z], [-Math.PI / 2, 0, 0]);
+
+  // laser
+  { const g = part(P.laser[0]).g;
+    holder(g, P.laser[0] + .25, 0, H - .22);
+    add(g, cyl(.19, .9, 24), std(0x1a1d1f, .5, .45), [P.laser[0], H, 0], [0, 0, Math.PI / 2]);
+    add(g, cyl(.195, .14, 24), std(0xc9932e, .3, .5), [P.laser[0] - .22, H, 0], [0, 0, Math.PI / 2]);
+    add(g, cyl(.06, .02, 16), glowMat(RED, 3), [P.laser[0] + .46, H, 0], [0, 0, Math.PI / 2]); }
+
+  // beamsplitter cubes; the coating plane bisects the in and out beams
+  const bs = (k, rotY) => { const [x, z] = P[k]; const g = part(x).g; holder(g, x, z, H - .3);
+    add(g, new THREE.BoxGeometry(.52, .05, .52), M.black, [x, H - .27, z]);
+    add(g, new THREE.BoxGeometry(.42, .42, .42), M.glass, [x, H, z]);
+    add(g, new THREE.PlaneGeometry(.58, .42), M.bsCoat, [x, H, z], [0, rotY, 0]); };
+  bs("s1", Math.PI / 4); bs("s2", Math.PI / 4); bs("s3", -Math.PI / 4);
+
+  // kinematic mirror mounts
+  const mirror = (k, inDir, outDir) => { const [x, z] = P[k]; const g0 = part(x).g;
+    const n = V3().subVectors(outDir.clone().normalize(), inDir.clone().normalize()).normalize();
+    holder(g0, x - n.x * .2, z - n.z * .2, H - .3);
+    const m = new THREE.Group(); m.position.set(x, H, z); m.quaternion.setFromUnitVectors(V3(0, 0, 1), n); g0.add(m);
+    add(m, new THREE.BoxGeometry(.58, .58, .1), M.black, [0, 0, -.1]);
+    add(m, cyl(.21, .05, 32), M.mirror, [0, 0, -.02], [Math.PI / 2, 0, 0]);
+    [[.21, .21], [-.21, -.21]].forEach(([a, b]) => add(m, cyl(.04, .16, 10), M.alu, [a, b, -.2], [Math.PI / 2, 0, 0])); };
+  mirror("m1", V3(0, 0, -1), V3().subVectors(F("ldrC"), F("m1")));
+  mirror("m2", V3(0, 0, -1), V3().subVectors(F("ldrC"), F("m2")));
+  mirror("mA", V3(1, 0, 0), V3(-1, 0, 0));
+  mirror("mB", V3(0, 0, 1), V3(0, 0, -1));
+
+  // polarisers at different angles: each beam gets its own power
+  [["pA", .35], ["pB", 1.05]].forEach(([k, ang]) => { const [x, z] = P[k]; const g = part(x).g; holder(g, x, z, H - .3);
+    const pg = new THREE.Group(); pg.position.set(x, H, z); g.add(pg);
+    add(pg, new THREE.TorusGeometry(.24, .045, 10, 32), M.black);
+    add(pg, cyl(.22, .015, 32), M.polar, [0, 0, 0], [Math.PI / 2, 0, 0]);
+    add(pg, new THREE.BoxGeometry(.02, .42, .03), M.white, [0, 0, .02], [0, 0, ang]); });
+
+  // beam blocks are the inputs: down = blocked (0), up = open (1)
+  const flags = {};
+  const flag = (k, axis, hit) => { const [x, z] = P[k]; const p = part(x); const g = p.g;
+    const bx = x + (axis === "z" ? .38 : 0), bz = z + (axis === "x" ? .38 : 0);
+    add(g, cyl(.12, .3, 16), M.black, [bx, .15, bz]);
+    add(g, cyl(.04, H + .25, 10), M.steel, [bx, (H + .25) / 2, bz]);
+    const piv = new THREE.Group(); piv.position.set(bx, H + .25, bz); g.add(piv);
+    const arm = new THREE.Group(); piv.add(arm);
+    const dir = axis === "z" ? V3(-1, 0, 0) : V3(0, 0, -1);
+    add(arm, new THREE.BoxGeometry(axis === "z" ? .38 : .04, .04, axis === "z" ? .04 : .38), M.alu, [dir.x * .19, 0, dir.z * .19]);
+    add(arm, new THREE.BoxGeometry(axis === "z" ? .3 : .04, .38, axis === "z" ? .04 : .3), M.flag, [dir.x * .38, -.2, dir.z * .38]);
+    flags[k] = { arm, axis, up: 0, p, hit: glow(g, RED, .35, 0, [x + hit[0], H, z + hit[1]]) }; };
+  flag("fA", "z", [0, .02]); flag("fB", "z", [0, .02]); flag("fA2", "x", [-.02, 0]); flag("fB2", "z", [0, -.02]);
+
+  // two lenses close together to enlarge the fringes
+  ["l1", "l2"].forEach(k => { const [x, z] = P[k]; const g = part(x).g; holder(g, x, z, H - .3);
+    add(g, new THREE.TorusGeometry(.2, .035, 8, 28), M.black, [x, H, z]);
+    const lens = add(g, new THREE.SphereGeometry(.18, 24, 12), M.glass, [x, H, z]); lens.scale.set(1, 1, .22); });
+
+  // screen with a hole cut on a dark fringe
+  const scrP = part(P.scr[0]); const sg = scrP.g;
+  holder(sg, P.scr[0], P.scr[1] - .05, .2);
+  add(sg, new THREE.BoxGeometry(1.5, 1.5, .06), std(0x202528, .2, .7), [P.scr[0], H + .1, P.scr[1] - .04]);
+  const screenU = { fr: { value: 0 }, spot: { value: 0 }, phase: { value: 0 }, t: { value: 0 } };
+  const screen = new THREE.ShaderMaterial({
+    uniforms: screenU, vertexShader: UV_VS,
+    fragmentShader: `varying vec2 vUv; uniform float fr, spot, phase, t;
+      float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      void main(){
+        vec2 p = vUv - 0.5; vec2 hc = vec2(0.06, -0.055);
+        float env = exp(-dot(p, p) * 10.0);
+        float ph = 9.0 * 6.2831 * dot(p - hc, normalize(vec2(0.85, 0.5))) + 3.14159 + phase;
+        float fringe = 0.5 + 0.5 * cos(ph);
+        float speck = 0.7 + 0.6 * hash(floor(vUv * 150.0) + floor(t * 4.0));
+        float I = mix(1.0, fringe * 1.6, fr) * env * spot * speck;
+        vec3 c = vec3(0.16, 0.165, 0.17) + vec3(1.0, 0.17, 0.1) * I * 2.0;
+        float hole = 1.0 - smoothstep(0.022, 0.03, length(p - hc));
+        c = mix(c, vec3(0.0), hole);
+        gl_FragColor = vec4(c, 1.0);
+      }`
+  });
+  add(sg, new THREE.PlaneGeometry(1.36, 1.36), screen, [P.scr[0], H + .1, P.scr[1]]);
+  const holeW = V3(P.scr[0] + .06 * 1.36, H + .1 - .055 * 1.36, P.scr[1]);
+
+  // photoresistors on small boards
+  const ldrTex = canvasTex(128, 128, (x, w) => {
+    x.fillStyle = "#121619"; x.fillRect(0, 0, w, w);
+    x.fillStyle = "#d9893a"; x.beginPath(); x.arc(64, 64, 52, 0, 7); x.fill();
+    x.strokeStyle = "#5a2d12"; x.lineWidth = 5; x.beginPath();
+    for (let i = 0; i < 7; i++){ const yy = 30 + i * 11; x.moveTo(i % 2 ? 40 : 30, yy); x.lineTo(i % 2 ? 98 : 88, yy); }
+    x.stroke(); x.fillStyle = "#c9cdd0"; x.beginPath(); x.arc(64, 20, 6, 0, 7); x.arc(64, 108, 6, 0, 7); x.fill();
+  });
+  const ldr = (x, z, h) => { const p = part(x); const g = p.g; holder(g, x, z - .1, h - .3);
+    add(g, new THREE.BoxGeometry(.5, .5, .06), std(0x1c2a20, .1, .6), [x, h, z - .03]);
+    const m = new THREE.MeshBasicMaterial({ map: ldrTex, toneMapped: false }); m.color.setScalar(.55);
+    add(g, new THREE.PlaneGeometry(.38, .38), m, [x, h, z + .005]);
+    return { p, gl: glow(g, 0xff4a3a, 1.0, 0, [x, h, z + .08]) }; };
+  const LC = ldr(P.ldrC[0], P.ldrC[1], H);
+  const LS = ldr(P.ldrS[0], P.ldrS[1], holeW.y);
+
+  // Arduino reading both photoresistors
+  { const g = part(P.ard[0]).g;
+    add(g, new THREE.BoxGeometry(1.1, .05, .8), std(0x1a6f8a, .1, .5), [2.75, .05, -2.55]);
+    add(g, new THREE.BoxGeometry(.5, .05, .14), M.black, [2.75, .1, -2.55]);
+    add(g, new THREE.BoxGeometry(.3, .2, .32), M.alu, [2.27, .15, -2.75]);
+    for (let i = 0; i < 10; i++) add(g, new THREE.BoxGeometry(.06, .1, .06), M.black, [2.35 + i * .09, .12, -2.22]);
+    tube(g, [[P.ldrC[0], H - .25, P.ldrC[1] - .1], [-.2, .1, -3.4], [2.2, .1, -3.0], [2.6, .14, -2.24]], .025, std(0xc23b2b, 0, .6));
+    tube(g, [[P.ldrS[0], holeW.y - .25, P.ldrS[1] - .1], [1.6, .2, -2.55], [2.4, .14, -2.24]], .025, std(0x2c2f31, 0, .6)); }
+
+  // beams
+  const beamG = new THREE.Group(); root.add(beamG);
+  const seg = (a, b, k = 1) => { const m = rod(beamG, a, b, .013, glowMat(RED, 3.2 * k, { transparent: true })); return m; };
+  const always = [
+    seg(F("laser").add(V3(.46, 0, 0)), F("s1")), seg(F("s1"), F("s2"), .8), seg(F("s2"), F("s3"), .65),
+    seg(F("s1"), F("fA"), .8), seg(F("s2"), F("fB"), .65), seg(F("s3"), F("fA2"), .55), seg(F("s3"), F("fB2"), .55)
+  ];
+  const gated = {
+    A: [seg(F("fA"), F("pA"), .8), seg(F("pA"), F("m1"), .45), seg(F("m1"), F("ldrC"), .45), seg(F("fA2"), F("mA"), .55)],
+    B: [seg(F("fB"), F("pB"), .65), seg(F("pB"), F("m2"), .5), seg(F("m2"), F("ldrC"), .5), seg(F("fB2"), F("mB"), .55)],
+    out: [seg(F("s3"), F("l1"), .7)],
+    sum: [seg(holeW, V3(P.ldrS[0] + .08, holeW.y, P.ldrS[1] + .02), .6)]
+  };
+  const cone = add(beamG, new THREE.CylinderGeometry(.03, .5, 1.12, 32, 1, true), new THREE.MeshBasicMaterial({ color: RED, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }), [P.scr[0], H + .05, (P.l2[1] + P.scr[1]) / 2], [Math.PI / 2, 0, 0]);
+
+  function update(t, dt, lv, fold){
+    root.visible = fold < .999;
+    if (!root.visible) return;
+    for (const p of parts){
+      const a = .34 * (p.x - XMIN) / (XMAX - XMIN), s = ease(sstep(a, a + .36, fold));
+      p.g.scale.y = Math.max(.002, 1 - s); p.g.visible = s < .995; p.k = 1 - s;
+    }
+    const bk = 1 - sstep(.02, .36, fold);
+    beamG.visible = bk > .01;
+    const setOp = (arr, o) => arr.forEach(m => { m.material.opacity = o * bk; m.visible = o * bk > .02; });
+    setOp(always, 1); setOp(gated.A, lv.A); setOp(gated.B, lv.B); setOp(gated.out, lv.out); setOp(gated.sum, lv.sum);
+    cone.material.opacity = lv.out * .12 * bk;
+    screenU.spot.value = lv.out; screenU.fr.value = lv.fr; screenU.t.value = t;
+    screenU.phase.value = Math.sin(t * 1.3) * .25 + Math.sin(t * 3.7) * .08;
+    const k = 1 - Math.pow(.004, dt);
+    flags.fA.up = lerp(flags.fA.up, S.a, k); flags.fB.up = lerp(flags.fB.up, S.b, k);
+    flags.fA2.up = lerp(flags.fA2.up, S.a, k); flags.fB2.up = lerp(flags.fB2.up, S.b, k);
+    Object.values(flags).forEach(f => {
+      const ang = f.up * 1.35;
+      if (f.axis === "z") f.arm.rotation.z = -ang; else f.arm.rotation.x = ang;
+      f.hit.material.opacity = (1 - f.up) * .9 * f.p.k * bk;
+    });
+    const c = IA * lv.A + IB * lv.B;
+    LC.gl.material.opacity = Math.min(1, c * .8) * LC.p.k; LC.gl.scale.setScalar(.6 + c * .6);
+    LS.gl.material.opacity = lv.sum * .9 * LS.p.k;
+    board.visible = fold < .75;
+    tableMat.opacity = 1 - sstep(.25, .65, fold); table.visible = tableMat.opacity > .01;
+  }
+  return { update };
+}
+
+/* ===================== 2 · the same circuit as a silicon photonic cell ===================== */
+function buildCell(){
+  const root = new THREE.Group(); scene.add(root);
+  const RED = 0xff3b2f;
+  const subU = { uOpacity: { value: 0 } };
+  const subMat = new THREE.ShaderMaterial({ uniforms: subU, vertexShader: UV_VS, fragmentShader: SUB_FS, transparent: true });
+  add(root, new THREE.BoxGeometry(TILE, .3, TILE), subMat, [C.x, -.1485, C.z]);
+
+  const els = [];
+  const el = (x, z, d) => { const g = new THREE.Group(); g.position.set(x, 0, z); g.scale.setScalar(.001); root.add(g); els.push({ g, d }); return g; };
+  const dl = x => .45 + .25 * (x - XMIN) / (XMAX - XMIN);
+
+  // III–V laser bonded at the left edge
+  { const g = el(P.laser[0], 0, dl(P.laser[0]));
+    add(g, new THREE.BoxGeometry(.9, .14, .36), M.inp, [0, .07, 0]);
+    add(g, new THREE.BoxGeometry(.66, .02, .16), M.gold, [-.06, .15, 0]);
+    add(g, new THREE.PlaneGeometry(.05, .1), glowMat(RED, 3), [.452, .07, 0], [0, Math.PI / 2, 0]); }
+  // MMI splitters
+  const mmi = (k, w, d) => { const [x, z] = P[k]; const g = el(x, z, dl(x)); add(g, new THREE.BoxGeometry(w, .03, d), M.siDev, [0, .015, 0]); };
+  mmi("s1", .46, .2); mmi("s2", .46, .2); mmi("s3", .34, .34);
+  // micro-ring modulators (the inputs) with electrode pads
+  const rings = {};
+  const ring = (k, off) => { const [x, z] = P[k]; const g = el(x + off[0], z + off[1], dl(x));
+    add(g, new THREE.TorusGeometry(.13, .022, 8, 40), M.siDev, [0, .02, 0], [-Math.PI / 2, 0, 0]);
+    const gl = add(g, new THREE.TorusGeometry(.13, .03, 8, 40), glowMat(RED, 2.6, { transparent: true, opacity: 0, depthWrite: false }), [0, .03, 0], [-Math.PI / 2, 0, 0]);
+    const l = Math.hypot(off[0], off[1]);
+    add(g, new THREE.BoxGeometry(.12, .012, .12), M.gold, [off[0] / l * .24, .008, off[1] / l * .24]);
+    rings[k] = gl; };
+  ring("fA", [-.2, 0]); ring("fB", [-.2, 0]); ring("fA2", [0, .2]); ring("fB2", [-.2, 0]);
+  // attenuators (the polarisers' job): a heated serpentine over the waveguide
+  const heater = k => { const [x, z] = P[k]; const g = el(x, z, dl(x));
+    for (let i = 0; i < 5; i++) add(g, new THREE.BoxGeometry(.2, .012, .025), M.heater, [0, .022, -.16 + i * .08]);
+    for (let i = 0; i < 4; i++) add(g, new THREE.BoxGeometry(.025, .012, .08), M.heater, [i % 2 ? -.0875 : .0875, .022, -.12 + i * .08]);
+    add(g, new THREE.BoxGeometry(.12, .012, .12), M.gold, [.24, .008, -.16]); add(g, new THREE.BoxGeometry(.12, .012, .12), M.gold, [.24, .008, .16]); };
+  heater("pA"); heater("pB");
+  // loop mirrors close the interferometer arms
+  const loop = (k, dir) => { const [x, z] = P[k]; const g = el(x + dir[0] * .2, z + dir[1] * .2, dl(x));
+    add(g, new THREE.TorusGeometry(.2, .02, 8, 48), M.siDev, [0, .02, 0], [-Math.PI / 2, 0, 0]);
+    return add(g, new THREE.TorusGeometry(.2, .028, 8, 48), glowMat(RED, 2.4, { transparent: true, opacity: 0, depthWrite: false }), [0, .03, 0], [-Math.PI / 2, 0, 0]); };
+  const loopA = loop("mA", [1, 0]), loopB = loop("mB", [0, 1]);
+  // germanium photodiodes
+  const pd = (x, z) => { const g = el(x, z, dl(x));
+    add(g, new THREE.BoxGeometry(.56, .025, .34), M.siDev2, [0, .0125, 0]);
+    add(g, new THREE.BoxGeometry(.36, .04, .14), M.ge, [0, .03, 0]);
+    add(g, new THREE.BoxGeometry(.5, .014, .05), M.gold, [0, .03, .13]); add(g, new THREE.BoxGeometry(.5, .014, .05), M.gold, [0, .03, -.13]);
+    return glow(g, 0xff4a3a, .9, 0, [0, .1, 0]); };
+  const pdC = pd(P.ldrC[0], P.ldrC[1]), pdS = pd(P.ldrS[0], P.ldrS[1]);
+  // transimpedance amplifiers + comparator, where the Arduino was
+  { const tex = canvasTex(256, 172, (x, w, h) => {
+      const r = rng(7); x.fillStyle = "#20262c"; x.fillRect(0, 0, w, h);
+      for (let row = 0; row < 21; row++){ let cx = 4; while (cx < w - 4){ const cw = 3 + r() * 12; const v = 46 + r() * 52 | 0; x.fillStyle = `rgb(${v * .85 | 0},${v},${v * 1.18 | 0})`; x.fillRect(cx, 4 + row * 8, cw - 1, 6); cx += cw; } }
+      x.strokeStyle = "rgba(217,165,76,.7)"; x.lineWidth = 2; x.strokeRect(2, 2, w - 4, h - 4);
+    });
+    const g = el(P.ard[0], P.ard[1], dl(P.ard[0]));
+    add(g, new THREE.BoxGeometry(1.2, .03, .8), std(0xffffff, .3, .5, { map: tex }), [0, .015, 0]); }
+  // signal pads; inputs and outputs glow cyan when they carry a 1
+  const padGlow = {};
+  const pad = (x, z, key) => { const g = el(x, z, .82);
+    add(g, new THREE.BoxGeometry(.26, .012, .26), M.gold, [0, .006, 0]);
+    if (key) padGlow[key] = add(g, new THREE.PlaneGeometry(.4, .4), glowMat(0x8fe3ff, 2, { transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }), [0, .02, 0], [-Math.PI / 2, 0, 0]); };
+  pad(-2.4, 2.9, "A"); pad(-.9, 2.9, "B"); pad(3.62, -2.25, "SUM"); pad(3.62, -2.85, "CARRY");
+  // bond-pad ring
+  { const g = el(0, 0, .86); const geo = new THREE.BoxGeometry(.16, .01, .16); const spots = [];
+    for (let x = -3.6; x <= 3.45; x += .45) spots.push([x, C.z - 3.72]);
+    for (let z = C.z - 3.25; z <= C.z + 3.5; z += .45) if (Math.abs(z) > .45) spots.push([C.x - 3.75, z]);
+    for (let x = -3.6; x <= 3.45; x += .45) if (Math.abs(x + 2.4) > .3 && Math.abs(x + .9) > .3) spots.push([x, 2.95 + .2]);
+    for (let z = C.z - 3.25; z <= C.z + 3.5; z += .45) if (z > -1.9 || z < -3.2) spots.push([C.x + 3.75, z]);
+    const im = new THREE.InstancedMesh(geo, M.gold, spots.length); const o = new THREE.Object3D();
+    spots.forEach(([x, z], i) => { o.position.set(x, .005, z); o.updateMatrix(); im.setMatrixAt(i, o.matrix); });
+    g.add(im); }
+
+  // metal traces: gold, with a cyan overlay that lights when the bit is 1
+  const traces = new THREE.Group(); root.add(traces);
+  const traceMat = std(0xc99a48, .9, .35, { transparent: true, opacity: 0 });
+  const sig = {};
+  const trace = (pts, key) => {
+    traces.add(new THREE.Mesh(ribbonGeo(roundPath(pts, .08), .045, .008), traceMat));
+    if (key){ if (!sig[key]) sig[key] = glowMat(0x8fe3ff, 2, { transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+      traces.add(new THREE.Mesh(ribbonGeo(roundPath(pts, .08), .07, .011), sig[key])); } };
+  trace([[-2.4, 2.9], [-2.4, -.5], [-2.24, -.5]], "A");
+  trace([[-2.4, 2.4], [2.05, 2.4], [2.05, .44]], "A");
+  trace([[-.9, 2.9], [-.9, -.5], [-.84, -.5]], "B");
+  trace([[-.9, 2.0], [.62, 2.0], [.62, .55], [.76, .55]], "B");
+  trace([[-1.1, -3.42], [-1.1, -3.7], [2.4, -3.7], [2.4, -2.95]]);
+  trace([[1.48, -2.55], [2.15, -2.55]]);
+  trace([[3.35, -2.25], [3.5, -2.25]], "SUM");
+  trace([[3.35, -2.85], [3.5, -2.85]], "CARRY");
+
+  // waveguides: same paths the beams took on the bench
+  const wgs = [];
+  const clad = new THREE.MeshBasicMaterial({ color: 0x0f191e, toneMapped: false });
+  const wg = (pts, key, k, st) => {
+    const path = roundPath(pts, .22);
+    const u = { uColor: { value: new THREE.Color(RED) }, uRib: { value: new THREE.Color(.05, .068, .08) }, uI: { value: 0 }, uReveal: { value: 0 }, uTime: { value: 0 }, uFreq: { value: 14 } };
+    root.add(new THREE.Mesh(ribbonGeo(path, .06, .012), new THREE.ShaderMaterial({ uniforms: u, vertexShader: WG_VS, fragmentShader: WG_FS, side: THREE.DoubleSide })));
+    const cm = new THREE.Mesh(ribbonGeo(path, .2, .005), clad); cm.visible = false; root.add(cm);
+    wgs.push({ u, key, k, st, cm }); };
+  wg([[-2.7, 0], [-1.8, 0]], "on", 1, .50);
+  wg([[-1.8, 0], [-.4, 0]], "on", .8, .55);
+  wg([[-.4, 0], [1.2, 0]], "on", .65, .60);
+  wg([[-1.8, 0], [-1.8, -.5]], "on", .8, .58);
+  wg([[-1.8, -.5], [-1.8, -1.95], [-1.1, -3.08]], "A", .8, .63);
+  wg([[-.4, 0], [-.4, -.5]], "on", .65, .62);
+  wg([[-.4, -.5], [-.4, -1.95], [-1.1, -3.08]], "B", .65, .67);
+  wg([P.s3, P.fA2], "on", .55, .66);
+  wg([P.fA2, P.mA], "A", .55, .71);
+  wg([P.s3, P.fB2], "on", .55, .66);
+  wg([P.fB2, P.mB], "B", .55, .71);
+  wg([[1.2, 0], [1.2, -2.38]], "S", .7, .74);
+
+  function update(t, lv, fold, show){
+    root.visible = show && fold > .2;
+    if (!root.visible) return;
+    subU.uOpacity.value = sstep(.25, .6, fold);
+    subMat.transparent = subU.uOpacity.value < .999;
+    for (const e of els) e.g.scale.setScalar(Math.max(.001, ease(sstep(e.d, e.d + .2, fold))));
+    const lev = { on: 1, A: lv.A, B: lv.B, S: lv.sum };
+    for (const w of wgs){
+      const r = clamp((fold - w.st) / .2, 0, 1);
+      w.u.uReveal.value = r; w.cm.visible = r > .02;
+      w.u.uI.value = lev[w.key] * w.k; w.u.uTime.value = t;
+    }
+    rings.fA.material.opacity = (1 - lv.A) * .9; rings.fA2.material.opacity = (1 - lv.A) * .9;
+    rings.fB.material.opacity = (1 - lv.B) * .9; rings.fB2.material.opacity = (1 - lv.B) * .9;
+    loopA.material.opacity = lv.A * .85; loopB.material.opacity = lv.B * .85;
+    const c = IA * lv.A + IB * lv.B;
+    pdC.material.opacity = Math.min(1, c * .8); pdC.scale.setScalar(.5 + c * .6);
+    pdS.material.opacity = lv.sum * .9;
+    const tv = sstep(.72, .95, fold);
+    traceMat.opacity = tv; traces.visible = tv > .01;
+    sig.A.opacity = lv.A * .8 * tv; sig.B.opacity = lv.B * .8 * tv; sig.SUM.opacity = lv.sum * .8 * tv; sig.CARRY.opacity = lv.carry * .8 * tv;
+    padGlow.A.material.opacity = lv.A * .7; padGlow.B.material.opacity = lv.B * .7;
+    padGlow.SUM.material.opacity = lv.sum * .7; padGlow.CARRY.material.opacity = lv.carry * .7;
+  }
+  return { update };
+}
+
+/* ===================== 3 · blocks of 4×4 optical tiles, one per shader cluster ===================== */
+function buildArrays(){
+  const us = [];
+  CL.forEach((cl, i) => {
+    const u = { uTime: { value: 0 }, uFade: { value: 0 }, uDetail: { value: 1 }, uSeed: { value: i * 3.7 + .5 }, uHole: { value: new THREE.Vector2(-9, -9) } };
+    const m = new THREE.ShaderMaterial({ uniforms: u, vertexShader: UV_VS, fragmentShader: ARRAY_FS, extensions: { derivatives: true } });
+    const mesh = add(scene, new THREE.PlaneGeometry(64, 64), m, [D.x + cl.x + ARR.x, 0, D.z + cl.z + ARR.z], [-Math.PI / 2, 0, 0]);
+    us.push({ u, mesh });
+  });
+  return {
+    update(t, key, dist, ourCell){
+      const vis = key > 2.85, fade = sstep(2.95, 3.4, key), det = 1 - sstep(260, 900, dist);
+      us.forEach((a, i) => {
+        a.mesh.visible = vis;
+        a.u.uTime.value = t; a.u.uFade.value = i === 0 ? fade : 1; a.u.uDetail.value = det;
+        if (i === 0) a.u.uHole.value.set(ourCell ? OUR.ix : -9, ourCell ? 7 - OUR.iz : -9);
+      });
+    }
+  };
+}
+
+/* ===================== 4 · the GPU die, laid out after ATTILA's blocks ===================== */
+function buildDie(){
+  const root = new THREE.Group(); root.position.copy(D); scene.add(root);
+  const tex = {};
+  const mk = (kind, draw) => { const t = canvasTex(256, 256, draw); t.wrapS = t.wrapT = THREE.RepeatWrapping; tex[kind] = t; };
+  mk("logic", (x, w, h) => { const r = rng(11); x.fillStyle = "#262c33"; x.fillRect(0, 0, w, h);
+    for (let row = 0; row < 32; row++){ let cx = 0; while (cx < w){ const cw = 2 + r() * 10; const v = 40 + r() * 52 | 0; x.fillStyle = `rgb(${v * .86 | 0},${v},${v * 1.16 | 0})`; x.fillRect(cx, row * 8 + 1, cw - 1, 6); cx += cw; } }
+    x.fillStyle = "rgba(200,225,240,.07)"; for (let i = 0; i < 10; i++) x.fillRect(r() * w | 0, 0, 2, h); });
+  mk("sram", (x, w, h) => { x.fillStyle = "#2a2536"; x.fillRect(0, 0, w, h);
+    for (let i = 0; i < 64; i++) for (let j = 0; j < 64; j++){ x.fillStyle = (i + j) % 2 ? "#3d3552" : "#342e46"; x.fillRect(i * 4, j * 4, 3, 3); }
+    x.fillStyle = "#1c1926"; x.fillRect(0, 124, w, 8); x.fillRect(124, 0, 8, h); });
+  mk("oe", (x, w, h) => { const r = rng(23); x.fillStyle = "#1f2b26"; x.fillRect(0, 0, w, h);
+    for (let i = 0; i < 26; i++){ const bw = 16 + r() * 50, bh = 10 + r() * 40, bx = r() * (w - bw), by = r() * (h - bh); x.fillStyle = `rgba(${90 + r() * 40 | 0},${130 + r() * 50 | 0},${105 + r() * 40 | 0},.55)`; x.fillRect(bx, by, bw, bh); x.strokeStyle = "rgba(220,240,230,.18)"; x.strokeRect(bx + .5, by + .5, bw - 1, bh - 1); } });
+  mk("phy", (x, w, h) => { x.fillStyle = "#2c261d"; x.fillRect(0, 0, w, h);
+    for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++){ x.fillStyle = "#8a7550"; x.beginPath(); x.arc(16 + i * 32, 16 + j * 32, 9, 0, 7); x.fill(); x.fillStyle = "#c2a873"; x.beginPath(); x.arc(14 + i * 32, 14 + j * 32, 4, 0, 7); x.fill(); } });
+  mk("rop", (x, w, h) => { const r = rng(31); x.fillStyle = "#262a33"; x.fillRect(0, 0, w, h);
+    for (let i = 0; i < 64; i++) for (let j = 0; j < 32; j++){ x.fillStyle = (i + j) % 2 ? "#3a3f50" : "#323646"; x.fillRect(i * 4, j * 4, 3, 3); }
+    for (let row = 16; row < 32; row++){ let cx = 0; while (cx < w){ const cw = 2 + r() * 9; const v = 40 + r() * 46 | 0; x.fillStyle = `rgb(${v * .9 | 0},${v},${v * 1.12 | 0})`; x.fillRect(cx, row * 8 + 1, cw - 1, 6); cx += cw; } } });
+  mk("optic", (x, w, h) => { x.fillStyle = "#2a1414"; x.fillRect(0, 0, w, h); x.strokeStyle = "#7a2a22"; x.lineWidth = 3; for (let i = 0; i < 8; i++){ x.beginPath(); x.moveTo(0, 16 + i * 32); x.lineTo(w, 16 + i * 32); x.stroke(); } });
+  const TINT = { logic: 0xb4c0cc, sram: 0xc3b6dc, oe: 0x86a593, phy: 0xd8bc92, rop: 0xb8bdcc, optic: 0xe08070 };
+  const mats = {}; Object.keys(tex).forEach(k => { mats[k] = std(TINT[k], .35, .5, { map: tex[k] }); });
+  const lineMat = new THREE.LineBasicMaterial({ color: 0x4a6470, transparent: true, opacity: .75 });
+  const outline = [];
+  const blocks = [];
+  const block = (x0, z0, x1, z1, kind, name, ox = 0, oz = 0) => {
+    x0 += ox; x1 += ox; z0 += oz; z1 += oz;
+    const w = x1 - x0, d = z1 - z0;
+    const g = new THREE.BoxGeometry(w, .8, d);
+    const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * w / 40, uv.getY(i) * d / 40);
+    add(root, g, mats[kind], [(x0 + x1) / 2, -.4, (z0 + z1) / 2]);
+    outline.push(x0, .15, z0, x1, .15, z0, x1, .15, z0, x1, .15, z1, x1, .15, z1, x0, .15, z1, x0, .15, z1, x0, .15, z0);
+    if (name) blocks.push({ name, x: (x0 + x1) / 2, z: (z0 + z1) / 2 });
+  };
+  add(root, new THREE.BoxGeometry(400, 6, 400), std(0x0d1317, .55, .42), [0, -3.8, 0]);
+  outline.push(-197, -.5, -197, 197, -.5, -197, 197, -.5, -197, 197, -.5, 197, 197, -.5, 197, -197, -.5, 197, -197, -.5, 197, -197, -.5, -197);
+  // top band
+  block(-186, -186, -110, -148, "logic", "Command processor");
+  block(-106, -186, -36, -148, "logic", "Streamer");
+  block(36, -186, 124, -148, "oe", "DAC · display out");
+  block(128, -186, 186, -148, "oe");
+  // pipeline column
+  block(-32, -186, 32, -140, "logic", "Primitive assembly");
+  block(-32, -136, 32, -92, "logic", "Clipper");
+  block(-32, -88, 32, -44, "logic", "Triangle setup");
+  block(-32, -40, 32, 32, "logic", "Fragment generation");
+  block(-32, 36, 32, 84, "sram", "Hierarchical Z");
+  block(-32, 88, 32, 136, "logic", "Interpolator");
+  // ROPs and memory controller
+  block(-186, 140, -112, 186, "rop", "Z/stencil + colour");
+  block(-108, 140, -36, 186, "rop");
+  block(-32, 140, 32, 186, "logic", "Memory controller");
+  block(36, 140, 108, 186, "rop");
+  block(112, 140, 186, 186, "rop");
+  // I/O ring
+  block(-198, -150, -189, 186, "phy", "GDDR3 PHY");
+  block(189, 30, 198, 186, "phy"); block(189, -186, 198, -30, "phy");
+  block(-186, 189, 186, 198, "phy");
+  block(-186, -198, 30, -189, "phy");
+  block(186, -14, 199, 10, "optic");
+  // four unified shader clusters
+  const sub = [];
+  CL.forEach((cl, i) => {
+    const o = [cl.x, cl.z];
+    block(-12, -66, 30, -38, "logic", i === 0 ? "Texture unit" : null, ...o);
+    block(34, -66, 72, -38, "sram", i === 0 ? "Texture L1" : null, ...o);
+    block(-72, -66, -16, -14, "logic", i === 0 ? "Fetch · decode · schedule" : null, ...o);
+    block(-72, -10, -16, 52, "sram", i === 0 ? "Register file" : null, ...o);
+    block(-12, -30, 0, 34, "oe", i === 0 ? "Drivers + DACs" : null, ...o);
+    block(4, 38, 68, 50, "oe", i === 0 ? "TIAs + ADCs" : null, ...o);
+    block(-72, 56, 72, 66, "logic", null, ...o);
+    add(root, new THREE.BoxGeometry(64, .5, 64), std(0x0b1013, .4, .5), [cl.x + ARR.x, -.55, cl.z + ARR.z]);
+    sub.push({ x: cl.x, z: cl.z });
+  });
+  const lg = new THREE.BufferGeometry(); lg.setAttribute("position", new THREE.Float32BufferAttribute(outline, 3));
+  const lines = new THREE.LineSegments(lg, lineMat); root.add(lines);
+
+  // light tree: fibre input on the right edge, branching to the four tile blocks
+  const treeU = [];
+  const lightWG = pts => { const u = { uColor: { value: new THREE.Color(0xff3b2f) }, uRib: { value: new THREE.Color(.05, .068, .08) }, uI: { value: .8 }, uReveal: { value: 1 }, uTime: { value: 0 }, uFreq: { value: .32 } };
+    root.add(new THREE.Mesh(ribbonGeo(pts, 1.6, .9), new THREE.ShaderMaterial({ uniforms: u, vertexShader: WG_VS, fragmentShader: WG_FS, side: THREE.DoubleSide }))); treeU.push(u); };
+  lightWG([[199, -2], [147, -2], [-75, -2]]);
+  lightWG([[147, -2], [147, -39]]); lightWG([[147, -2], [147, 38]]);
+  lightWG([[-75, -2], [-75, -39]]); lightWG([[-75, -2], [-75, 38]]);
+  const lightIn = glow(root, 0xff3b2f, 26, .8, [196, 2, -2]);
+
+  // digital data moving through the pipeline
+  const paths = [];
+  const P2 = (...pts) => paths.push(pts);
+  P2([-148, -167], [-71, -167]);
+  CL.forEach(cl => P2([-71, -167], [-71, -144], [cl.x, -144], [cl.x, cl.z]));
+  CL.forEach(cl => P2([cl.x + 6, cl.z], [cl.x + 6, -146], [0, -146], [0, -163]));
+  P2([0, -163], [0, -114], [0, -66], [0, -4], [0, 60], [0, 112]);
+  CL.forEach(cl => P2([0, 112], [Math.sign(cl.x) * 34, 112], [Math.sign(cl.x) * 34, cl.z + 8], [cl.x, cl.z + 8]));
+  const ropX = [-149, 149, -72, 72];
+  CL.forEach((cl, i) => P2([cl.x - 6, cl.z + 8], [cl.x - 6, 138], [ropX[i], 138], [ropX[i], 163], [0, 163]));
+  P2([0, 163], [0, 193], [-150, 193]); P2([0, 163], [0, 193], [150, 193]);
+  P2([0, 163], [-34, 163], [-34, 120], [-193, 120]); P2([0, 163], [34, 163], [34, 120], [193, 120]);
+  P2([0, 163], [34, 163], [34, -167], [80, -167]);
+  const segs = paths.map(pts => { const L = [0]; for (let i = 1; i < pts.length; i++) L.push(L[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])); return { pts, L, tot: L[L.length - 1] }; });
+  const parts = []; segs.forEach((s, si) => { const n = Math.max(3, Math.round(s.tot / 45)); for (let i = 0; i < n; i++) parts.push({ s, off: i / n * s.tot, sp: 55 + (si % 3) * 12 }); });
+  const pos = new Float32Array(parts.length * 3), alpha = new Float32Array(parts.length);
+  const pg = new THREE.BufferGeometry(); pg.setAttribute("position", new THREE.BufferAttribute(pos, 3)); pg.setAttribute("aA", new THREE.BufferAttribute(alpha, 1));
+  const ptU = { uColor: { value: new THREE.Color(0x8fe3ff) }, uSize: { value: 3.4 }, uScale: { value: 800 } };
+  const points = new THREE.Points(pg, new THREE.ShaderMaterial({ uniforms: ptU, vertexShader: PT_VS, fragmentShader: PT_FS, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  points.frustumCulled = false; root.add(points);
+
+  function update(t, key, dist){
+    root.visible = key > 2.95;
+    if (!root.visible) return;
+    lines.visible = key < 7.4;
+    treeU.forEach(u => { u.uTime.value = t; });
+    lightIn.material.opacity = .55 + .2 * Math.sin(t * 3);
+    points.visible = key > 4.3;
+    if (points.visible){
+      ptU.uScale.value = renderer.domElement.height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
+      parts.forEach((p, i) => {
+        const s = p.s, d = (p.off + t * p.sp) % s.tot;
+        let j = 1; while (j < s.L.length - 1 && s.L[j] < d) j++;
+        const a = s.pts[j - 1], b = s.pts[j], f = (d - s.L[j - 1]) / ((s.L[j] - s.L[j - 1]) || 1);
+        pos[i * 3] = a[0] + (b[0] - a[0]) * f; pos[i * 3 + 1] = 1.4; pos[i * 3 + 2] = a[1] + (b[1] - a[1]) * f;
+        alpha[i] = Math.pow(Math.sin(Math.PI * d / s.tot), .5);
+      });
+      pg.attributes.position.needsUpdate = true; pg.attributes.aA.needsUpdate = true;
+    }
+  }
+  return { update, blocks, sub };
+}
+
+/* ===================== 5 · package and graphics card ===================== */
+function buildCard(){
+  const root = new THREE.Group(); root.position.set(D.x, 0, D.z); scene.add(root);
+  // package substrate with decoupling capacitors
+  add(root, new THREE.BoxGeometry(800, 24, 800), stdL(0x1e2a1c, .15, .7, { envMapIntensity: .5 }), [0, PKG_TOP - 12, 0]);
+  add(root, new THREE.BoxGeometry(420, 3, 420), stdL(0x0e110e, .1, .7), [0, PKG_TOP + 1.5, 0]);
+  { const geo = new THREE.BoxGeometry(30, 14, 16), spots = [];
+    for (let i = -8; i <= 8; i++){ spots.push([i * 40, -300, 0], [i * 40, 300, 0], [-300, i * 40, 1], [300, i * 40, 1]); }
+    const im = new THREE.InstancedMesh(geo, stdL(0x8a7150, .2, .5), spots.length); const o = new THREE.Object3D();
+    spots.forEach(([x, z, r], i) => { o.position.set(x, PKG_TOP + 7, z); o.rotation.set(0, r ? Math.PI / 2 : 0, 0); o.updateMatrix(); im.setMatrixAt(i, o.matrix); });
+    root.add(im); }
+  // fibre attach block at the die's light input
+  add(root, new THREE.BoxGeometry(80, 16, 46), new THREE.MeshPhysicalMaterial({ color: 0xcfe3ea, roughness: .1, transparent: true, opacity: .55 }), [250, PKG_TOP + 8, -2]);
+
+  // PCB: x across the card, z along it; the bracket end faces the monitor (−z)
+  const W0 = -1200, W1 = 1020, L0 = -2600, L1 = 2740;
+  const pcbTex = canvasTex(1024, 2464, (x, w, h) => {
+    const U = cx => (cx - W0) / (W1 - W0) * w, Vv = cz => (cz - L0) / (L1 - L0) * h;
+    x.fillStyle = "#0f2027"; x.fillRect(0, 0, w, h);
+    const r = rng(5);
+    x.strokeStyle = "rgba(60,110,120,.35)"; x.lineWidth = 2;
+    const mem = [[-820, -700], [-820, -300], [-820, 300], [-820, 700], [700, -700], [700, -300], [-250, -1050], [250, -1050]];
+    mem.forEach(([mx, mz]) => { for (let k = -5; k <= 5; k++){ x.beginPath(); x.moveTo(U(mx * .45 + k * 6), Vv(mz * .45 + k * 6)); x.lineTo(U(mx * .8 + k * 6), Vv(mz * .8 + k * 6)); x.lineTo(U(mx), Vv(mz)); x.stroke(); } });
+    for (let i = 0; i < 140; i++){ x.fillStyle = "rgba(170,190,195,.35)"; x.beginPath(); x.arc(r() * w, r() * h, 2.2, 0, 7); x.fill(); }
+    x.strokeStyle = "rgba(220,228,230,.55)"; x.lineWidth = 3;
+    mem.forEach(([mx, mz]) => x.strokeRect(U(mx - 160), Vv(mz - 140), U(mx + 160) - U(mx - 160), Vv(mz + 140) - Vv(mz - 140)));
+    x.strokeRect(U(-430), Vv(-430), U(430) - U(-430), Vv(430) - Vv(-430));
+    x.fillStyle = "rgba(220,228,230,.75)"; x.font = "600 30px monospace";
+    x.save(); x.translate(U(-1080), Vv(2450)); x.rotate(-Math.PI / 2); x.fillText("F²R · OPTICAL GPU · ES-01", 0, 0); x.restore();
+    x.font = "500 22px monospace"; x.fillText("1310 nm LASER", U(380), Vv(1240));
+  });
+  const pcbSide = M.pcbEdge;
+  const pcb = new THREE.Mesh(new THREE.BoxGeometry(W1 - W0, 32, L1 - L0), [pcbSide, pcbSide, std(0xffffff, .25, .6, { map: pcbTex }), pcbSide, pcbSide, pcbSide]);
+  pcb.position.set((W0 + W1) / 2, PCB_TOP - 16, (L0 + L1) / 2); root.add(pcb);
+  // BGA balls band under the package
+  add(root, new THREE.BoxGeometry(780, 20, 780), std(0x8f949a, .8, .4), [0, PCB_TOP + 10, 0]);
+  // GDDR3
+  const memTex = canvasTex(256, 224, (x, w, h) => { x.fillStyle = "#15191c"; x.fillRect(0, 0, w, h); x.fillStyle = "rgba(220,226,228,.8)"; x.font = "600 30px monospace"; x.fillText("GDDR3", 26, 110); x.font = "500 18px monospace"; x.fillText("512 Mb · 1.0 ns", 26, 142); x.beginPath(); x.arc(30, 30, 9, 0, 7); x.fill(); });
+  const memMat = [M.ic, M.ic, std(0xffffff, .15, .5, { map: memTex }), M.ic, M.ic, M.ic];
+  [[-820, -700], [-820, -300], [-820, 300], [-820, 700], [700, -700], [700, -300], [-250, -1050], [250, -1050]].forEach(([x, z]) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(280, 24, 240), memMat); m.position.set(x, PCB_TOP + 12, z); root.add(m); });
+  // power stage
+  for (let i = 0; i < 6; i++){ add(root, new THREE.BoxGeometry(190, 120, 190), std(0x2b2f33, .4, .5), [-640 + i * 230, PCB_TOP + 60, 1750]);
+    add(root, cyl(80, 220, 20), M.cap, [-640 + i * 230, PCB_TOP + 110, 2080]); add(root, cyl(80, 6, 20), std(0x30363b, .3, .5), [-640 + i * 230, PCB_TOP + 223, 2080]);
+    add(root, new THREE.BoxGeometry(120, 30, 150), M.ic, [-640 + i * 230, PCB_TOP + 15, 1500]); }
+  add(root, new THREE.BoxGeometry(360, 220, 260), std(0x111315, .1, .7), [600, PCB_TOP + 110, 2600]);
+  // laser module and fibre
+  add(root, new THREE.BoxGeometry(560, 220, 380), std(0x2a3238, .6, .38), [620, PCB_TOP + 110, 900]);
+  add(root, new THREE.BoxGeometry(380, 4, 160), std(0xeba340, .2, .5), [620, PCB_TOP + 222, 900]);
+  add(root, cyl(26, 120, 16), std(0x23282c, .3, .5), [330, PCB_TOP + 110, 900], [0, 0, Math.PI / 2]);
+  tube(root, [[280, PCB_TOP + 110, 900], [220, PCB_TOP + 220, 700], [380, PKG_TOP + 120, 300], [330, PKG_TOP + 30, 40], [290, PKG_TOP + 9, -2]], 9, std(0xe0b52a, .1, .45), 80, 8);
+  // PCIe ×16 edge fingers
+  { const ft = canvasTex(64, 512, (x, w, h) => { x.fillStyle = "#0f2027"; x.fillRect(0, 0, w, h); x.fillStyle = "#d9a54c"; for (let i = 0; i < 82; i++) x.fillRect(4, 2 + i * 6.2, w - 8, 4); }, true);
+    add(root, new THREE.PlaneGeometry(160, 1780), std(0xffffff, .9, .3, { map: ft }), [-1120, PCB_TOP + 1.5, -1510], [-Math.PI / 2, 0, 0]); }
+  // bracket with dual DVI and S-video
+  const brY0 = PCB_BOT - 60, brY1 = PCB_TOP + 340;
+  add(root, new THREE.BoxGeometry(2400, brY1 - brY0, 18), std(0xa7afb4, .85, .38), [-90, (brY0 + brY1) / 2, L0 - 10]);
+  [-650, 150].forEach(x => { add(root, new THREE.BoxGeometry(780, 300, 420), std(0x9aa1a6, .8, .4), [x, PCB_TOP + 150, L0 + 210]);
+    add(root, new THREE.BoxGeometry(600, 150, 12), M.white, [x, PCB_TOP + 150, L0 - 24]);
+    add(root, new THREE.BoxGeometry(660, 200, 6), std(0x0d0f10, .2, .6), [x, PCB_TOP + 150, L0 - 20]); });
+  add(root, cyl(90, 30, 24), std(0x111315, .2, .6), [700, PCB_TOP + 150, L0 - 25], [Math.PI / 2, 0, 0]);
+  // standoffs to the desk
+  [[W0 + 120, L0 + 200], [W1 - 120, L0 + 200], [W0 + 120, L1 - 200], [W1 - 120, L1 - 200]].forEach(([x, z]) => add(root, cyl(70, PCB_BOT - DESK - 30, 6), M.alu, [x, (PCB_BOT + DESK + 30) / 2, z]));
+  return { root, dvi: V3(D.x - 650, PCB_TOP + 150, D.z + L0 - 30), power: V3(D.x + 600, PCB_TOP + 110, D.z + 2730) };
+}
+
+/* ===================== 6 · desk, host board, monitor ===================== */
+function buildDesk(cardInfo){
+  const root = new THREE.Group(); scene.add(root);
+  const g = new THREE.Group(); g.position.set(D.x, 0, D.z); root.add(g);
+  // desk and ESD mat
+  const wood = canvasTex(512, 512, (x, w, h) => { const r = rng(3); x.fillStyle = "#1d1b19"; x.fillRect(0, 0, w, h); for (let i = 0; i < 160; i++){ x.strokeStyle = `rgba(${60 + r() * 30 | 0},${50 + r() * 22 | 0},${40 + r() * 18 | 0},.25)`; x.lineWidth = 1 + r() * 2; x.beginPath(); const y = r() * h; x.moveTo(0, y); x.bezierCurveTo(w * .3, y + r() * 10 - 5, w * .6, y + r() * 10 - 5, w, y + r() * 6 - 3); x.stroke(); } });
+  wood.wrapS = wood.wrapT = THREE.RepeatWrapping; wood.repeat.set(4, 2.5);
+  add(g, new THREE.BoxGeometry(36000, 700, 22000), std(0x6e6a66, .05, .7, { map: wood, envMapIntensity: .4 }), [-2500, DESK - 350, -4000]);
+  add(g, new THREE.BoxGeometry(14500, 30, 10500), stdL(0x1c3038, 0, .95, { envMapIntensity: .3 }), [-3700, DESK + 15, -1300]);
+
+  // host motherboard on standoffs
+  const mt = DESK + 230;
+  const mb = new THREE.Group(); g.add(mb);
+  add(mb, new THREE.BoxGeometry(4880, 32, 6100), stdL(0x162630, .15, .6), [-5260, mt - 16, -1450]);
+  for (const [x, z] of [[-7500, -4300], [-3020, -4300], [-7500, 1400], [-3020, 1400]]) add(mb, cyl(70, mt - 32 - DESK - 30, 6), M.alu, [x, (mt - 32 + DESK + 30) / 2, z]);
+  add(mb, new THREE.BoxGeometry(2200, 260, 2200), std(0xb8c0c4, .9, .35), [-5900, mt + 130, -2700]);
+  for (let i = 0; i < 14; i++) add(mb, new THREE.BoxGeometry(2200, 700, 22), std(0xcfd6d9, .95, .3), [-5900, mt + 610, -3740 + i * 160]);
+  add(mb, cyl(1050, 160, 48), std(0x121518, .2, .6), [-5900, mt + 1040, -2700]);
+  add(mb, cyl(260, 170, 24), std(0x2a3036, .3, .5), [-5900, mt + 1045, -2700]);
+  add(mb, cyl(250, 4, 24), std(0xeba340, .3, .5), [-5900, mt + 1131, -2700]);
+  [-4300, -4060, -3820].forEach(x => { add(mb, new THREE.BoxGeometry(110, 640, 2700), std(0x22292e, .5, .45), [x, mt + 320, -2650]); add(mb, new THREE.BoxGeometry(112, 30, 2400), std(0xeba340, .2, .5), [x, mt + 655, -2650]); });
+  add(mb, new THREE.BoxGeometry(300, 260, 1050), M.plastic, [-3150, mt + 130, -1100]);
+  add(mb, new THREE.BoxGeometry(700, 220, 700), std(0x3a4148, .7, .4), [-5200, mt + 110, 500]);
+  add(mb, new THREE.BoxGeometry(160, 220, 1780), M.plastic, [-3250, mt + 110, -1510]);
+  [-4100, -4900].forEach(x => add(mb, new THREE.BoxGeometry(160, 220, 1780), M.plastic, [x, mt + 110, -1510]));
+  add(mb, new THREE.BoxGeometry(120, 900, 3400), std(0x8d969b, .8, .4), [-7700, mt + 450, -2300]);
+
+  // PCIe riser from the host slot to the card edge
+  { const z0 = -2400, z1 = -620, cy = PCB_TOP - 16;
+    const curve = new THREE.CubicBezierCurve3(V3(-3250, mt + 230, 0), V3(-3250, mt + 520, 0), V3(-1500, cy + 240, 0), V3(-1215, cy + 40, 0));
+    const n = 40, pos = [], uvs = [], idx = [];
+    for (let i = 0; i <= n; i++){ const p = curve.getPoint(i / n); pos.push(p.x, p.y, z0, p.x, p.y, z1); uvs.push(i / n, 0, i / n, 1); if (i < n){ const k = i * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); } }
+    const rg = new THREE.BufferGeometry(); rg.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); rg.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2)); rg.setIndex(idx); rg.computeVertexNormals();
+    const rt = canvasTex(16, 256, (x, w, h) => { for (let i = 0; i < 64; i++){ x.fillStyle = i % 2 ? "#15181a" : "#22272a"; x.fillRect(0, i * 4, w, 4); } });
+    add(g, rg, std(0xffffff, .3, .55, { map: rt, side: THREE.DoubleSide }));
+    add(g, new THREE.BoxGeometry(220, 300, 1900), M.plastic, [-1215, cy + 10, -1510]); }
+
+  // power supply and its cables
+  add(g, new THREE.BoxGeometry(3000, 1720, 2800), stdL(0x1a1e21, .35, .5), [-6300, DESK + 860, -7300]);
+  add(g, cyl(1200, 10, 48), std(0x2a3034, .7, .35), [-6300, DESK + 1725, -7300]);
+  tube(g, [[-5600, DESK + 900, -5900], [-4300, DESK + 700, -4300], [-3400, mt + 500, -2300], [-3150, mt + 300, -1100]], 170, std(0x16191b, .1, .8), 48, 10);
+  const pw = cardInfo.power.clone().sub(D);
+  tube(g, [[-5200, DESK + 300, -5900], [-2400, DESK + 150, -3600], [-1700, DESK + 150, 3500], [pw.x, pw.y + 260, pw.z + 500], [pw.x, pw.y + 140, pw.z + 40]], 90, std(0x16191b, .1, .8), 64, 8);
+
+  // 22-inch 16:10 LCD
+  const mon = new THREE.Group(); mon.position.set(MX, DESK, MZ); g.add(mon);
+  const base = add(mon, cyl(1, 1, 48), M.gloss, [0, 70, 300]); base.scale.set(2300, 140, 1500);
+  add(mon, new THREE.BoxGeometry(700, 3300, 260), M.gloss, [0, 1750, -450]);
+  add(mon, new THREE.BoxGeometry(9900, 6420, 360), M.gloss, [0, 5400, 0]);
+  add(mon, new THREE.BoxGeometry(7400, 4300, 520), std(0x14171a, .2, .5), [0, 5300, -420]);
+  const screenMat = new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false });
+  add(mon, new THREE.PlaneGeometry(9480, 5920), screenMat, [0, 5400, 181]);
+  glow(mon, 0x8fe3ff, 260, .9, [4500, 2290, 190]);
+  add(mon, new THREE.BoxGeometry(900, 360, 120), std(0x0e1012, .3, .5), [1700, 3500, -700]);
+
+  // DVI cable from the card bracket to the monitor
+  const dv = cardInfo.dvi.clone().sub(D);
+  tube(g, [[dv.x, dv.y, dv.z], [dv.x, dv.y + 80, dv.z - 900], [dv.x - 300, DESK + 160, dv.z - 2200], [MX + 2600, DESK + 160, MZ + 600], [MX + 2700, DESK + 160, MZ - 1300], [MX + 1700, DESK + 2400, MZ - 1100], [MX + 1700, DESK + 3500, MZ - 780]], 75, std(0x1a1d20, .2, .55), 96, 10);
+  add(g, new THREE.BoxGeometry(820, 320, 520), std(0x1a1d20, .2, .55), [dv.x, dv.y, dv.z - 240]);
+
+  return { root, screenMat, screenCenter: V3(D.x + MX, DESK + 5400, D.z + MZ + 181) };
+}
+
+/* ===================== 7 · the scene on the monitor ===================== */
+function buildMonitorScene(){
+  const W = 768, Hh = 480;
+  const target = new THREE.WebGLRenderTarget(W, Hh, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat });
+  const ms = new THREE.Scene(); ms.background = new THREE.Color(0x203040); ms.fog = new THREE.Fog(0x203040, 14, 38);
+  const mc = new THREE.PerspectiveCamera(42, W / Hh, .1, 100);
+  ms.add(new THREE.HemisphereLight(0xc0d6e2, 0x2b2620, .55));
+  const sun = new THREE.DirectionalLight(0xfff0dc, 1.05); sun.position.set(5, 9, 4); sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 1, far: 30 }); ms.add(sun);
+  const chk = canvasTex(256, 256, (x) => { for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++){ x.fillStyle = (i + j) % 2 ? "#b8b1a2" : "#545a5e"; x.fillRect(i * 32, j * 32, 32, 32); } });
+  chk.wrapS = chk.wrapT = THREE.RepeatWrapping; chk.repeat.set(12, 12);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(48, 48), new THREE.MeshPhongMaterial({ map: chk, shininess: 8 })); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; ms.add(floor);
+  const tg = new THREE.TeapotGeometry(1.25, 10); tg.computeBoundingBox();
+  const teapot = new THREE.Mesh(tg, new THREE.MeshPhongMaterial({ color: 0xe9e2d4, shininess: 70, specular: 0x555555 })); teapot.position.y = -tg.boundingBox.min.y; teapot.castShadow = true; ms.add(teapot);
+  const cube = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.1, 1.1), new THREE.MeshPhongMaterial({ color: 0xeba340, shininess: 30 })); cube.position.set(-2.9, .55, 1.2); cube.castShadow = true; ms.add(cube);
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(.7, 24, 16), new THREE.MeshPhongMaterial({ color: 0x8fe3ff, shininess: 90 })); ball.position.set(2.8, .7, 1.5); ball.castShadow = true; ms.add(ball);
+  const verts = [tg, cube.geometry, ball.geometry, floor.geometry].reduce((a, gg) => a + gg.attributes.position.count, 0);
+  const pix = W * Hh;
+  // HUD drawn on top of the frame
+  const hc = document.createElement("canvas"); hc.width = W; hc.height = Hh;
+  const hx = hc.getContext("2d");
+  const hudTex = new THREE.CanvasTexture(hc); hudTex.encoding = THREE.sRGBEncoding;
+  const hudScene = new THREE.Scene();
+  hudScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({ map: hudTex, transparent: true, depthTest: false, toneMapped: false })));
+  const hudCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  let frame = 0, hudT = 0;
+  const drawHud = () => {
+    hx.clearRect(0, 0, W, Hh);
+    hx.fillStyle = "rgba(6,10,12,.55)"; hx.fillRect(14, 14, 330, 52); hx.fillRect(14, Hh - 82, 380, 68);
+    hx.font = "600 15px 'JetBrains Mono', monospace"; hx.fillStyle = "#eba340"; hx.fillText("ATTILA-CLASS GPU · 4 OPTICAL SHADERS", 24, 36);
+    hx.font = "500 13px 'JetBrains Mono', monospace"; hx.fillStyle = "#c9d4d8"; hx.fillText(`frame ${String(frame).padStart(6, "0")} · 768×480 · DVI`, 24, 56);
+    hx.fillStyle = "#ff6a58"; hx.fillText(`vertex DP4 in light   ${fmtInt(verts * 4).padStart(9)}`, 24, Hh - 56);
+    hx.fillText(`pixel DP3 in light    ${fmtInt(pix).padStart(9)}`, 24, Hh - 32);
+    hudTex.needsUpdate = true;
+  };
+  drawHud();
+  const live = { verts: $('[data-live="verts"]'), dp4: $('[data-live="dp4"]'), pix: $('[data-live="pix"]'), dp3: $('[data-live="dp3"]'), frame: $('[data-live="frame"]') };
+  live.verts.textContent = fmtInt(verts); live.dp4.textContent = fmtInt(verts * 4); live.pix.textContent = fmtInt(pix); live.dp3.textContent = fmtInt(pix);
+  let ang = .6;
+  return {
+    texture: target.texture,
+    render(dt){
+      ang += dt * (REDUCE ? .08 : .22); frame++;
+      mc.position.set(Math.sin(ang) * 8.4, 3.6, Math.cos(ang) * 8.4); mc.lookAt(0, 1, 0);
+      teapot.rotation.y += dt * .5; ball.position.y = .7 + Math.abs(Math.sin(frame * .03)) * .5 * (REDUCE ? 0 : 1);
+      sun.position.set(Math.sin(ang * .7 + 1) * 6, 9, Math.cos(ang * .7 + 1) * 6);
+      hudT += dt; if (hudT > .25){ hudT = 0; drawHud(); live.frame.textContent = fmtInt(frame); }
+      renderer.setRenderTarget(target); renderer.render(ms, mc);
+      renderer.autoClear = false; renderer.clearDepth(); renderer.render(hudScene, hudCam); renderer.autoClear = true;
+      renderer.setRenderTarget(null);
+    }
+  };
+}
+
+/* ===================== build everything ===================== */
+const bench = buildBench();
+const cell = buildCell();
+const arrays = buildArrays();
+const die = buildDie();
+const card = buildCard();
+const desk = buildDesk(card);
+const monitor = buildMonitorScene();
+desk.screenMat.map = monitor.texture; desk.screenMat.needsUpdate = true;
+
+/* ---------- camera keyframes, one per story section ---------- */
+const KF = [
+  { t: V3(-.1, .45, -.85), d: 14.5, az: .42, el: .62 },
+  { t: V3(-1.05, .45, -1.9), d: 7.6, az: .1, el: .74 },
+  { t: V3(1.3, .5, -.6), d: 7.8, az: .62, el: .6 },
+  { t: V3(-.1, 0, -.95), d: 10.8, az: .28, el: 1.0 },
+  { t: V3(4.5, 0, -6), d: 74, az: .3, el: .95 },
+  { t: V3(D.x - 99, 0, D.z - 73), d: 215, az: .3, el: .95 },
+  { t: V3(D.x, 0, D.z), d: 640, az: .3, el: .9 },
+  { t: V3(D.x - 90, PCB_TOP, D.z + 70), d: 7600, az: .38, el: .82 },
+  { t: V3(D.x - 2900, DESK + 2700, D.z - 4200), d: 27500, az: .16, el: .3 },
+  { t: desk.screenCenter.clone(), d: 15800, az: .04, el: .1 }
+];
+function pose(k){
+  const i = Math.min(KF.length - 2, Math.max(0, Math.floor(k))), f = ease(clamp(k - i, 0, 1));
+  const A = KF[i], B = KF[i + 1];
+  const d = Math.exp(lerp(Math.log(A.d), Math.log(B.d), f));
+  const g = Math.abs(B.d - A.d) < 1e-6 * A.d ? f : clamp((d - A.d) / (B.d - A.d), 0, 1);
+  return { t: V3().lerpVectors(A.t, B.t, g), d, az: lerp(A.az, B.az, f), el: lerp(A.el, B.el, f) };
+}
+
+/* ---------- labels ---------- */
+const lblRoot = $("#labels");
+const labels = [];
+function label(text, p, k0, k1, cls = ""){
+  const el = document.createElement("div"); el.className = "lbl " + cls;
+  const i = document.createElement("i"), s = document.createElement("span"); s.textContent = text; el.append(i, s); lblRoot.appendChild(el);
+  labels.push({ el, p: p.isVector3 ? p : V3(p[0], p[1], p[2]), k0, k1, o: -1 });
+}
+// bench
+label("Laser · linearly polarised", [P.laser[0], H + .45, 0], -1, .5, "light");
+label("S1 (5) · input A", [P.s1[0], H + .55, 0], -1, .5);
+label("S2 (6) · input B", [P.s2[0], H + .55, 0], -1, .5);
+label("S3 (7) · Michelson XOR", [P.s3[0], H + .55, 0], -1, .5);
+label("Screen (11)", [P.scr[0], H + .95, P.scr[1]], -1, .5);
+label("Arduino applies the threshold", [P.ard[0], .4, P.ard[1]], -1, .5, "data");
+label("Block a beam to set a 0", [-1.1, H + .55, -.5], .55, 1.45);
+label("Polarisers (3, 4) mark each beam", [-1.1, H + .45, -1.05], .55, 1.45);
+label("Mirrors (1, 2) converge A and B", [P.m2[0] + .2, H + .5, P.m2[1]], .55, 1.45);
+label("Carry photoresistor", [P.ldrC[0], H + .45, P.ldrC[1]], .55, 1.45, "light");
+label("Block an arm to set a 0", [P.fA2[0], H + .6, P.fA2[1]], 1.55, 2.2);
+label("Mirror (10)", [P.mB[0], H + .5, P.mB[1]], 1.55, 2.2);
+label("Mirror (9)", [P.mA[0], H + .5, P.mA[1]], 1.55, 2.2);
+label("Two lenses (8) enlarge the fringes", [P.l2[0] - .25, H + .45, P.l2[1]], 1.55, 2.2);
+label("Screen (11), hole on a dark fringe", [P.scr[0], H + .95, P.scr[1]], 1.55, 2.2);
+label("Sum photoresistor behind the hole", [P.ldrS[0] + .35, .5, P.ldrS[1]], 1.55, 2.2, "light");
+// silicon cell
+label("III–V laser", [P.laser[0], .2, 0], 2.9, 3.45, "light");
+label("MMI splitters", [P.s2[0], .1, P.s2[1]], 2.9, 3.45);
+label("Ring modulators · inputs", [P.fA[0] - .2, .1, P.fA[1]], 2.9, 3.45);
+label("Attenuators · weights", [P.pB[0] + .1, .1, P.pB[1]], 2.9, 3.45);
+label("Loop mirrors", [P.mA[0] + .2, .1, P.mA[1]], 2.9, 3.45);
+label("Ge photodiode · carry", [P.ldrC[0], .1, P.ldrC[1]], 2.9, 3.45, "light");
+label("Ge photodiode · sum", [P.ldrS[0], .1, P.ldrS[1]], 2.9, 3.45, "light");
+label("TIA + comparator", [P.ard[0], .1, P.ard[1]], 2.9, 3.45, "data");
+label("Input pads A, B", [-1.65, .05, 2.9], 2.9, 3.45, "data");
+// tiles
+{ const nx = AC.x + (OUR.ix + 1 - 3.5) * TILE, nz = AC.z + (OUR.iz - 3.5) * TILE;
+  label("Our adder cell", [C.x, .2, C.z], 3.6, 4.5, "light");
+  label("4×4 dot-product tile", [nx, .2, nz], 3.6, 4.5);
+  label("Input ring modulators", [nx - 3.3, .2, nz - 1], 3.6, 4.5, "light");
+  label("Weights", [nx - .9, .2, nz - 1.6], 3.6, 4.5);
+  label("Photodiodes → ADCs", [nx + 1.2, .2, nz + 3.3], 3.6, 4.5, "data"); }
+// cluster and die
+die.blocks.forEach(b => {
+  const inCluster = ["Texture unit", "Texture L1", "Fetch · decode · schedule", "Register file", "Drivers + DACs", "TIAs + ADCs"].includes(b.name);
+  if (inCluster) label(b.name, [D.x + b.x, 1.5, D.z + b.z], 4.6, 5.5, b.name.includes("DAC") || b.name.includes("ADC") ? "data" : "");
+  else label(b.name, [D.x + b.x, 1.5, D.z + b.z], 5.6, 6.35);
+});
+label("64 optical tiles", [D.x + CL[0].x + ARR.x, 1.5, D.z + CL[0].z + ARR.z - 12], 4.6, 5.5, "light");
+CL.forEach((cl, i) => label(`Shader ${i}`, [D.x + cl.x - 44, 1.5, D.z + cl.z - 40], 5.6, 6.35, "light"));
+label("Light in from fibre", [D.x + 196, 2, D.z - 2], 5.6, 6.35, "light");
+// card
+label("Optical GPU", [D.x, 10, D.z], 6.6, 7.5, "light");
+label("GDDR3 memory", [D.x - 820, PCB_TOP + 30, D.z + 300], 6.6, 7.5);
+label("Laser module", [D.x + 620, PCB_TOP + 230, D.z + 900], 6.6, 7.5, "light");
+label("Power stage", [D.x - 100, PCB_TOP + 200, D.z + 1900], 6.6, 7.5);
+label("Dual DVI", [D.x - 250, PCB_TOP + 330, D.z - 2620], 6.6, 7.5, "data");
+label("PCIe ×16 edge", [D.x - 1180, PCB_TOP, D.z - 1510], 6.6, 7.5, "data");
+// desk
+label("22-inch LCD over DVI", [D.x + MX - 3500, DESK + 8700, D.z + MZ], 7.6, 8.55, "data");
+label("Optical GPU card", [D.x, PCB_TOP + 300, D.z + 900], 7.6, 8.55, "light");
+label("Host board + CPU", [D.x - 5900, DESK + 1500, D.z - 2700], 7.6, 8.55);
+label("PCIe riser", [D.x - 2300, DESK + 1200, D.z - 1510], 7.6, 8.55, "data");
+label("Power supply", [D.x - 6300, DESK + 1900, D.z - 7300], 7.6, 8.55);
+
+const _v = V3();
+function updateLabels(key){
+  const w = innerWidth, h = innerHeight;
+  for (const L of labels){
+    let o = sstep(L.k0 - .12, L.k0, key) * (1 - sstep(L.k1, L.k1 + .12, key));
+    if (o > .01){
+      _v.copy(L.p).project(camera);
+      if (_v.z > 1 || Math.abs(_v.x) > 1.05 || Math.abs(_v.y) > 1.05) o = 0;
+      else L.el.style.transform = `translate(${((_v.x * .5 + .5) * w - 4).toFixed(1)}px, ${((-_v.y * .5 + .5) * h).toFixed(1)}px) translateY(-50%)`;
+    }
+    if (Math.abs(o - L.o) > .01){ L.el.style.opacity = o.toFixed(2); L.el.style.visibility = o > .01 ? "visible" : "hidden"; L.o = o; }
+  }
+}
+
+/* ---------- scale bar ---------- */
+const fieldEl = $("#fieldv"), rulerEl = $("#ruler"), rulerV = $("#rulerv");
+const fmtLen = m => m >= 1 ? (m < 10 ? m.toFixed(2) : m.toFixed(1)) + " m" : m >= .01 ? (m * 100).toFixed(m < .1 ? 1 : 0) + " cm" : m >= .001 ? (m * 1000).toFixed(m < .01 ? 2 : 1) + " mm" : (m * 1e6).toFixed(0) + " µm";
+const fmtNice = m => m >= 1 ? m + " m" : m >= .01 ? Math.round(m * 100) + " cm" : m >= .001 ? Math.round(m * 1000) + " mm" : Math.round(m * 1e6) + " µm";
+let lastField = "", lastRuler = "";
+function updateScale(d, fold){
+  const unit = Math.exp(lerp(Math.log(.12), Math.log(50e-6), ease(fold)));
+  const wUnits = 2 * d * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * camera.aspect;
+  const field = wUnits * unit;
+  const fs = "≈ " + fmtLen(field); if (fs !== lastField){ fieldEl.textContent = fs; lastField = fs; }
+  const pxPerM = innerWidth / field, target = 110 / pxPerM;
+  const p = Math.pow(10, Math.floor(Math.log10(target)));
+  const nice = [5, 2, 1].map(k => k * p).find(v => v <= target) || p;
+  const rs = fmtNice(+nice.toPrecision(3));
+  rulerEl.style.width = Math.round(nice * pxPerM) + "px";
+  if (rs !== lastRuler){ rulerV.textContent = rs; lastRuler = rs; }
+}
+
+/* ---------- post ---------- */
+let composer, bloom;
+function makeComposer(){
+  const w = innerWidth, h = innerHeight;
+  const rtOpts = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat };
+  const rt = renderer.capabilities.isWebGL2 && THREE.WebGLMultisampleRenderTarget ? new THREE.WebGLMultisampleRenderTarget(w * DPR, h * DPR, rtOpts) : new THREE.WebGLRenderTarget(w * DPR, h * DPR, rtOpts);
+  composer = new THREE.EffectComposer(renderer, rt);
+  composer.addPass(new THREE.RenderPass(scene, camera));
+  bloom = new THREE.UnrealBloomPass(new THREE.Vector2(w / 2, h / 2), .78, .5, .82);
+  composer.addPass(bloom);
+  composer.addPass(new THREE.ShaderPass(THREE.GammaCorrectionShader));
+}
+makeComposer();
+function resize(){
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false); composer.setSize(w, h);
+  camera.aspect = w / h;
+  if (w >= 900) camera.setViewOffset(w, h, -Math.min(330, w * .21), 0, w, h);
+  else camera.setViewOffset(w, h, 0, h * .17, w, h);
+  camera.updateProjectionMatrix();
+  measure();
+}
+addEventListener("resize", resize);
+resize();
+
+/* ---------- drag to look around (mouse and pen; touch scrolls the page) ---------- */
+let drag = null, azOff = 0, elOff = 0;
+canvas.addEventListener("pointerdown", e => { if (e.pointerType === "touch") return; drag = { x: e.clientX, y: e.clientY, az: azOff, el: elOff }; canvas.setPointerCapture(e.pointerId); canvas.classList.add("drag"); });
+canvas.addEventListener("pointermove", e => { if (!drag) return; azOff = drag.az - (e.clientX - drag.x) * .005; elOff = clamp(drag.el + (e.clientY - drag.y) * .004, -.55, .55); });
+const endDrag = () => { drag = null; canvas.classList.remove("drag"); };
+canvas.addEventListener("pointerup", endDrag); canvas.addEventListener("pointercancel", endDrag);
+
+/* ---------- loop ---------- */
+const lv = { A: 0, B: 0, out: 0, sum: 0, fr: 0, carry: 0 };
+let last = performance.now(), T = 0, keyS = scrollKey(), firstFrame = true;
+function frame(now){
+  const dt = Math.min(.05, (now - last) / 1000); last = now; T += dt;
+  const target = scrollKey();
+  keyS += (target - keyS) * (1 - Math.exp(-Math.min(.12, (now - (frame.prev || now)) / 1000) * 6)); frame.prev = now; if (Math.abs(target - keyS) < 1e-4) keyS = target;
+  const key = keyS;
+  const fold = sstep(2.2, 2.92, key);
+
+  const k = 1 - Math.pow(.004, dt);
+  lv.A = lerp(lv.A, S.a, k); lv.B = lerp(lv.B, S.b, k);
+  lv.out = lerp(lv.out, S.a || S.b ? 1 : 0, k); lv.sum = lerp(lv.sum, S.a ^ S.b, k);
+  lv.fr = lerp(lv.fr, S.a && S.b ? 1 : 0, k); lv.carry = lerp(lv.carry, IA * S.a + IB * S.b > THR ? 1 : 0, k);
+
+  if (!drag){ const dk = Math.exp(-dt * .35); azOff *= dk; elOff *= dk; }
+  const ps = pose(key);
+  const az = ps.az + azOff + (REDUCE ? 0 : Math.sin(T * .12) * .05);
+  const el = clamp(ps.el + elOff, .06, 1.45);
+  camera.position.set(ps.t.x + ps.d * Math.cos(el) * Math.sin(az), ps.t.y + ps.d * Math.sin(el), ps.t.z + ps.d * Math.cos(el) * Math.cos(az));
+  camera.lookAt(ps.t);
+  camera.near = ps.d / 200; camera.far = ps.d * 40; camera.updateProjectionMatrix();
+  scene.fog.near = ps.d * 1.5; scene.fog.far = ps.d * 5;
+
+  const ourCell = key < 4.75;
+  bench.update(T, dt, lv, fold);
+  cell.update(T, lv, fold, ourCell);
+  arrays.update(T, key, ps.d, ourCell);
+  die.update(T, key, ps.d);
+  card.root.visible = key > 5.5;
+  desk.root.visible = key > 6.3;
+  if (key > 6.4) monitor.render(dt);
+
+  updateLabels(key);
+  updateScale(ps.d, fold);
+  updateRail(key);
+  composer.render();
+  if (firstFrame){ firstFrame = false; $("#loader").classList.add("off"); }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
