@@ -19,7 +19,9 @@ transimpedance-amplifier and laser intensity noise. There is no full-wave
 electromagnetic simulation. Every number in PARAMS is an assumption chosen as
 a typical value for a silicon photonics foundry process at 1550 nm.
 
-Run:  python3 optical_sim.py      (writes results.json and figures/*.png)
+Run:  python3 optical_sim_v1.py   (writes results.json and figures/*.png in this folder)
+
+Superseded by ../pdk_sim.py (PDK compact models, measured devices, validation). Kept for reference.
 """
 import json
 import math
