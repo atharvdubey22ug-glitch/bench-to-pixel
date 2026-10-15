@@ -1,4 +1,4 @@
-# Optical full adder chip
+# Optical full adder chip and 4-bit ALU
 
 A silicon photonic version of the full adder in *Using Polarisation and Interference for Optical Computing* (Section 4.2, Figures 15–16), designed for the SiEPIC EBeam process run by Applied Nanotools: 220 nm silicon waveguides, TiW heaters (M1) and a metal routing layer (M2).
 
@@ -6,7 +6,9 @@ A silicon photonic version of the full adder in *Using Polarisation and Interfer
 
 The layout is a native KLayout / SiEPIC-Tools design, `klayout/EBeam_heaters_atharvdubey_FullAdder.gds` (and `.oas`, the fabrication export). It measures 1.87 × 1.60 mm and holds 113 components, ten grating couplers and twelve probe pads. It passes SiEPIC-Tools' functional verification with 0 errors. It has not been fabricated.
 
-Open it in KLayout with SiEPIC-Tools and the SiEPIC EBeam PDK installed. The EBeam technology then gives the layer colours and the PCells, so every waveguide and heater stays editable.
+Four copies of it make a 4-bit ALU (ADD, SUB, AND, OR, XOR) on one 3.72 × 3.08 mm die: see [4-bit ALU](#4-bit-alu) below.
+
+Open either layout in KLayout with SiEPIC-Tools and the SiEPIC EBeam PDK installed. The EBeam technology then gives the layer colours and the PCells, so every waveguide and heater stays editable.
 
 ## From the bench to the chip
 
@@ -88,7 +90,7 @@ The simulation also finds a better marking. With equal weights on A, B and Cin, 
 
 ## Layout and checks
 
-`klayout/full_adder_siepic.py` builds the layout with SiEPIC-Tools from the EBeam library:
+`klayout/full_adder_siepic.py` builds the layout with SiEPIC-Tools (the drawing code is `klayout/builder.py`, shared with the ALU) from the EBeam library:
 
 - `GC_TE_1550_8degOxide_BB` grating couplers;
 - `ebeam_y_1550` Y-branches;
@@ -118,9 +120,58 @@ Checks, all passing:
   - each of the 10 heaters on exactly two nets;
   - no metal near a grating coupler.
 
-The foundry's own KLayout DRC run (the `.lydrc` deck in the KLayout application) should still be done before submission.
+- **The PDK's own DRC decks**, run with the KLayout DRC engine by `klayout/run_drc.py` (reports in `klayout/fa/drc/`):
+
+  | Deck | Rules | Violations |
+  |---|---|---|
+  | `SiEPIC_EBeam_DRC`, the process deck | 14 | **0** |
+  | `ELEC463 Metal Heater` (course "Chip1") | 5 | 0 |
+  | `ELEC463 Doping` (course "Chip2") | 10 | 140, all `M_Si_separation` |
+
+  The process deck is the one that applies. The ELEC463 decks belong to a university course: the Metal Heater deck checks metal on layer 47/0, which this design does not use, and the Doping deck is for a doped-silicon heater process that forbids metal over waveguides, so it flags every metal heater (14 markers per heater).
 
 The first draft of this layout, drawn with gdsfactory, is in the git history (commit db5fa41).
+
+## 4-bit ALU
+
+![4-bit ALU layout](figures/alu4_layout.png)
+
+`klayout/EBeam_heaters_atharvdubey_ALU4.gds` (and `.oas`) holds four full adders in a 2 × 2 grid: bit 0 bottom-left, bit 1 bottom-right, bit 2 top-left, bit 3 top-right. Each bit is the verified full adder, unchanged. The die is 3.72 × 3.08 mm with 443 components, 34 grating couplers (four per test circuit, eight test circuits, plus the alignment loopback pair), 40 heaters and 48 probe pads.
+
+**How the bits are chained.** The bits share no light. Bit i's carry photocurrent goes to a comparator, and the comparator drives bit i+1's carry-in heaters. This is the same hybrid step that already carries XOR 1 into XOR 2 inside each adder. The electronic controller that does this also picks the operation:
+
+| Operation | What the controller does | Result read from |
+|---|---|---|
+| ADD, A + B + cin | carry-in of bit 0 = cin; carries ripple | SUM of each bit, carry out |
+| SUB, A − B | inverts B in the heater driver, carry-in of bit 0 = 1 (two's complement) | SUM; carry out 1 means no borrow |
+| AND | every carry-in = 0 | CARRY, since majority(A, B, 0) = A and B |
+| OR | every carry-in = 1 | CARRY, since majority(A, B, 1) = A or B |
+| XOR | nothing extra | XOR 1 of each bit |
+
+AND and OR need no extra optics because the carry unit computes majority(A, B, Cin) (the equal-weight marking above).
+
+**Layout checks**, all passing (`klayout/alu4_build_report.json`, `klayout/alu4/drc/`):
+
+- SiEPIC-Tools functional verification with the `DFT_Phot1x` rules: 0 errors. Each half of each bit is its own automated-test circuit (`opt_in_..._ALU4_Bit{0-3}_Half{1,2}`); the rows are 1524 µm (12 × 127 µm) apart, so one fibre-array column reaches every circuit in a column of bits.
+- The four bits are identical: same 110 parts, same drawn lengths, checked in the build script.
+- No waveguide crossings, no unconnected optical pins.
+- `verify.py`: every rule passes; 48 metal nets with one pad each; each of the 40 heaters on two nets.
+- PDK DRC decks: `SiEPIC_EBeam_DRC` 0 violations over 14 rules; `ELEC463 Metal Heater` 0; `ELEC463 Doping` 560 `M_Si_separation`, which is the same not-applicable flag on every heater.
+
+**Simulation** (`alu4_sim.py`, results in `alu4_results.json`). Each bit is simulated from its own circuit in the SiEPIC extraction of the ALU layout, and each matches the single full adder to 1e-15. The controller is modelled as it would be built: comparator thresholds are fixed per bit after calibration, every decision sees detector noise, and the carry ripples bit to bit. Each bit gets 1 mW of laser (a 4 mW laser split eight ways). Every die below runs 1,536 operations: ADD with both carry-ins, SUB, AND, OR and XOR, each over all 256 operand pairs.
+
+| Die | Wrong results | Worst decision margin | Minimum laser, whole ALU |
+|---|---|---|---|
+| Nominal (220 nm silicon, 500 nm waveguides) | 0 of 1,536 | 45.7% | 15 µW |
+| Stressed: each bit at a different corner (±10 nm thickness, ±20 nm width), calibrated per bit | 0 of 1,536 | 45.4% | 19 µW |
+| Stressed, nominal heater settings, per-bit thresholds | 0 of 1,536 | 3.0% (bit 3 carry) | 108 µW |
+| Stressed, nominal heater settings and thresholds (no calibration) | 731 of 1,536 | fails | – |
+
+The stressed die has far more variation between bits than a real 3.7 mm die. It still works once each bit is calibrated on its own, which is the usual procedure for heater-tuned circuits. Setting only the thresholds per bit barely works, and skipping calibration fails: bit 2's XOR 1 level drops under the shared threshold and the wrong X corrupts its SUM.
+
+![Decision levels of every bit](figures/alu4_levels.png)
+
+**Speed.** Each carry hop is one comparator and one heater switching time. A 4-bit add therefore takes about five heater switching times (set the inputs, then four hops), which is tens of microseconds per hop for thermal heaters. Like the single adder, the ALU shows the logic, not speed.
 
 ## Testing a fabricated chip
 
@@ -141,16 +192,22 @@ The first draft of this layout, drawn with gdsfactory, is in the git history (co
 - Heater thermal crosstalk is not modelled; heaters are at least 90 µm apart.
 - Heater power and switching speed depend on the TiW process and must be measured. Thermal switches settle in tens of microseconds, so this chip shows the logic, not speed.
 - Waveguide loss (3 dB/cm) is an assumption.
-- The die area must fit the run's submission template; at 1.87 × 1.60 mm it is larger than the 605 × 410 µm cells of the SiEPIC course runs.
+- The die area must fit the run's submission template. At 1.87 × 1.60 mm (full adder) and 3.72 × 3.08 mm (ALU), both are larger than the 605 × 410 µm cells of the SiEPIC course runs.
+- The ALU's carry chain and operation select are an electronic controller (comparators, heater drivers), modelled in `alu4_sim.py`, not drawn.
 
 ## Reproduce
 
 ```
 pip install klayout siepic siepic_ebeam_pdk
 python3 klayout/full_adder_siepic.py   # layout (.gds/.oas), SiEPIC verification, extracted netlist
+python3 klayout/alu4_siepic.py         # 4-bit ALU layout, same checks
+python3 klayout/run_drc.py klayout/EBeam_heaters_atharvdubey_FullAdder.oas klayout/fa     # PDK DRC decks (needs the klayout executable)
+python3 klayout/run_drc.py klayout/EBeam_heaters_atharvdubey_ALU4.oas klayout/alu4
 pip install -r requirements.txt
-python3 verify.py                      # design-rule and electrical checks
+python3 verify.py                      # design-rule and electrical checks (add a .gds path for the ALU)
 python3 full_adder_sim.py              # about 20 minutes; full_adder_results.json
+python3 alu4_sim.py                    # about 6 minutes; alu4_results.json
 python3 figures.py
 python3 render_chip.py
+python3 alu4_figures.py
 ```

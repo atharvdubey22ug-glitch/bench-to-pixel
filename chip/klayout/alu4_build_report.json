@@ -1,0 +1,365 @@
+{
+ "top_cell": "EBeam_heaters_atharvdubey_ALU4",
+ "die_um": [
+  3720.0,
+  3076.0
+ ],
+ "bits": 4,
+ "grid": {
+  "0": [
+   0,
+   0
+  ],
+  "1": [
+   1,
+   0
+  ],
+  "2": [
+   0,
+   1
+  ],
+  "3": [
+   1,
+   1
+  ]
+ },
+ "siepic_verification_errors": 0,
+ "components": 443,
+ "components_per_bit": 110,
+ "bits_identical": true,
+ "test_circuits": [
+  "opt_in_TE_1550_device_atharvdubey_ALU4_Bit0_Half1",
+  "opt_in_TE_1550_device_atharvdubey_ALU4_Bit0_Half2",
+  "opt_in_TE_1550_device_atharvdubey_ALU4_Bit1_Half1",
+  "opt_in_TE_1550_device_atharvdubey_ALU4_Bit1_Half2",
+  "opt_in_TE_1550_device_atharvdubey_ALU4_Bit2_Half1",
+  "opt_in_TE_1550_device_atharvdubey_ALU4_Bit2_Half2",
+  "opt_in_TE_1550_device_atharvdubey_ALU4_Bit3_Half1",
+  "opt_in_TE_1550_device_atharvdubey_ALU4_Bit3_Half2"
+ ],
+ "waveguide_crossings": [],
+ "dangling_optical_pins": [],
+ "pads": 48,
+ "heater_pads": [
+  {
+   "bit": 0,
+   "name": "B_and",
+   "between": [
+    "ALU4_B0_P10",
+    "ALU4_B0_P11"
+   ]
+  },
+  {
+   "bit": 0,
+   "name": "A_and",
+   "between": [
+    "ALU4_B0_P11",
+    "ALU4_B0_P12"
+   ]
+  },
+  {
+   "bit": 0,
+   "name": "A_x1",
+   "between": [
+    "ALU4_B0_P12",
+    "ALU4_B0_P13"
+   ]
+  },
+  {
+   "bit": 0,
+   "name": "bias1",
+   "between": [
+    "ALU4_B0_P13",
+    "ALU4_B0_P14"
+   ]
+  },
+  {
+   "bit": 0,
+   "name": "B_x1",
+   "between": [
+    "ALU4_B0_P14",
+    "ALU4_B0_P15"
+   ]
+  },
+  {
+   "bit": 0,
+   "name": "X_and",
+   "between": [
+    "ALU4_B0_P20",
+    "ALU4_B0_P21"
+   ]
+  },
+  {
+   "bit": 0,
+   "name": "C_and",
+   "between": [
+    "ALU4_B0_P21",
+    "ALU4_B0_P22"
+   ]
+  },
+  {
+   "bit": 0,
+   "name": "C_x2",
+   "between": [
+    "ALU4_B0_P22",
+    "ALU4_B0_P23"
+   ]
+  },
+  {
+   "bit": 0,
+   "name": "bias2",
+   "between": [
+    "ALU4_B0_P23",
+    "ALU4_B0_P24"
+   ]
+  },
+  {
+   "bit": 0,
+   "name": "X_x2",
+   "between": [
+    "ALU4_B0_P24",
+    "ALU4_B0_P25"
+   ]
+  },
+  {
+   "bit": 1,
+   "name": "B_and",
+   "between": [
+    "ALU4_B1_P10",
+    "ALU4_B1_P11"
+   ]
+  },
+  {
+   "bit": 1,
+   "name": "A_and",
+   "between": [
+    "ALU4_B1_P11",
+    "ALU4_B1_P12"
+   ]
+  },
+  {
+   "bit": 1,
+   "name": "A_x1",
+   "between": [
+    "ALU4_B1_P12",
+    "ALU4_B1_P13"
+   ]
+  },
+  {
+   "bit": 1,
+   "name": "bias1",
+   "between": [
+    "ALU4_B1_P13",
+    "ALU4_B1_P14"
+   ]
+  },
+  {
+   "bit": 1,
+   "name": "B_x1",
+   "between": [
+    "ALU4_B1_P14",
+    "ALU4_B1_P15"
+   ]
+  },
+  {
+   "bit": 1,
+   "name": "X_and",
+   "between": [
+    "ALU4_B1_P20",
+    "ALU4_B1_P21"
+   ]
+  },
+  {
+   "bit": 1,
+   "name": "C_and",
+   "between": [
+    "ALU4_B1_P21",
+    "ALU4_B1_P22"
+   ]
+  },
+  {
+   "bit": 1,
+   "name": "C_x2",
+   "between": [
+    "ALU4_B1_P22",
+    "ALU4_B1_P23"
+   ]
+  },
+  {
+   "bit": 1,
+   "name": "bias2",
+   "between": [
+    "ALU4_B1_P23",
+    "ALU4_B1_P24"
+   ]
+  },
+  {
+   "bit": 1,
+   "name": "X_x2",
+   "between": [
+    "ALU4_B1_P24",
+    "ALU4_B1_P25"
+   ]
+  },
+  {
+   "bit": 2,
+   "name": "B_and",
+   "between": [
+    "ALU4_B2_P10",
+    "ALU4_B2_P11"
+   ]
+  },
+  {
+   "bit": 2,
+   "name": "A_and",
+   "between": [
+    "ALU4_B2_P11",
+    "ALU4_B2_P12"
+   ]
+  },
+  {
+   "bit": 2,
+   "name": "A_x1",
+   "between": [
+    "ALU4_B2_P12",
+    "ALU4_B2_P13"
+   ]
+  },
+  {
+   "bit": 2,
+   "name": "bias1",
+   "between": [
+    "ALU4_B2_P13",
+    "ALU4_B2_P14"
+   ]
+  },
+  {
+   "bit": 2,
+   "name": "B_x1",
+   "between": [
+    "ALU4_B2_P14",
+    "ALU4_B2_P15"
+   ]
+  },
+  {
+   "bit": 2,
+   "name": "X_and",
+   "between": [
+    "ALU4_B2_P20",
+    "ALU4_B2_P21"
+   ]
+  },
+  {
+   "bit": 2,
+   "name": "C_and",
+   "between": [
+    "ALU4_B2_P21",
+    "ALU4_B2_P22"
+   ]
+  },
+  {
+   "bit": 2,
+   "name": "C_x2",
+   "between": [
+    "ALU4_B2_P22",
+    "ALU4_B2_P23"
+   ]
+  },
+  {
+   "bit": 2,
+   "name": "bias2",
+   "between": [
+    "ALU4_B2_P23",
+    "ALU4_B2_P24"
+   ]
+  },
+  {
+   "bit": 2,
+   "name": "X_x2",
+   "between": [
+    "ALU4_B2_P24",
+    "ALU4_B2_P25"
+   ]
+  },
+  {
+   "bit": 3,
+   "name": "B_and",
+   "between": [
+    "ALU4_B3_P10",
+    "ALU4_B3_P11"
+   ]
+  },
+  {
+   "bit": 3,
+   "name": "A_and",
+   "between": [
+    "ALU4_B3_P11",
+    "ALU4_B3_P12"
+   ]
+  },
+  {
+   "bit": 3,
+   "name": "A_x1",
+   "between": [
+    "ALU4_B3_P12",
+    "ALU4_B3_P13"
+   ]
+  },
+  {
+   "bit": 3,
+   "name": "bias1",
+   "between": [
+    "ALU4_B3_P13",
+    "ALU4_B3_P14"
+   ]
+  },
+  {
+   "bit": 3,
+   "name": "B_x1",
+   "between": [
+    "ALU4_B3_P14",
+    "ALU4_B3_P15"
+   ]
+  },
+  {
+   "bit": 3,
+   "name": "X_and",
+   "between": [
+    "ALU4_B3_P20",
+    "ALU4_B3_P21"
+   ]
+  },
+  {
+   "bit": 3,
+   "name": "C_and",
+   "between": [
+    "ALU4_B3_P21",
+    "ALU4_B3_P22"
+   ]
+  },
+  {
+   "bit": 3,
+   "name": "C_x2",
+   "between": [
+    "ALU4_B3_P22",
+    "ALU4_B3_P23"
+   ]
+  },
+  {
+   "bit": 3,
+   "name": "bias2",
+   "between": [
+    "ALU4_B3_P23",
+    "ALU4_B3_P24"
+   ]
+  },
+  {
+   "bit": 3,
+   "name": "X_x2",
+   "between": [
+    "ALU4_B3_P24",
+    "ALU4_B3_P25"
+   ]
+  }
+ ]
+}

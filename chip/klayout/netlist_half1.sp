@@ -1,4 +1,4 @@
-* Spice output from KLayout SiEPIC-Tools v0.5.31, 2026-10-15 10:03:15.
+* Spice output from KLayout SiEPIC-Tools v0.5.31, 2026-10-15 13:02:20.
 
 .subckt EBeam_heaters_atharvdubey_FullAdder wg_heater_6_elec1 wg_heater_6_elec2 wg_heater_9_elec1 wg_heater_9_elec2 wg_heater_21_elec1 wg_heater_21_elec2 wg_heater_34_elec1 wg_heater_34_elec2 wg_heater_43_elec1 wg_heater_43_elec2 GC_TE_1550_8degOxide_BB_detector3 GC_TE_1550_8degOxide_BB_detector2 GC_TE_1550_8degOxide_BB_laser GC_TE_1550_8degOxide_BB_detector1
 .param MC_uniformity_width=0 

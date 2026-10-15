@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<report-database>
+ <description>SiEPIC-EBeam-PDK DRC</description>
+ <original-file/>
+ <generator>drc: script='fa/drc/SiEPIC_EBeam_DRC.drc'</generator>
+ <top-cell>EBeam_heaters_atharvdubey_FullAdder</top-cell>
+ <tags>
+ </tags>
+ <categories>
+  <category>
+   <name>Boundary</name>
+   <description>devices are out of boundary</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>Boundary</name>
+   <description>devices are out of boundary</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>Si_width</name>
+   <description>Si minimum feature size violation; min 60 nm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>Si_space</name>
+   <description>Si minimum space violation; min 60 nm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>SiN_width</name>
+   <description>SiN minimum feature size violation; min 120 nm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>SiN_space</name>
+   <description>SiN minimum space violation; min 120 nm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>M1_width</name>
+   <description>M1 minimum feature size violation; min 3 µm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>M1_space</name>
+   <description>M1 minimum space violation; min 3 µm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>M2_width</name>
+   <description>M2 minimum feature size violation; min 5 µm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>M2_space</name>
+   <description>M2 minimum space violation; min 8 µm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>MLOpen_width</name>
+   <description>MLOpen minimum feature size violation; min 10 µm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>MLOpen_space</name>
+   <description>MLOpen minimum space violation; min 10 µm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>M2_M1_overlap</name>
+   <description>M2 minimum overlap with M1 violation; min 3 µm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>DT_Metal_separation</name>
+   <description>DT-Metal minimum separation violation; min 20 µm</description>
+   <categories>
+   </categories>
+  </category>
+ </categories>
+ <cells>
+  <cell>
+   <name>EBeam_heaters_atharvdubey_FullAdder</name>
+   <variant/>
+   <references>
+   </references>
+  </cell>
+ </cells>
+ <items>
+ </items>
+</report-database>

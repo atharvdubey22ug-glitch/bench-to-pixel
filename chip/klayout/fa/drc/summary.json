@@ -1,0 +1,19 @@
+{
+ "ELEC463 Doping": {
+  "rules_checked": 10,
+  "violations": 140,
+  "by_rule": {
+   "M_Si_separation": 140
+  }
+ },
+ "ELEC463 Metal Heater": {
+  "rules_checked": 5,
+  "violations": 0,
+  "by_rule": {}
+ },
+ "SiEPIC_EBeam_DRC": {
+  "rules_checked": 14,
+  "violations": 0,
+  "by_rule": {}
+ }
+}

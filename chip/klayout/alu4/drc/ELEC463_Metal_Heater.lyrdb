@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<report-database>
+ <description>DRC ELEC463-2018 Chip1</description>
+ <original-file/>
+ <generator>drc: script='alu4/drc/ELEC463_Metal_Heater.drc'</generator>
+ <top-cell>EBeam_heaters_atharvdubey_ALU4</top-cell>
+ <tags>
+ </tags>
+ <categories>
+  <category>
+   <name>Si_width</name>
+   <description>Si minimum feature size violation; min 60 nm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>Si_space</name>
+   <description>Si minimum space violation; min 60 nm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>M_width</name>
+   <description>Si minimum feature size violation; min 3 µm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>M_space</name>
+   <description>Metal minimum space violation; min 3 µm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>Boundary</name>
+   <description>devices are out of boundary</description>
+   <categories>
+   </categories>
+  </category>
+ </categories>
+ <cells>
+  <cell>
+   <name>EBeam_heaters_atharvdubey_ALU4</name>
+   <variant/>
+   <references>
+   </references>
+  </cell>
+ </cells>
+ <items>
+ </items>
+</report-database>

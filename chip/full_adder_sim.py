@@ -83,10 +83,10 @@ PORTMAP = {"ebeam_y_1550": ("yb", {"opt1": "port_1", "opt2": "port_2", "opt3": "
            "ebeam_terminator_te1550": ("term", {"opt1": "o0"})}
 
 
-def netlist(corner=NOMINAL, extract=EXTRACT):
-    """SAX netlist from the SiEPIC-extracted layout netlist."""
+def netlist(corner=NOMINAL, extract=EXTRACT, bit=None):
+    """SAX netlist from the SiEPIC-extracted layout netlist (one bit of a multi-bit layout if given)."""
     th, w = corner
-    comps = json.load(open(extract))["components"]
+    comps = [c for c in json.load(open(extract))["components"] if bit is None or c.get("bit") == bit]
     ins, ports, netpins = {}, {}, {}
     for c in comps:
         k, idx = c["kind"], c["idx"]
@@ -124,9 +124,9 @@ class Chip:
     """The chip as drawn. Each half adder has its own laser input (design-for-test rules); in use both
     are fed from one laser through a 50/50 fibre splitter, so each gets half the laser power."""
 
-    def __init__(self, corner=NOMINAL, lam=LAM, extract=EXTRACT):
+    def __init__(self, corner=NOMINAL, lam=LAM, extract=EXTRACT, bit=None):
         self.corner, self.lam = corner, lam
-        self.circ, _ = sax.circuit(netlist=netlist(corner, extract), models=MODELS)
+        self.circ, _ = sax.circuit(netlist=netlist(corner, extract, bit), models=MODELS)
         self.cal = None
 
     def run(self, **ph):
