@@ -1,0 +1,1493 @@
+{
+ "components": [
+  {
+   "idx": 0,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 1,
+    "opt2": 0
+   },
+   "center": [
+    786.4,
+    238.325
+   ],
+   "length_um": 124.24699999999999
+  },
+  {
+   "idx": 1,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 3,
+    "opt2": 2
+   },
+   "center": [
+    1037.075,
+    293.175
+   ],
+   "length_um": 640.597
+  },
+  {
+   "idx": 2,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 4,
+    "opt2": 5
+   },
+   "center": [
+    786.4,
+    -523.675
+   ],
+   "length_um": 124.24699999999999
+  },
+  {
+   "idx": 3,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 6,
+    "opt2": 7
+   },
+   "center": [
+    1037.075,
+    -468.825
+   ],
+   "length_um": 640.597
+  },
+  {
+   "idx": 4,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 9,
+    "opt2": 8
+   },
+   "center": [
+    1056.775,
+    230.525
+   ],
+   "length_um": 39.697
+  },
+  {
+   "idx": 5,
+   "kind": "ebeam_bdc_te1550",
+   "pins": {
+    "opt1": 0,
+    "opt2": 10,
+    "opt3": 11,
+    "opt4": 12
+   },
+   "center": [
+    864.125,
+    219.35
+   ]
+  },
+  {
+   "idx": 6,
+   "kind": "wg_heater",
+   "pins": {
+    "opt1": 13,
+    "opt2": 14
+   },
+   "center": [
+    1200.1,
+    217.0
+   ],
+   "length_um": 120.0,
+   "role": "bias1"
+  },
+  {
+   "idx": 7,
+   "kind": "ebeam_bdc_te1550",
+   "pins": {
+    "opt1": 2,
+    "opt2": 15,
+    "opt3": 16,
+    "opt4": 17
+   },
+   "center": [
+    1365.475,
+    324.35
+   ]
+  },
+  {
+   "idx": 8,
+   "kind": "ebeam_bdc_te1550",
+   "pins": {
+    "opt1": 19,
+    "opt2": 20,
+    "opt3": 21,
+    "opt4": 18
+   },
+   "center": [
+    1606.075,
+    324.35
+   ]
+  },
+  {
+   "idx": 9,
+   "kind": "wg_heater",
+   "pins": {
+    "opt1": 22,
+    "opt2": 23
+   },
+   "center": [
+    1485.55,
+    344.35
+   ],
+   "length_um": 120.0,
+   "role": "B_x1"
+  },
+  {
+   "idx": 10,
+   "kind": "ebeam_terminator_te1550",
+   "pins": {
+    "opt1": 15
+   },
+   "center": [
+    1324.65,
+    326.7
+   ]
+  },
+  {
+   "idx": 11,
+   "kind": "ebeam_terminator_te1550",
+   "pins": {
+    "opt1": 18
+   },
+   "center": [
+    1646.9,
+    326.7
+   ]
+  },
+  {
+   "idx": 12,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 16,
+    "opt2": 19
+   },
+   "center": [
+    1485.775,
+    313.175
+   ],
+   "length_um": 198.943
+  },
+  {
+   "idx": 13,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 17,
+    "opt2": 22
+   },
+   "center": [
+    1413.2,
+    335.525
+   ],
+   "length_um": 39.247
+  },
+  {
+   "idx": 14,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 23,
+    "opt2": 20
+   },
+   "center": [
+    1558.125,
+    335.525
+   ],
+   "length_um": 39.697
+  },
+  {
+   "idx": 15,
+   "kind": "ebeam_bdc_te1550",
+   "pins": {
+    "opt1": 25,
+    "opt2": 8,
+    "opt3": 13,
+    "opt4": 24
+   },
+   "center": [
+    1104.725,
+    219.35
+   ]
+  },
+  {
+   "idx": 16,
+   "kind": "ebeam_y_1550",
+   "pins": {
+    "opt1": 21,
+    "opt2": 26,
+    "opt3": 27
+   },
+   "center": [
+    1648.85,
+    322.0
+   ]
+  },
+  {
+   "idx": 17,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 26,
+    "opt2": 27
+   },
+   "center": [
+    1675.425,
+    322.0
+   ],
+   "length_um": 120.39
+  },
+  {
+   "idx": 18,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 14,
+    "opt2": 28
+   },
+   "center": [
+    1458.275,
+    217.0
+   ],
+   "length_um": 396.35
+  },
+  {
+   "idx": 19,
+   "kind": "ebeam_y_1550",
+   "pins": {
+    "opt1": 28,
+    "opt2": 29,
+    "opt3": 30
+   },
+   "center": [
+    1663.85,
+    217.0
+   ]
+  },
+  {
+   "idx": 20,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 29,
+    "opt2": 30
+   },
+   "center": [
+    1690.425,
+    217.0
+   ],
+   "length_um": 120.39
+  },
+  {
+   "idx": 21,
+   "kind": "wg_heater",
+   "pins": {
+    "opt1": 31,
+    "opt2": 9
+   },
+   "center": [
+    984.2,
+    239.35
+   ],
+   "length_um": 120.0,
+   "role": "A_x1"
+  },
+  {
+   "idx": 22,
+   "kind": "ebeam_terminator_te1550",
+   "pins": {
+    "opt1": 10
+   },
+   "center": [
+    823.3,
+    221.7
+   ]
+  },
+  {
+   "idx": 23,
+   "kind": "ebeam_terminator_te1550",
+   "pins": {
+    "opt1": 24
+   },
+   "center": [
+    1145.55,
+    221.7
+   ]
+  },
+  {
+   "idx": 24,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 11,
+    "opt2": 25
+   },
+   "center": [
+    984.425,
+    208.175
+   ],
+   "length_um": 198.943
+  },
+  {
+   "idx": 25,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 12,
+    "opt2": 31
+   },
+   "center": [
+    911.85,
+    230.525
+   ],
+   "length_um": 39.247
+  },
+  {
+   "idx": 26,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 32,
+    "opt2": 33
+   },
+   "center": [
+    616.025,
+    229.575
+   ],
+   "length_um": 171.597
+  },
+  {
+   "idx": 27,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 35,
+    "opt2": 34
+   },
+   "center": [
+    336.65,
+    322.675
+   ],
+   "length_um": 786.847
+  },
+  {
+   "idx": 28,
+   "kind": "GC_TE_1550_8degOxide_BB",
+   "pins": {
+    "opt1": 36
+   },
+   "center": [
+    -19.985,
+    0.084
+   ],
+   "role": "c_b"
+  },
+  {
+   "idx": 29,
+   "kind": "GC_TE_1550_8degOxide_BB",
+   "pins": {
+    "opt1": 37
+   },
+   "center": [
+    -19.985,
+    127.084
+   ],
+   "role": "c_a"
+  },
+  {
+   "idx": 30,
+   "kind": "GC_TE_1550_8degOxide_BB",
+   "pins": {
+    "opt1": 38
+   },
+   "center": [
+    -19.985,
+    254.084
+   ],
+   "role": "laser1"
+  },
+  {
+   "idx": 31,
+   "kind": "GC_TE_1550_8degOxide_BB",
+   "pins": {
+    "opt1": 34
+   },
+   "center": [
+    -19.985,
+    381.084
+   ],
+   "role": "xor"
+  },
+  {
+   "idx": 32,
+   "kind": "ebeam_bdc_te1550",
+   "pins": {
+    "opt1": 42,
+    "opt2": 39,
+    "opt3": 40,
+    "opt4": 41
+   },
+   "center": [
+    355.975,
+    129.35
+   ]
+  },
+  {
+   "idx": 33,
+   "kind": "ebeam_bdc_te1550",
+   "pins": {
+    "opt1": 44,
+    "opt2": 45,
+    "opt3": 46,
+    "opt4": 43
+   },
+   "center": [
+    115.375,
+    129.35
+   ]
+  },
+  {
+   "idx": 34,
+   "kind": "wg_heater",
+   "pins": {
+    "opt1": 47,
+    "opt2": 48
+   },
+   "center": [
+    235.9,
+    149.35
+   ],
+   "length_um": 120.0,
+   "role": "A_and"
+  },
+  {
+   "idx": 35,
+   "kind": "ebeam_terminator_te1550",
+   "pins": {
+    "opt1": 39
+   },
+   "center": [
+    396.8,
+    131.7
+   ]
+  },
+  {
+   "idx": 36,
+   "kind": "ebeam_terminator_te1550",
+   "pins": {
+    "opt1": 43
+   },
+   "center": [
+    74.55,
+    131.7
+   ]
+  },
+  {
+   "idx": 37,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 40,
+    "opt2": 44
+   },
+   "center": [
+    235.675,
+    118.175
+   ],
+   "length_um": 198.943
+  },
+  {
+   "idx": 38,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 41,
+    "opt2": 47
+   },
+   "center": [
+    308.25,
+    140.525
+   ],
+   "length_um": 39.247
+  },
+  {
+   "idx": 39,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 48,
+    "opt2": 45
+   },
+   "center": [
+    163.325,
+    140.525
+   ],
+   "length_um": 39.697
+  },
+  {
+   "idx": 40,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 37,
+    "opt2": 46
+   },
+   "center": [
+    40.0,
+    127.0
+   ],
+   "length_um": 80.0
+  },
+  {
+   "idx": 41,
+   "kind": "ebeam_bdc_te1550",
+   "pins": {
+    "opt1": 52,
+    "opt2": 49,
+    "opt3": 50,
+    "opt4": 51
+   },
+   "center": [
+    355.975,
+    2.35
+   ]
+  },
+  {
+   "idx": 42,
+   "kind": "ebeam_bdc_te1550",
+   "pins": {
+    "opt1": 54,
+    "opt2": 55,
+    "opt3": 56,
+    "opt4": 53
+   },
+   "center": [
+    115.375,
+    2.35
+   ]
+  },
+  {
+   "idx": 43,
+   "kind": "wg_heater",
+   "pins": {
+    "opt1": 57,
+    "opt2": 58
+   },
+   "center": [
+    235.9,
+    22.35
+   ],
+   "length_um": 120.0,
+   "role": "B_and"
+  },
+  {
+   "idx": 44,
+   "kind": "ebeam_terminator_te1550",
+   "pins": {
+    "opt1": 49
+   },
+   "center": [
+    396.8,
+    4.7
+   ]
+  },
+  {
+   "idx": 45,
+   "kind": "ebeam_terminator_te1550",
+   "pins": {
+    "opt1": 53
+   },
+   "center": [
+    74.55,
+    4.7
+   ]
+  },
+  {
+   "idx": 46,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 50,
+    "opt2": 54
+   },
+   "center": [
+    235.675,
+    -8.825
+   ],
+   "length_um": 198.943
+  },
+  {
+   "idx": 47,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 51,
+    "opt2": 57
+   },
+   "center": [
+    308.25,
+    13.525
+   ],
+   "length_um": 39.247
+  },
+  {
+   "idx": 48,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 58,
+    "opt2": 55
+   },
+   "center": [
+    163.325,
+    13.525
+   ],
+   "length_um": 39.697
+  },
+  {
+   "idx": 49,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 36,
+    "opt2": 56
+   },
+   "center": [
+    40.0,
+    0.0
+   ],
+   "length_um": 80.0
+  },
+  {
+   "idx": 50,
+   "kind": "ebeam_y_1550",
+   "pins": {
+    "opt1": 59,
+    "opt2": 61,
+    "opt3": 60
+   },
+   "center": [
+    461.35,
+    194.0
+   ]
+  },
+  {
+   "idx": 51,
+   "kind": "ebeam_y_1550",
+   "pins": {
+    "opt1": 62,
+    "opt2": 32,
+    "opt3": 63
+   },
+   "center": [
+    551.35,
+    196.75
+   ]
+  },
+  {
+   "idx": 52,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 38,
+    "opt2": 59
+   },
+   "center": [
+    226.975,
+    224.0
+   ],
+   "length_um": 510.84700000000004
+  },
+  {
+   "idx": 53,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 60,
+    "opt2": 42
+   },
+   "center": [
+    435.425,
+    159.125
+   ],
+   "length_um": 158.54700000000003
+  },
+  {
+   "idx": 54,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 61,
+    "opt2": 62
+   },
+   "center": [
+    506.35,
+    196.75
+   ],
+   "length_um": 75.2
+  },
+  {
+   "idx": 55,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 63,
+    "opt2": 52
+   },
+   "center": [
+    480.425,
+    97.0
+   ],
+   "length_um": 378.29699999999997
+  },
+  {
+   "idx": 56,
+   "kind": "GC_TE_1550_8degOxide_BB",
+   "pins": {
+    "opt1": 64
+   },
+   "center": [
+    -19.985,
+    508.084
+   ],
+   "role": "gc_508"
+  },
+  {
+   "idx": 57,
+   "kind": "GC_TE_1550_8degOxide_BB",
+   "pins": {
+    "opt1": 65
+   },
+   "center": [
+    -19.985,
+    635.084
+   ],
+   "role": "gc_635"
+  },
+  {
+   "idx": 58,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 64,
+    "opt2": 65
+   },
+   "center": [
+    10.375,
+    571.5
+   ],
+   "length_um": 163.89700000000002
+  },
+  {
+   "idx": 59,
+   "kind": "ebeam_bdc_te1550",
+   "pins": {
+    "opt1": 33,
+    "opt2": 35,
+    "opt3": 1,
+    "opt4": 3
+   },
+   "center": [
+    708.675,
+    262.0
+   ]
+  },
+  {
+   "idx": 60,
+   "kind": "ebeam_terminator_te1550",
+   "pins": {
+    "opt1": 66
+   },
+   "center": [
+    396.8,
+    -630.3
+   ]
+  },
+  {
+   "idx": 61,
+   "kind": "ebeam_terminator_te1550",
+   "pins": {
+    "opt1": 67
+   },
+   "center": [
+    74.55,
+    -630.3
+   ]
+  },
+  {
+   "idx": 62,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 68,
+    "opt2": 69
+   },
+   "center": [
+    235.675,
+    -643.825
+   ],
+   "length_um": 198.943
+  },
+  {
+   "idx": 63,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 70,
+    "opt2": 71
+   },
+   "center": [
+    308.25,
+    -621.475
+   ],
+   "length_um": 39.247
+  },
+  {
+   "idx": 64,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 73,
+    "opt2": 72
+   },
+   "center": [
+    163.325,
+    -621.475
+   ],
+   "length_um": 39.697
+  },
+  {
+   "idx": 65,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 74,
+    "opt2": 75
+   },
+   "center": [
+    40.0,
+    -635.0
+   ],
+   "length_um": 80.0
+  },
+  {
+   "idx": 66,
+   "kind": "ebeam_bdc_te1550",
+   "pins": {
+    "opt1": 79,
+    "opt2": 76,
+    "opt3": 77,
+    "opt4": 78
+   },
+   "center": [
+    355.975,
+    -759.65
+   ]
+  },
+  {
+   "idx": 67,
+   "kind": "ebeam_bdc_te1550",
+   "pins": {
+    "opt1": 81,
+    "opt2": 82,
+    "opt3": 83,
+    "opt4": 80
+   },
+   "center": [
+    115.375,
+    -759.65
+   ]
+  },
+  {
+   "idx": 68,
+   "kind": "wg_heater",
+   "pins": {
+    "opt1": 84,
+    "opt2": 85
+   },
+   "center": [
+    235.9,
+    -739.65
+   ],
+   "length_um": 120.0,
+   "role": "X_and"
+  },
+  {
+   "idx": 69,
+   "kind": "ebeam_terminator_te1550",
+   "pins": {
+    "opt1": 76
+   },
+   "center": [
+    396.8,
+    -757.3
+   ]
+  },
+  {
+   "idx": 70,
+   "kind": "ebeam_terminator_te1550",
+   "pins": {
+    "opt1": 80
+   },
+   "center": [
+    74.55,
+    -757.3
+   ]
+  },
+  {
+   "idx": 71,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 77,
+    "opt2": 81
+   },
+   "center": [
+    235.675,
+    -770.825
+   ],
+   "length_um": 198.943
+  },
+  {
+   "idx": 72,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 78,
+    "opt2": 84
+   },
+   "center": [
+    308.25,
+    -748.475
+   ],
+   "length_um": 39.247
+  },
+  {
+   "idx": 73,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 85,
+    "opt2": 82
+   },
+   "center": [
+    163.325,
+    -748.475
+   ],
+   "length_um": 39.697
+  },
+  {
+   "idx": 74,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 86,
+    "opt2": 83
+   },
+   "center": [
+    40.0,
+    -762.0
+   ],
+   "length_um": 80.0
+  },
+  {
+   "idx": 75,
+   "kind": "ebeam_y_1550",
+   "pins": {
+    "opt1": 87,
+    "opt2": 89,
+    "opt3": 88
+   },
+   "center": [
+    461.35,
+    -568.0
+   ]
+  },
+  {
+   "idx": 76,
+   "kind": "ebeam_y_1550",
+   "pins": {
+    "opt1": 90,
+    "opt2": 92,
+    "opt3": 91
+   },
+   "center": [
+    551.35,
+    -565.25
+   ]
+  },
+  {
+   "idx": 77,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 93,
+    "opt2": 87
+   },
+   "center": [
+    226.975,
+    -538.0
+   ],
+   "length_um": 510.84700000000004
+  },
+  {
+   "idx": 78,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 88,
+    "opt2": 94
+   },
+   "center": [
+    435.425,
+    -602.875
+   ],
+   "length_um": 158.54700000000003
+  },
+  {
+   "idx": 79,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 89,
+    "opt2": 90
+   },
+   "center": [
+    506.35,
+    -565.25
+   ],
+   "length_um": 75.2
+  },
+  {
+   "idx": 80,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 91,
+    "opt2": 79
+   },
+   "center": [
+    480.425,
+    -665.0
+   ],
+   "length_um": 378.29699999999997
+  },
+  {
+   "idx": 81,
+   "kind": "ebeam_bdc_te1550",
+   "pins": {
+    "opt1": 95,
+    "opt2": 96,
+    "opt3": 4,
+    "opt4": 6
+   },
+   "center": [
+    708.675,
+    -500.0
+   ]
+  },
+  {
+   "idx": 82,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 92,
+    "opt2": 95
+   },
+   "center": [
+    616.025,
+    -532.425
+   ],
+   "length_um": 171.597
+  },
+  {
+   "idx": 83,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 96,
+    "opt2": 97
+   },
+   "center": [
+    336.65,
+    -439.325
+   ],
+   "length_um": 786.847
+  },
+  {
+   "idx": 84,
+   "kind": "GC_TE_1550_8degOxide_BB",
+   "pins": {
+    "opt1": 86
+   },
+   "center": [
+    -19.985,
+    -761.916
+   ],
+   "role": "c_d"
+  },
+  {
+   "idx": 85,
+   "kind": "GC_TE_1550_8degOxide_BB",
+   "pins": {
+    "opt1": 74
+   },
+   "center": [
+    -19.985,
+    -634.916
+   ],
+   "role": "c_c"
+  },
+  {
+   "idx": 86,
+   "kind": "GC_TE_1550_8degOxide_BB",
+   "pins": {
+    "opt1": 93
+   },
+   "center": [
+    -19.985,
+    -507.916
+   ],
+   "role": "laser2"
+  },
+  {
+   "idx": 87,
+   "kind": "GC_TE_1550_8degOxide_BB",
+   "pins": {
+    "opt1": 97
+   },
+   "center": [
+    -19.985,
+    -380.916
+   ],
+   "role": "sum"
+  },
+  {
+   "idx": 88,
+   "kind": "ebeam_bdc_te1550",
+   "pins": {
+    "opt1": 94,
+    "opt2": 66,
+    "opt3": 68,
+    "opt4": 70
+   },
+   "center": [
+    355.975,
+    -632.65
+   ]
+  },
+  {
+   "idx": 89,
+   "kind": "ebeam_bdc_te1550",
+   "pins": {
+    "opt1": 69,
+    "opt2": 72,
+    "opt3": 75,
+    "opt4": 67
+   },
+   "center": [
+    115.375,
+    -632.65
+   ]
+  },
+  {
+   "idx": 90,
+   "kind": "wg_heater",
+   "pins": {
+    "opt1": 71,
+    "opt2": 73
+   },
+   "center": [
+    235.9,
+    -612.65
+   ],
+   "length_um": 120.0,
+   "role": "C_and"
+  },
+  {
+   "idx": 91,
+   "kind": "wg_heater",
+   "pins": {
+    "opt1": 98,
+    "opt2": 99
+   },
+   "center": [
+    1485.55,
+    -417.65
+   ],
+   "length_um": 120.0,
+   "role": "X_x2"
+  },
+  {
+   "idx": 92,
+   "kind": "ebeam_terminator_te1550",
+   "pins": {
+    "opt1": 100
+   },
+   "center": [
+    1324.65,
+    -435.3
+   ]
+  },
+  {
+   "idx": 93,
+   "kind": "ebeam_terminator_te1550",
+   "pins": {
+    "opt1": 101
+   },
+   "center": [
+    1646.9,
+    -435.3
+   ]
+  },
+  {
+   "idx": 94,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 102,
+    "opt2": 103
+   },
+   "center": [
+    1485.775,
+    -448.825
+   ],
+   "length_um": 198.943
+  },
+  {
+   "idx": 95,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 104,
+    "opt2": 98
+   },
+   "center": [
+    1413.2,
+    -426.475
+   ],
+   "length_um": 39.247
+  },
+  {
+   "idx": 96,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 99,
+    "opt2": 105
+   },
+   "center": [
+    1558.125,
+    -426.475
+   ],
+   "length_um": 39.697
+  },
+  {
+   "idx": 97,
+   "kind": "ebeam_bdc_te1550",
+   "pins": {
+    "opt1": 107,
+    "opt2": 108,
+    "opt3": 109,
+    "opt4": 106
+   },
+   "center": [
+    1104.725,
+    -542.65
+   ]
+  },
+  {
+   "idx": 98,
+   "kind": "ebeam_y_1550",
+   "pins": {
+    "opt1": 112,
+    "opt2": 110,
+    "opt3": 111
+   },
+   "center": [
+    1648.85,
+    -440.0
+   ]
+  },
+  {
+   "idx": 99,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 110,
+    "opt2": 111
+   },
+   "center": [
+    1675.425,
+    -440.0
+   ],
+   "length_um": 120.39
+  },
+  {
+   "idx": 100,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 114,
+    "opt2": 113
+   },
+   "center": [
+    1458.275,
+    -545.0
+   ],
+   "length_um": 396.35
+  },
+  {
+   "idx": 101,
+   "kind": "ebeam_y_1550",
+   "pins": {
+    "opt1": 113,
+    "opt2": 115,
+    "opt3": 116
+   },
+   "center": [
+    1663.85,
+    -545.0
+   ]
+  },
+  {
+   "idx": 102,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 115,
+    "opt2": 116
+   },
+   "center": [
+    1690.425,
+    -545.0
+   ],
+   "length_um": 120.39
+  },
+  {
+   "idx": 103,
+   "kind": "wg_heater",
+   "pins": {
+    "opt1": 117,
+    "opt2": 118
+   },
+   "center": [
+    984.2,
+    -522.65
+   ],
+   "length_um": 120.0,
+   "role": "C_x2"
+  },
+  {
+   "idx": 104,
+   "kind": "ebeam_terminator_te1550",
+   "pins": {
+    "opt1": 119
+   },
+   "center": [
+    823.3,
+    -540.3
+   ]
+  },
+  {
+   "idx": 105,
+   "kind": "ebeam_terminator_te1550",
+   "pins": {
+    "opt1": 106
+   },
+   "center": [
+    1145.55,
+    -540.3
+   ]
+  },
+  {
+   "idx": 106,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 120,
+    "opt2": 107
+   },
+   "center": [
+    984.425,
+    -553.825
+   ],
+   "length_um": 198.943
+  },
+  {
+   "idx": 107,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 121,
+    "opt2": 117
+   },
+   "center": [
+    911.85,
+    -531.475
+   ],
+   "length_um": 39.247
+  },
+  {
+   "idx": 108,
+   "kind": "Waveguide",
+   "pins": {
+    "opt1": 118,
+    "opt2": 108
+   },
+   "center": [
+    1056.775,
+    -531.475
+   ],
+   "length_um": 39.697
+  },
+  {
+   "idx": 109,
+   "kind": "ebeam_bdc_te1550",
+   "pins": {
+    "opt1": 5,
+    "opt2": 119,
+    "opt3": 120,
+    "opt4": 121
+   },
+   "center": [
+    864.125,
+    -542.65
+   ]
+  },
+  {
+   "idx": 110,
+   "kind": "wg_heater",
+   "pins": {
+    "opt1": 109,
+    "opt2": 114
+   },
+   "center": [
+    1200.1,
+    -545.0
+   ],
+   "length_um": 120.0,
+   "role": "bias2"
+  },
+  {
+   "idx": 111,
+   "kind": "ebeam_bdc_te1550",
+   "pins": {
+    "opt1": 7,
+    "opt2": 100,
+    "opt3": 102,
+    "opt4": 104
+   },
+   "center": [
+    1365.475,
+    -437.65
+   ]
+  },
+  {
+   "idx": 112,
+   "kind": "ebeam_bdc_te1550",
+   "pins": {
+    "opt1": 103,
+    "opt2": 105,
+    "opt3": 112,
+    "opt4": 101
+   },
+   "center": [
+    1606.075,
+    -437.65
+   ]
+  }
+ ],
+ "gc_roles": {
+  "xor": [
+   0.0,
+   381.0
+  ],
+  "laser1": [
+   0.0,
+   254.0
+  ],
+  "c_a": [
+   0.0,
+   127.0
+  ],
+  "c_b": [
+   0.0,
+   0.0
+  ],
+  "sum": [
+   0.0,
+   -381.0
+  ],
+  "laser2": [
+   0.0,
+   -508.0
+  ],
+  "c_c": [
+   0.0,
+   -635.0
+  ],
+  "c_d": [
+   0.0,
+   -762.0
+  ]
+ }
+}

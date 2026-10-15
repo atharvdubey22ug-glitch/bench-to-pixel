@@ -4,7 +4,8 @@ Optical full adder chip: circuit simulation of the paper's Figure 15 on the SiEP
 (Applied Nanotools) passive silicon process with metal heaters.
 
 Mapping from the bench (Fig. 15/16 of "Using Polarisation and Interference for Optical Computing")
-  S1 (1)          Y-branch: light for the carry-in half / the A,B half
+  S1 (1)          a 50/50 fibre splitter feeding the two blocks' laser couplers (each block is one
+                  automated-test circuit under the SiEPIC Phot1x design-for-test rules)
   S2 (2), S3 (3)  Y-branches: tap light for input A and input B of AND gate 1
   S4 (8)          broadband directional coupler: Michelson XOR 1 (inputs A, B)
   S5 (10)         Y-branches: light for AND gate 2 and XOR 2
@@ -21,9 +22,10 @@ cascade cannot work: XOR 1 cancels A and B by giving them opposite phases at its
 (cascade_failure() shows this). XOR 1 is therefore detected, thresholded and re-applied to XOR 2
 as an input (the X switches), the same way the bench's Arduino applied thresholds.
 
-The whole chip is one SAX scattering network of PDK S-matrices (grating couplers, Y-branches,
-broadband couplers, strip waveguides) plus heater phase shifters, so back-reflections are
-included. Heaters are calibrated per chip with measurable sweeps (calibrate()).
+The circuit is read from the KLayout/SiEPIC layout (klayout/extracted_netlist.json: SiEPIC-Tools net
+extraction and drawn waveguide lengths) and solved as one SAX scattering network of PDK S-matrices
+(grating couplers, Y-branches, broadband couplers, strip waveguides) plus heater phase shifters, so
+back-reflections are included. Heaters are calibrated per chip with measurable sweeps (calibrate()).
 """
 import json
 import math
@@ -51,16 +53,11 @@ CORNERS = [(t, w) for t in (210.0, 220.0, 230.0) for w in (480.0, 500.0, 520.0)]
 DET = dict(resp=1.0, dark=1e-9, tia_pA=2.0, bw=1e6, rin_dB=-140.0)
 LOSS = P.WG_LOSS_DB_CM
 
-# Waveguide lengths (um). Taken from the drawn layout (layout_extract.json, written by layout.py)
-# when it exists; otherwise these schematic values are used.
-LEN = dict(gc_s1=60, in1=500, in2=500, ab1=75, ab2=75, sx1=215, sx2=215, x_out1=950, x_out2=950,
-           arm_a1=636, arm_b1=636, arm_a2=636, arm_b2=636, mzi_arm=250, loop=94,
-           and_in_A_and=155, and_in_B_and=375, and_in_C_and=155, and_in_X_and=375,
-           and_out_A_and=80, and_out_B_and=80, and_out_C_and=80, and_out_X_and=80)
-_EXTRACT = os.path.join(HERE, "layout_extract.json")
-if os.path.exists(_EXTRACT):
-    with open(_EXTRACT) as _f:
-        LEN = {**LEN, **json.load(_f)["lengths_um"]}
+# The circuit is read from the KLayout/SiEPIC layout: klayout/extracted_netlist.json is written by
+# klayout/full_adder_siepic.py from SiEPIC-Tools' net extraction (which pins touch which) and the
+# drawn waveguide lengths. Nothing about the topology is typed in here.
+EXTRACT = os.path.join(HERE, "klayout", "extracted_netlist.json")
+ROLE = {"xor": "xor1"}
 
 SWITCHES = ["A_and", "B_and", "C_and", "X_and", "A_x1", "B_x1", "C_x2", "X_x2"]
 BIASES = ["bias1", "bias2"]
@@ -72,95 +69,69 @@ def _phase(wl=1.55, phi=0.0):
     return sax.reciprocal({("o0", "o1"): jnp.exp(1j * phi) * jnp.ones_like(wl)})
 
 
+def _term(wl=1.55):
+    """Terminator: a matched one-port (no reflection)."""
+    wl = jnp.asarray(wl)
+    return {("o0", "o0"): 0j * jnp.ones_like(wl)}
+
+
 MODELS = {"bdc": siepic.bidirectional_coupler, "wg": siepic.waveguide, "yb": siepic.y_branch,
-          "gc": siepic.grating_coupler, "ps": _phase}
+          "gc": siepic.grating_coupler, "ps": _phase, "term": _term}
+PORTMAP = {"ebeam_y_1550": ("yb", {"opt1": "port_1", "opt2": "port_2", "opt3": "port_3"}),
+           "ebeam_bdc_te1550": ("bdc", {f"opt{k}": f"port_{k}" for k in range(1, 5)}),
+           "GC_TE_1550_8degOxide_BB": ("gc", {"opt1": "o1"}),
+           "ebeam_terminator_te1550": ("term", {"opt1": "o0"})}
 
 
-def netlist(corner=NOMINAL, L=LEN):
+def netlist(corner=NOMINAL, extract=EXTRACT):
+    """SAX netlist from the SiEPIC-extracted layout netlist."""
     th, w = corner
-    ins, con, ports = {}, {}, {}
-
-    def wg(name, length):
-        ins[name] = {"component": "wg", "settings": {"length": float(length), "loss": LOSS, "width": w, "height": th}}
-        return name
-
-    def yb(name):
-        ins[name] = {"component": "yb", "settings": {"thickness": th, "width": w}}
-
-    def bdc(name):
-        ins[name] = {"component": "bdc", "settings": {"thickness": th, "width": w}}
-
-    def gc(name, port_name):
-        ins[name] = {"component": "gc", "settings": {"thickness": th}}
-        ports[port_name] = f"{name},o0"
-
-    def switch(p):
-        """Mach-Zehnder switch: in = {p}1,port_1; out = {p}2,port_3; heater phase on arm b."""
-        bdc(p + "1"); bdc(p + "2"); wg(p + "a", L["mzi_arm"]); wg(p + "b", L["mzi_arm"]); ins[p + "h"] = "ps"
-        con.update({f"{p}1,port_3": f"{p}a,o0", f"{p}a,o1": f"{p}2,port_1", f"{p}1,port_4": f"{p}h,o0",
-                    f"{p}h,o1": f"{p}b,o0", f"{p}b,o1": f"{p}2,port_2"})
-        ports[p + "_in2"] = f"{p}1,port_2"
-        ports[p + "_dump"] = f"{p}2,port_4"
-        return f"{p}1,port_1", f"{p}2,port_3"
-
-    def loop_mirror(p):
-        yb(p); wg(p + "l", L["loop"])
-        con.update({f"{p},port_2": f"{p}l,o0", f"{p}l,o1": f"{p},port_3"})
-        return f"{p},port_1"
-
-    def michelson(p, in_port, arm_a, arm_b, sw_a, sw_b, bias, out_name, Lm):
-        bdc(p)
-        con[in_port] = f"{p},port_1"
-        for arm, length, sw in (("a", arm_a, sw_a), ("b", arm_b, sw_b)):
-            wg(f"{p}{arm}w", length)
-            s_in, s_out = switch(sw)
-            con[f"{p},{'port_3' if arm == 'a' else 'port_4'}"] = f"{p}{arm}w,o0"
-            con[f"{p}{arm}w,o1"] = s_in
-            if arm == "a":
-                ins[bias] = "ps"
-                con[s_out] = f"{bias},o0"
-                con[f"{bias},o1"] = loop_mirror(f"{p}lm{arm}")
-            else:
-                con[s_out] = loop_mirror(f"{p}lm{arm}")
-        wg(f"{p}out", Lm["x_out"]); gc(f"gc_{out_name}", out_name)
-        con.update({f"{p},port_2": f"{p}out,o0", f"{p}out,o1": f"gc_{out_name},o1"})
-
-    def and_branch(p, src, out_name):
-        wg(p + "i", L[f"and_in_{p}"]); s_in, s_out = switch(p); wg(p + "o", L[f"and_out_{p}"]); gc("gc_" + out_name, out_name)
-        con.update({src: f"{p}i,o0", f"{p}i,o1": s_in, s_out: f"{p}o,o0", f"{p}o,o1": f"gc_{out_name},o1"})
-
-    def block(h, src, n1, n2, outs):
-        """One half of the chip (layout.half_block): taps Sa, Sb; AND switches for n1, n2;
-        Michelson XOR with arm switches n1 (arm a, with the bias heater) and n2 (arm b)."""
-        sa, sb = f"Sa{h}", f"Sb{h}"
-        yb(sa); yb(sb)
-        wg(f"in{h}w", L[f"in{h}"]); wg(f"ab{h}w", L[f"ab{h}"]); wg(f"sx{h}w", L[f"sx{h}"])
-        con.update({src: f"in{h}w,o0", f"in{h}w,o1": f"{sa},port_1", f"{sa},port_3": f"ab{h}w,o0",
-                    f"ab{h}w,o1": f"{sb},port_1", f"{sb},port_3": f"sx{h}w,o0"})
-        and_branch(f"{n1}_and", f"{sa},port_2", outs[0])
-        and_branch(f"{n2}_and", f"{sb},port_2", outs[1])
-        Lx = dict(L)
-        Lx["x_out"] = L[f"x_out{h}"]
-        michelson(f"X{h}", f"sx{h}w,o1", L[f"arm_a{h}"], L[f"arm_b{h}"], f"{n1}_x{h}", f"{n2}_x{h}", f"bias{h}", outs[2], Lx)
-
-    gc("gc_in", "laser")
-    yb("S1")
-    wg("w_in", L["gc_s1"])
-    con.update({"gc_in,o1": "w_in,o0", "w_in,o1": "S1,port_1"})
-    block(1, "S1,port_2", "A", "B", ("c_a", "c_b", "xor1"))
-    block(2, "S1,port_3", "C", "X", ("c_c", "c_d", "sum"))
+    comps = json.load(open(extract))["components"]
+    ins, ports, netpins = {}, {}, {}
+    for c in comps:
+        k, idx = c["kind"], c["idx"]
+        if k == "Waveguide":
+            nm = f"wg{idx}"
+            ins[nm] = {"component": "wg", "settings": {"length": c["length_um"], "loss": LOSS, "width": w, "height": th}}
+            pm = {"opt1": f"{nm},o0", "opt2": f"{nm},o1"}
+        elif k == "wg_heater":
+            nm = c["role"]
+            ins[nm + "_wg"] = {"component": "wg", "settings": {"length": c["length_um"], "loss": LOSS, "width": w, "height": th}}
+            ins[nm + "_ps"] = "ps"
+            netpins.setdefault(f"int_{nm}", []).extend([f"{nm}_wg,o1", f"{nm}_ps,o0"])
+            pm = {"opt1": f"{nm}_wg,o0", "opt2": f"{nm}_ps,o1"}
+        else:
+            model, mp = PORTMAP[k]
+            nm = f"{model}{idx}"
+            st = {"thickness": th} if model == "gc" else ({"thickness": th, "width": w} if model in ("yb", "bdc") else {})
+            ins[nm] = {"component": model, "settings": st} if st else model
+            pm = {p: f"{nm},{q}" for p, q in mp.items()}
+            if model == "gc":
+                ports[ROLE.get(c["role"], c["role"])] = f"{nm},o0"
+        for pin, net in c["pins"].items():
+            netpins.setdefault(net, []).append(pm[pin])
+    con = {}
+    for net, ps in netpins.items():
+        assert len(ps) == 2, (net, ps)
+        con[ps[0]] = ps[1]
     return {"instances": ins, "connections": con, "ports": ports}
 
 
+SOURCE = {"xor1": "laser1", "c_a": "laser1", "c_b": "laser1", "sum": "laser2", "c_c": "laser2", "c_d": "laser2"}
+
+
 class Chip:
-    def __init__(self, corner=NOMINAL, L=LEN, lam=LAM):
+    """The chip as drawn. Each half adder has its own laser input (design-for-test rules); in use both
+    are fed from one laser through a 50/50 fibre splitter, so each gets half the laser power."""
+
+    def __init__(self, corner=NOMINAL, lam=LAM, extract=EXTRACT):
         self.corner, self.lam = corner, lam
-        self.circ, _ = sax.circuit(netlist=netlist(corner, L), models=MODELS)
+        self.circ, _ = sax.circuit(netlist=netlist(corner, extract), models=MODELS)
         self.cal = None
 
     def run(self, **ph):
-        """Output powers per watt of laser in the fibre. Keyword args: heater phases (rad), any of
-        SWITCHES + BIASES, arrays broadcast together. Bias phases are round-trip values."""
+        """Output powers per watt of laser (before the 50/50 split). Keyword args: heater phases (rad),
+        any of SWITCHES + BIASES, arrays broadcast together. Bias phases are round-trip values."""
         keys = SWITCHES + BIASES
         arrs = np.broadcast_arrays(*[np.atleast_1d(np.asarray(ph.get(k, 0.0), float)) for k in keys])
         shp, n = arrs[0].shape, arrs[0].size
@@ -169,10 +140,10 @@ class Chip:
         CH = 6000                                                                       # batch size (memory)
         for i0 in range(0, n, CH):
             sl = slice(i0, min(n, i0 + CH))
-            kw = {(k if k in BIASES else k + "h"): {"phi": jnp.asarray(v[sl])} for k, v in zip(keys, flat)}
+            kw = {k + "_ps": {"phi": jnp.asarray(v[sl])} for k, v in zip(keys, flat)}
             s = self.circ(wl=jnp.full(sl.stop - sl.start, self.lam * 1e6), **kw)
             for o in OUTPUTS:
-                fields[o][sl] = np.asarray(s["laser", o])
+                fields[o][sl] = np.asarray(s[SOURCE[o], o]) / math.sqrt(2.0)
         return {o: (np.abs(fields[o]) ** 2).reshape(shp) for o in OUTPUTS}, \
                {o: fields[o].reshape(shp) for o in ("xor1", "sum")}
 
@@ -335,7 +306,7 @@ def cascade_failure(chip):
 
 
 def main():
-    out = {"method": __doc__.strip().splitlines()[0], "detection": DET, "lengths_um": LEN}
+    out = {"method": __doc__.strip().splitlines()[0], "detection": DET, "netlist": os.path.relpath(EXTRACT, HERE)}
     chips = {}
     for name, wts in (("majority", (1.0, 1.0, 1.0, 0.0)), ("paper_and_or", (1.0, 1.0, 0.5, 0.5))):
         ch = Chip().calibrate(wts)

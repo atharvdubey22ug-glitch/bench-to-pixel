@@ -1,0 +1,144 @@
+{
+ "top_cell": "EBeam_heaters_atharvdubey_FullAdder",
+ "die_um": [
+  1870.0,
+  1600.0
+ ],
+ "siepic_verification_errors": 0,
+ "components": 113,
+ "waveguide_crossings": [],
+ "dangling_optical_pins": [],
+ "lengths_um": {
+  "A_and_arm_top": 198.943,
+  "A_and_arm_heater": 198.944,
+  "and_out_A_and": 80.0,
+  "B_and_arm_top": 198.943,
+  "B_and_arm_heater": 198.944,
+  "and_out_B_and": 80.0,
+  "in1": 510.847,
+  "and_in_A_and": 158.547,
+  "ab1": 75.2,
+  "and_in_B_and": 378.297,
+  "sx1": 171.597,
+  "x_out1": 786.847,
+  "A_x1_arm_top": 198.943,
+  "A_x1_arm_heater": 198.944,
+  "arm_a1": 640.597,
+  "B_x1_arm_top": 198.943,
+  "B_x1_arm_heater": 198.944,
+  "arm_b1": 640.597,
+  "lmb1_loop": 120.39,
+  "lma1_loop": 120.39,
+  "C_and_arm_top": 198.943,
+  "C_and_arm_heater": 198.944,
+  "and_out_C_and": 80.0,
+  "X_and_arm_top": 198.943,
+  "X_and_arm_heater": 198.944,
+  "and_out_X_and": 80.0,
+  "in2": 510.847,
+  "and_in_C_and": 158.547,
+  "ab2": 75.2,
+  "and_in_X_and": 378.297,
+  "sx2": 171.597,
+  "x_out2": 786.847,
+  "C_x2_arm_top": 198.943,
+  "C_x2_arm_heater": 198.944,
+  "arm_a2": 640.597,
+  "X_x2_arm_top": 198.943,
+  "X_x2_arm_heater": 198.944,
+  "arm_b2": 640.597,
+  "lmb2_loop": 120.39,
+  "lma2_loop": 120.39,
+  "loopback": 163.897
+ },
+ "pads": {
+  "block1": [
+   "P10",
+   "P11",
+   "P12",
+   "P13",
+   "P14",
+   "P15"
+  ],
+  "block2": [
+   "P20",
+   "P21",
+   "P22",
+   "P23",
+   "P24",
+   "P25"
+  ]
+ },
+ "heater_pads": [
+  {
+   "name": "B_and",
+   "between": [
+    "P10",
+    "P11"
+   ]
+  },
+  {
+   "name": "A_and",
+   "between": [
+    "P11",
+    "P12"
+   ]
+  },
+  {
+   "name": "A_x1",
+   "between": [
+    "P12",
+    "P13"
+   ]
+  },
+  {
+   "name": "bias1",
+   "between": [
+    "P13",
+    "P14"
+   ]
+  },
+  {
+   "name": "B_x1",
+   "between": [
+    "P14",
+    "P15"
+   ]
+  },
+  {
+   "name": "X_and",
+   "between": [
+    "P20",
+    "P21"
+   ]
+  },
+  {
+   "name": "C_and",
+   "between": [
+    "P21",
+    "P22"
+   ]
+  },
+  {
+   "name": "C_x2",
+   "between": [
+    "P22",
+    "P23"
+   ]
+  },
+  {
+   "name": "bias2",
+   "between": [
+    "P23",
+    "P24"
+   ]
+  },
+  {
+   "name": "X_x2",
+   "between": [
+    "P24",
+    "P25"
+   ]
+  }
+ ]
+}

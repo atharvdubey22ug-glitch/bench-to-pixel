@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Checks on full_adder_chip.gds.
+"""Independent checks on the KLayout layout (klayout/EBeam_heaters_atharvdubey_FullAdder.gds).
 
 1. Design rules of the SiEPIC EBeam DRC deck (siepic_ebeam_pdk drc/SiEPIC_EBeam_DRC.lydrc):
    Si width >= 60 nm, Si space >= 70 nm, M1 width/space >= 3 um, M2 width >= 5 um, M2 space >= 8 um,
    M_Open width/space >= 10 um, M2-over-M1 overlap >= 3 um, every Si shape inside the FloorPlan.
 2. Electrical: each merged M2 net carries exactly one pad opening; each heater (M1) touches exactly
-   two different nets; no metal within 10 um of a grating coupler.
-3. Optical: every routed waveguide touches other silicon only at its two end ports (no crossings).
+   two different nets; no metal within 25 um of a grating coupler's fibre target.
+Optical connectivity and waveguide crossings are checked by SiEPIC-Tools in klayout/full_adder_siepic.py.
 """
 import json
 import os
@@ -59,36 +59,6 @@ def drc(gds):
     return res
 
 
-def route_overlaps(component, routes):
-    """For each route: silicon it shares with any other instance must lie at its end ports."""
-    problems = []
-    kcl = component.kcl
-    li = kcl.layer(1, 0)
-
-    def inst_region(inst):
-        return kdb.Region(inst.cell.begin_shapes_rec(li)).transformed(inst.trans)
-
-    insts = list(component.insts)
-    key = lambda i: (i.cell_index, str(i.trans))  # noqa: E731
-    regions = {key(i): inst_region(i) for i in insts}
-    for name, r, p1, p2 in routes:
-        mine = {key(i) for i in r.instances}
-        rr = kdb.Region()
-        for k in mine:
-            rr += regions[k]
-        others = kdb.Region()
-        for k, reg in regions.items():
-            if k not in mine:
-                others += reg
-        ov = (rr & others).merged()
-        ends = [kdb.Point(int(p.center[0]), int(p.center[1])) for p in (p1, p2)]
-        for poly in ov.each():
-            c = poly.bbox().center()
-            if min(c.distance(e) for e in ends) > 2000:     # 2 um from either end port
-                problems.append((component.name, name, round(c.x / 1000, 1), round(c.y / 1000, 1)))
-    return problems
-
-
 if __name__ == "__main__":
-    gds = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "full_adder_chip.gds")
+    gds = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "klayout", "EBeam_heaters_atharvdubey_FullAdder.gds")
     print(json.dumps(drc(gds), indent=1))
