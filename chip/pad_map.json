@@ -1,0 +1,137 @@
+{
+ "pads": [
+  {
+   "name": "P10",
+   "x": 150.0,
+   "y": 601.0
+  },
+  {
+   "name": "P11",
+   "x": 275.0,
+   "y": 601.0
+  },
+  {
+   "name": "P12",
+   "x": 400.0,
+   "y": 601.0
+  },
+  {
+   "name": "P13",
+   "x": 525.0,
+   "y": 601.0
+  },
+  {
+   "name": "P14",
+   "x": 650.0,
+   "y": 601.0
+  },
+  {
+   "name": "P15",
+   "x": 775.0,
+   "y": 601.0
+  },
+  {
+   "name": "P20",
+   "x": 150.0,
+   "y": -601.0
+  },
+  {
+   "name": "P21",
+   "x": 275.0,
+   "y": -601.0
+  },
+  {
+   "name": "P22",
+   "x": 400.0,
+   "y": -601.0
+  },
+  {
+   "name": "P23",
+   "x": 525.0,
+   "y": -601.0
+  },
+  {
+   "name": "P24",
+   "x": 650.0,
+   "y": -601.0
+  },
+  {
+   "name": "P25",
+   "x": 775.0,
+   "y": -601.0
+  }
+ ],
+ "heaters": [
+  {
+   "name": "A_and",
+   "between": [
+    "P10",
+    "P11"
+   ]
+  },
+  {
+   "name": "B_and",
+   "between": [
+    "P11",
+    "P12"
+   ]
+  },
+  {
+   "name": "A_x1",
+   "between": [
+    "P12",
+    "P13"
+   ]
+  },
+  {
+   "name": "bias",
+   "between": [
+    "P13",
+    "P14"
+   ]
+  },
+  {
+   "name": "B_x1",
+   "between": [
+    "P14",
+    "P15"
+   ]
+  },
+  {
+   "name": "C_and",
+   "between": [
+    "P20",
+    "P21"
+   ]
+  },
+  {
+   "name": "X_and",
+   "between": [
+    "P21",
+    "P22"
+   ]
+  },
+  {
+   "name": "C_x2",
+   "between": [
+    "P22",
+    "P23"
+   ]
+  },
+  {
+   "name": "bias",
+   "between": [
+    "P23",
+    "P24"
+   ]
+  },
+  {
+   "name": "X_x2",
+   "between": [
+    "P24",
+    "P25"
+   ]
+  }
+ ],
+ "drive": "Each heater sits between two adjacent pads; set pad potentials so each heater sees its own voltage difference."
+}

@@ -1,0 +1,5 @@
+gdsfactory==8.18.0
+klayout==0.30.12
+siepic_ebeam_pdk==0.4.53
+pillow
+# simulation: see ../sim/requirements.txt (simphony, sax, jax, numpy, matplotlib)
