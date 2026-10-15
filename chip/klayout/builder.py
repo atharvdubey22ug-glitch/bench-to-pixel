@@ -54,9 +54,10 @@ class Builder:
         self.C_HEAT = ly.create_cell("wg_heater", "EBeam", {"length": HEATER, "mh_width": 4, "waveguide_type": WG})
         self.SHIFT = DCplxTrans()
         self.lengths, self.heaters, self.gc_roles = {}, {}, {}
-        self.bits = []          # (bit, absolute DBox region, heater-name prefix)
+        self.bits = []          # (bit, absolute DBox region, heater-name prefix, design->GDS transform)
         self.blocks = []
         self.opt_in = []
+        self.heaters_per_bit = 10
 
     # ------------------------------------------------------------ primitives (design coordinates)
     def place(self, c, T, x=0.0, y=0.0, rot=0, mirror=False):
@@ -231,7 +232,7 @@ class Builder:
             self.gc_roles[(bit, "loopback_in")] = self.SHIFT * DPoint(0, 635)
             self.gc_roles[(bit, "loopback_out")] = self.SHIFT * DPoint(0, 508)
             self.opt_in.append(f"opt_in_TE_1550_device_{USER}_Loopback")
-        self.bits.append((bit, pya.DBox(dx, dy, dx + pitch[0], dy + pitch[1]), self.pre))
+        self.bits.append((bit, pya.DBox(dx, dy, dx + pitch[0], dy + pitch[1]), self.pre, self.SHIFT))
 
     # ------------------------------------------------------------ floor plan, files, checks
     def finish(self, here, dft_at=(80.0, 1560.0), write_spice=True):
@@ -268,7 +269,7 @@ class Builder:
             return DPoint(p.x * dbu, p.y * dbu)
 
         def bit_of(q):
-            for b, box, _ in self.bits:
+            for b, box, _, _ in self.bits:
                 if box.contains(q):
                     return b
             raise ValueError(q)
@@ -276,8 +277,7 @@ class Builder:
         ext = []
         # heater midpoints, stored in each bit's design coordinates -> absolute
         abs_heater = {}
-        for b, box, pre in self.bits:
-            sh = DCplxTrans(1, 0, False, 120.0 + box.left, 860.0 + box.bottom)
+        for b, box, pre, sh in self.bits:
             for nm, pts in self.heaters.items():
                 if nm.startswith(pre) and (pre or ":" not in nm):
                     abs_heater[(b, nm[len(pre):])] = sh * DPoint(0.5 * (pts[0][0] + pts[1][0]), pts[0][1])
@@ -301,9 +301,9 @@ class Builder:
                 if "role" not in item:
                     item["role"] = f"gc_{int(round(cc.y))}"
             ext.append(item)
-        for b, _, _ in self.bits:
+        for b, _, _, _ in self.bits:
             roles = [e.get("role") for e in ext if e["kind"] == "wg_heater" and e["bit"] == b]
-            assert len(set(roles)) == len(roles) == 10, (b, roles)
+            assert len(set(roles)) == len(roles) == self.heaters_per_bit, (b, roles)
         # ---- independent checks
         li = ly.layer(1, 0)
         insts = [i for i in cell.each_inst() if i.cell.name != "FloorPlan"]

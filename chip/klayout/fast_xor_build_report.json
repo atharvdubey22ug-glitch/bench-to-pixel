@@ -1,0 +1,52 @@
+{
+ "top_cell": "EBeam_heaters_atharvdubey_FastXOR",
+ "die_um": [
+  916.0,
+  900.0
+ ],
+ "siepic_verification_errors": 0,
+ "components": 32,
+ "waveguide_crossings": [],
+ "dangling_optical_pins": [],
+ "lengths_um": {
+  "laser_in": 52.6,
+  "arm_A": 420.494,
+  "A_mod_arm_top": 198.943,
+  "A_mod_arm_heater": 198.944,
+  "arm_B": 420.494,
+  "B_mod_arm_top": 198.943,
+  "B_mod_arm_heater": 198.944,
+  "xor_out": 985.143,
+  "mon_out": 985.143
+ },
+ "heater_pads": [
+  {
+   "name": "A_mod",
+   "between": [
+    "FastXOR_PA0",
+    "FastXOR_PA1"
+   ]
+  },
+  {
+   "name": "biasA",
+   "between": [
+    "FastXOR_PA1",
+    "FastXOR_PA2"
+   ]
+  },
+  {
+   "name": "B_mod",
+   "between": [
+    "FastXOR_PB0",
+    "FastXOR_PB1"
+   ]
+  },
+  {
+   "name": "biasB",
+   "between": [
+    "FastXOR_PB1",
+    "FastXOR_PB2"
+   ]
+  }
+ ]
+}
