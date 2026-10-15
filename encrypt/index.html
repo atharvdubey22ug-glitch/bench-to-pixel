@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23111a1e'/%3E%3Cpath d='M8 40 L28 24 L56 24' stroke='%23ff5a47' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='28' cy='24' r='5' fill='%23eba340'/%3E%3C/svg%3E">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<title>Light vs Silicon XOR</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Encrypt a message with a one-time pad on a simulated optical interference XOR and on a conventional electronic chip, and compare how long each takes.">
+<meta name="author" content="Atharv Dubey">
+<meta name="theme-color" content="#0a1013">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: one reading column; controls, then the two chips side by side (stacked on phones), then a shared time axis.
+   Same look as Bench to Pixel: a lab with the lights off. Red is light, cyan is electrical data, amber marks thresholds and the F²R accent. */
+:root{
+  --ink:#0a1013;
+  --ink-2:#111a1e;
+  --ink-3:#16232a;
+  --line:#22313a;
+  --fg:#e3ebed;
+  --muted:#8b9ea5;
+  --faint:#5d6f77;
+  --petg:#eba340;
+  --beam:#8fe3ff;
+  --laser:#ff5a47;
+  --f-display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+html{background:var(--ink)}
+body{margin:0;background:var(--ink);color:var(--fg);font-family:var(--f-body);font-size:15.5px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--fg);text-decoration-color:rgba(235,163,64,.7);text-underline-offset:3px}
+a:hover{color:var(--petg)}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--beam);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 64px;display:grid;gap:28px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font:600 12px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--fg);text-decoration:none}
+.brand svg{width:26px;height:26px;flex:none}
+.brand .t{color:var(--muted);font-weight:500}
+.crumb{font:500 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+h1{font:700 clamp(30px,5.2vw,54px)/1.02 var(--f-display);font-variation-settings:"wdth" 82;letter-spacing:-.02em;margin:0;text-wrap:balance;max-width:16ch}
+h1 em{font-style:normal;color:var(--laser)}
+h1 b{font-weight:700;color:var(--beam)}
+h2{font:650 clamp(20px,2.4vw,26px)/1.15 var(--f-display);font-variation-settings:"wdth" 88;margin:0;text-wrap:balance}
+h3{font:600 12px/1.2 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0}
+.lede{max-width:66ch;color:var(--muted);margin:0;font-size:16.5px}
+.lede strong{color:var(--fg);font-weight:500}
+.hero{display:grid;gap:14px}
+
+/* controls */
+.controls{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px 28px;padding:18px;border:1px solid var(--line);border-radius:12px;background:var(--ink-2)}
+.field{display:grid;gap:8px;min-width:0}
+.field label,.field .lab{font:500 11px/1.2 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.msg{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--ink);font:500 16px/1.4 var(--f-mono);color:var(--fg)}
+.msg:focus{border-color:var(--beam);outline:none}
+.hint{font:400 12px/1.4 var(--f-mono);color:var(--faint);font-variant-numeric:tabular-nums}
+.keyrow{display:flex;gap:10px;align-items:flex-start;min-width:0}
+.keyhex{flex:1;min-width:0;font:400 12.5px/1.5 var(--f-mono);color:var(--petg);word-break:break-all;padding:8px 10px;border-radius:8px;background:var(--ink);border:1px dashed var(--line);max-height:4.6em;overflow:auto}
+.btn{flex:none;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:var(--ink-3);cursor:pointer;font:500 12px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase}
+.btn:hover{border-color:var(--petg);color:var(--petg)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{padding:7px 11px;border-radius:999px;border:1px solid var(--line);cursor:pointer;font:500 12.5px/1 var(--f-mono);color:var(--muted);letter-spacing:.02em;text-transform:none;font-variant-numeric:tabular-nums;background:var(--ink)}
+.seg label:hover{color:var(--fg)}
+.seg input:checked+label{color:var(--ink);background:var(--fg);border-color:var(--fg)}
+.seg input:focus-visible+label{outline:2px solid var(--beam);outline-offset:2px}
+.seg.light input:checked+label{background:var(--laser);border-color:var(--laser);color:var(--ink)}
+.seg.elec input:checked+label{background:var(--beam);border-color:var(--beam);color:var(--ink)}
+.right{display:grid;gap:16px;align-content:start}
+.status{display:flex;align-items:center;gap:8px;font:500 12px/1.3 var(--f-mono);color:var(--muted)}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+.status.busy i{background:var(--petg);animation:pulse 1s ease-in-out infinite}
+.status.done i{background:#3fbf7f}
+@keyframes pulse{50%{opacity:.25}}
+
+/* the two chips */
+.duel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.chip{border:1px solid var(--line);border-radius:12px;background:var(--ink-2);padding:18px;display:grid;gap:16px;align-content:start;min-width:0}
+.chip.opt{box-shadow:inset 0 2px 0 var(--laser)}
+.chip.ele{box-shadow:inset 0 2px 0 var(--beam)}
+.chip header{display:grid;gap:4px}
+.chip header p{margin:0;color:var(--muted);font-size:14px}
+.tag{font:600 11px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase}
+.opt .tag{color:var(--laser)}
+.ele .tag{color:var(--beam)}
+.schem{width:100%;height:auto;display:block;max-width:100%}
+.big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.big .v{font:700 clamp(38px,5vw,56px)/1 var(--f-display);font-variation-settings:"wdth" 80;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.opt .big .v{color:var(--laser)}
+.ele .big .v{color:var(--beam)}
+.big .k{font:500 12px/1.3 var(--f-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0;font-size:14px}
+.facts dt{font:500 11.5px/1.5 var(--f-mono);color:var(--faint);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.facts dd{margin:0;color:var(--fg);font-variant-numeric:tabular-nums;min-width:0}
+.facts dd small{color:var(--muted);font-size:12.5px}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font:600 11.5px/1.5 var(--f-mono);letter-spacing:.03em}
+.pill.ok{background:rgba(63,191,127,.14);color:#6fd9a2}
+.pill.bad{background:rgba(255,90,71,.15);color:#ff8a7c}
+.pill.warn{background:rgba(235,163,64,.15);color:var(--petg)}
+.out{display:grid;gap:6px;min-width:0}
+.hexline{font:400 12.5px/1.55 var(--f-mono);word-break:break-all;color:var(--fg);padding:8px 10px;border-radius:8px;background:var(--ink);border:1px solid var(--line);max-height:6.3em;overflow:auto}
+.hexline .e{color:var(--laser);text-decoration:underline;text-decoration-thickness:2px}
+.plain{font:500 15px/1.45 var(--f-mono);padding:8px 10px;border-radius:8px;background:var(--ink);border:1px solid var(--line);word-break:break-word;min-height:1.5em}
+.eyebox{display:grid;gap:6px}
+.eyebox canvas{width:100%;height:240px;display:block;border-radius:8px;background:var(--ink);border:1px solid var(--line);max-width:100%;box-sizing:border-box}
+.cap{font:400 12px/1.45 var(--f-mono);color:var(--faint)}
+
+/* timeline */
+.race{border:1px solid var(--line);border-radius:12px;background:var(--ink-2);padding:18px;display:grid;gap:12px}
+.race canvas{width:100%;height:230px;display:block;max-width:100%}
+.race .row{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font:500 12px/1.3 var(--f-mono);color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:4px;border-radius:2px;display:inline-block}
+
+/* notes */
+.notes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 28px}
+.notes section{display:grid;gap:8px;align-content:start;min-width:0}
+.notes p,.notes li{color:var(--muted);font-size:14.5px;margin:0}
+.notes ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.notes strong{color:var(--fg);font-weight:500}
+.src{font-size:13px;color:var(--faint)}
+.src ol{margin:6px 0 0;padding-left:18px;display:grid;gap:4px}
+.src a{color:var(--muted)}
+code{font:400 .9em var(--f-mono);color:var(--fg)}
+
+@media (max-width:900px){
+  .controls{grid-template-columns:minmax(0,1fr)}
+  .duel{grid-template-columns:minmax(0,1fr)}
+  .notes{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="brand" href="https://atharvdubey22ug-glitch.github.io/bench-to-pixel/" aria-label="Back to Bench to Pixel">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#111a1e"/><path d="M8 40 L28 24 L56 24" stroke="#ff5a47" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="28" cy="24" r="5" fill="#eba340"/></svg>
+      Bench to Pixel <span class="t">/ encrypt</span>
+    </a>
+    <span class="crumb">one-time pad · XOR at line rate</span>
+  </div>
+
+  <header class="hero">
+    <h1>The same XOR, on <em>light</em> and on <b>silicon</b></h1>
+    <p class="lede">Type a message. It is encrypted with a one-time pad, bit by bit: <strong>ciphertext = message XOR key</strong>, then decrypted the same way. The left chip is the single-pass interference XOR from this project, simulated live in your browser from its layout. The right chip is a conventional electronic chip doing the same job. Both run at the bit rate you pick; the question is how long each one makes the data wait.</p>
+  </header>
+
+  <form class="controls" id="controls" autocomplete="off">
+    <div class="field">
+      <label for="msg">Message (up to 64 bytes)</label>
+      <input class="msg" id="msg" maxlength="64" value="Light did this XOR in 19 picoseconds.">
+      <span class="hint" id="msgInfo">0 bytes · 0 bits</span>
+      <span class="lab" id="keyLab">Key (one-time pad, random)</span>
+      <div class="keyrow">
+        <div class="keyhex" id="keyHex" aria-labelledby="keyLab"></div>
+        <button type="button" class="btn" id="newKey">New key</button>
+      </div>
+    </div>
+    <div class="right">
+      <div class="field">
+        <span class="lab">Bit rate on each input</span>
+        <div class="seg" role="radiogroup" aria-label="Bit rate">
+          <input type="radio" name="rate" id="r25" value="25"><label for="r25">25 Gb/s</label>
+          <input type="radio" name="rate" id="r50" value="50"><label for="r50">50</label>
+          <input type="radio" name="rate" id="r100" value="100" checked><label for="r100">100</label>
+          <input type="radio" name="rate" id="r200" value="200"><label for="r200">200</label>
+          <input type="radio" name="rate" id="r400" value="400"><label for="r400">400</label>
+        </div>
+      </div>
+      <div class="field">
+        <span class="lab">Optical chip: modulators and photodiode</span>
+        <div class="seg light" role="radiogroup" aria-label="Modulator speed">
+          <input type="radio" name="mod" id="m50" value="50"><label for="m50">50 GHz silicon</label>
+          <input type="radio" name="mod" id="m100" value="100" checked><label for="m100">100 GHz lithium niobate</label>
+          <input type="radio" name="mod" id="m0" value="0"><label for="m0">ideal</label>
+        </div>
+      </div>
+      <div class="field">
+        <span class="lab">Electronic chip: logic clock</span>
+        <div class="seg elec" role="radiogroup" aria-label="Logic clock">
+          <input type="radio" name="clk" id="c1" value="1"><label for="c1">1 GHz</label>
+          <input type="radio" name="clk" id="c15" value="1.5" checked><label for="c15">1.5 GHz</label>
+          <input type="radio" name="clk" id="c2" value="2"><label for="c2">2 GHz</label>
+          <input type="radio" name="clk" id="c3" value="3"><label for="c3">3 GHz</label>
+        </div>
+      </div>
+      <div class="status" id="status" role="status"><i></i><span>Ready</span></div>
+    </div>
+  </form>
+
+  <div class="duel">
+    <article class="chip opt" aria-labelledby="optTitle">
+      <header>
+        <span class="tag">Optical · interference XOR</span>
+        <h2 id="optTitle">One coupler does the logic</h2>
+        <p>Message and key ride on one laser through two modulators; the beams meet at a coupler and cancel when both bits are 1.</p>
+      </header>
+      <svg class="schem" viewBox="0 0 520 176" role="img" aria-label="Optical XOR: a laser is split into two arms with a modulator each, the arms meet at a coupler, and a photodiode reads the ciphertext.">
+        <defs><marker id="arR" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#ff5a47"/></marker></defs>
+        <rect x="6" y="72" width="62" height="32" rx="6" fill="#16232a" stroke="#22313a"/>
+        <text x="37" y="92" text-anchor="middle" fill="#e3ebed" font-family="JetBrains Mono, monospace" font-size="11">laser</text>
+        <path class="wg" d="M68 88 H96 C112 88 112 40 132 40 H156 M96 88 C112 88 112 136 132 136 H156" fill="none" stroke="#ff5a47" stroke-width="2"/>
+        <rect x="156" y="26" width="104" height="28" rx="5" fill="#16232a" stroke="#ff5a47"/>
+        <text x="208" y="44" text-anchor="middle" fill="#e3ebed" font-family="JetBrains Mono, monospace" font-size="11">message</text>
+        <rect x="156" y="122" width="104" height="28" rx="5" fill="#16232a" stroke="#eba340"/>
+        <text x="208" y="140" text-anchor="middle" fill="#eba340" font-family="JetBrains Mono, monospace" font-size="11">key</text>
+        <path class="wg flow" d="M260 40 H330 C352 40 352 84 372 84 H392 M260 136 H330 C352 136 352 92 372 92 H392" fill="none" stroke="#ff5a47" stroke-width="2"/>
+        <rect x="372" y="78" width="20" height="20" rx="3" fill="none" stroke="#5d6f77" stroke-dasharray="2 2"/>
+        <path class="wg flow" d="M392 84 C406 84 410 60 424 60 H452" fill="none" stroke="#ff5a47" stroke-width="2" marker-end="url(#arR)"/>
+        <path d="M392 92 C406 92 410 116 424 116 H446" fill="none" stroke="#5d6f77" stroke-width="1.5"/>
+        <rect x="456" y="46" width="58" height="28" rx="5" fill="#16232a" stroke="#22313a"/>
+        <text x="485" y="64" text-anchor="middle" fill="#e3ebed" font-family="JetBrains Mono, monospace" font-size="10">photo-</text>
+        <text x="485" y="88" text-anchor="middle" fill="#8b9ea5" font-family="JetBrains Mono, monospace" font-size="9.5">diode</text>
+        <text x="452" y="128" fill="#5d6f77" font-family="JetBrains Mono, monospace" font-size="9.5">monitor</text>
+        <text x="382" y="114" text-anchor="middle" fill="#8b9ea5" font-family="JetBrains Mono, monospace" font-size="9.5">coupler</text>
+        <path d="M208 162 H382" stroke="#5d6f77" stroke-width="1"/><path d="M208 157 V167 M382 157 V167" stroke="#5d6f77"/>
+        <text x="295" y="173" text-anchor="middle" fill="#8b9ea5" font-family="JetBrains Mono, monospace" font-size="9.5">gate: 5.2 ps</text>
+      </svg>
+      <div class="big"><span class="v" id="optLat">19 ps</span><span class="k">from bit in<br>to ciphertext out</span></div>
+      <dl class="facts">
+        <dt>Logic</dt><dd>1 interference coupler <small>(plus 2 modulators, 1 photodiode)</small></dd>
+        <dt>Where the time goes</dt><dd id="optSplit">5.2 ps in the gate, 13.8 ps in the waveguide to the fibre</dd>
+        <dt>Encrypt errors</dt><dd id="optErrE">–</dd>
+        <dt>Decrypt errors</dt><dd id="optErrD">–</dd>
+      </dl>
+      <div class="eyebox">
+        <h3>Ciphertext eye at the photodiode</h3>
+        <canvas id="eye" width="760" height="380" aria-label="Eye diagram of the optical ciphertext"></canvas>
+        <span class="cap" id="eyeCap">Every bit of the ciphertext, overlaid on two bit periods. Amber line: decision threshold.</span>
+      </div>
+      <div class="out">
+        <h3>Ciphertext (hex)</h3>
+        <div class="hexline" id="optHex"></div>
+      </div>
+      <div class="out">
+        <h3>Decrypted on the optical chip</h3>
+        <div class="plain" id="optPlain"></div>
+      </div>
+    </article>
+
+    <article class="chip ele" aria-labelledby="eleTitle">
+      <header>
+        <span class="tag">Electronic · SerDes + CMOS logic</span>
+        <h2 id="eleTitle">Gates wait for words</h2>
+        <p>Transistor logic cannot toggle at tens of GHz, so the chip first gathers the serial bits into wide words, XORs a word per clock, and shifts the result back out.</p>
+      </header>
+      <svg class="schem" viewBox="0 0 520 176" role="img" aria-label="Electronic XOR: two serial receivers, word registers, an array of XOR gates and a serial transmitter.">
+        <defs><marker id="arC" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#8fe3ff"/></marker></defs>
+        <text x="4" y="20" fill="#e3ebed" font-family="JetBrains Mono, monospace" font-size="10">message</text>
+        <text x="4" y="168" fill="#eba340" font-family="JetBrains Mono, monospace" font-size="10">key</text>
+        <path d="M4 42 H40 M4 134 H40" stroke="#8fe3ff" stroke-width="2" marker-end="url(#arC)"/>
+        <rect x="42" y="24" width="78" height="36" rx="5" fill="#16232a" stroke="#8fe3ff"/>
+        <text x="81" y="46" text-anchor="middle" fill="#e3ebed" font-family="JetBrains Mono, monospace" font-size="10.5">receiver</text>
+        <rect x="42" y="116" width="78" height="36" rx="5" fill="#16232a" stroke="#8fe3ff"/>
+        <text x="81" y="138" text-anchor="middle" fill="#e3ebed" font-family="JetBrains Mono, monospace" font-size="10.5">receiver</text>
+        <g id="slotsA"></g><g id="slotsB"></g>
+        <path d="M120 42 H140 M120 134 H140" stroke="#8fe3ff" stroke-width="1.5"/>
+        <path d="M244 42 C262 42 262 70 282 70 M244 134 C262 134 262 106 282 106" stroke="#8fe3ff" stroke-width="1.5" fill="none"/>
+        <rect x="282" y="58" width="84" height="60" rx="5" fill="#16232a" stroke="#8fe3ff"/>
+        <text x="324" y="84" text-anchor="middle" fill="#e3ebed" font-family="JetBrains Mono, monospace" font-size="10.5" id="gateText">128 XOR</text>
+        <text x="324" y="100" text-anchor="middle" fill="#8b9ea5" font-family="JetBrains Mono, monospace" font-size="9.5">gates</text>
+        <path d="M366 88 H392" stroke="#8fe3ff" stroke-width="1.5"/>
+        <rect x="392" y="70" width="80" height="36" rx="5" fill="#16232a" stroke="#8fe3ff"/>
+        <text x="432" y="92" text-anchor="middle" fill="#e3ebed" font-family="JetBrains Mono, monospace" font-size="10.5">transmitter</text>
+        <path d="M472 88 H514" stroke="#8fe3ff" stroke-width="2" marker-end="url(#arC)"/>
+        <text x="192" y="16" text-anchor="middle" fill="#8b9ea5" font-family="JetBrains Mono, monospace" font-size="9.5" id="wordText">word: W bits</text>
+        <text x="350" y="168" text-anchor="middle" fill="#8b9ea5" font-family="JetBrains Mono, monospace" font-size="9.5" id="clkText">one word per clock</text>
+      </svg>
+      <div class="big"><span class="v" id="eleLat">2.0 ns</span><span class="k">at least, from bit in<br>to ciphertext out</span></div>
+      <dl class="facts">
+        <dt>Logic</dt><dd id="eleGates">–</dd>
+        <dt>Where the time goes</dt><dd id="eleSplit">–</dd>
+        <dt>Encrypt errors</dt><dd id="eleErr">–</dd>
+        <dt>Line rate</dt><dd id="eleRate">–</dd>
+      </dl>
+      <div class="out">
+        <h3>Ciphertext (hex)</h3>
+        <div class="hexline" id="eleHex"></div>
+      </div>
+      <div class="out">
+        <h3>Decrypted on the electronic chip</h3>
+        <div class="plain" id="elePlain"></div>
+      </div>
+    </article>
+  </div>
+
+  <section class="race" aria-labelledby="raceTitle">
+    <div class="row">
+      <h2 id="raceTitle">Same message, same clock on the wall</h2>
+      <div class="legend"><span><i style="background:var(--fg)"></i>message enters</span><span><i style="background:var(--laser)"></i>optical ciphertext</span><span><i style="background:var(--beam)"></i>electronic ciphertext</span></div>
+    </div>
+    <canvas id="race" width="1000" height="230" aria-label="Timeline of the message and the two ciphertexts"></canvas>
+    <p class="cap" id="raceCap"></p>
+  </section>
+
+  <div class="notes">
+    <section>
+      <h3>What this shows</h3>
+      <p>Both chips produce the same ciphertext at the same bit rate. The difference is how long a bit waits. Light reaches the photodiode about <strong>19 ps</strong> after the modulators flip, and only 5.2 ps of that is the gate itself. The electronic chip must collect a whole word before its gates can act, so even a minimal design holds each bit for about three clock cycles, which is <strong>about 100 times longer</strong>. One coupler also replaces a whole array of gates.</p>
+    </section>
+    <section>
+      <h3>What it doesn't show</h3>
+      <ul>
+        <li>Throughput is the same: both keep up with the line rate.</li>
+        <li>The electronic chip regenerates the signal with a fresh clock; the optical chip passes the inputs' timing jitter straight through.</li>
+        <li>The interference XOR needs message and key on one laser, so it fits a transmitter, not two unrelated fibres.</li>
+        <li>Energy is not compared. Both sides spend most of it in drivers and receivers at their edges.</li>
+        <li>Both latencies leave out the analog front ends (modulator drivers and photodiode amplifier; receiver clock recovery and equalisation), so the electronic figure is a floor.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>How each side is computed</h3>
+      <p><strong>Optical:</strong> your bits drive the time-domain model of the single-pass XOR layout (<code>FastXOR</code>, SiEPIC extraction), in a worker in this page. It is the same model as the Python study, matching it to 1e-16. Modulators and photodiode have Gaussian responses at the chosen bandwidth; 10 mW laser, 1 A/W photodiode, 20 pA/√Hz amplifier noise. Each bit is decided at its centre, 19 ps after it was sent. The errors you see come out of that simulation.</p>
+      <p><strong>Electronic:</strong> a model, not a simulation. Word width W = ⌈rate ÷ clock⌉; a bit waits one word to be collected, one clock for the XOR register and one to cross into the transmit clock: three word times.</p>
+    </section>
+  </div>
+
+  <div class="src">
+    <strong style="color:var(--muted);font-weight:500">Sources</strong>
+    <ol>
+      <li>Layout, circuit model and speed study: <a href="https://github.com/atharvdubey22ug-glitch/bench-to-pixel/tree/main/chip/speed">chip/speed in the Bench to Pixel repository</a>.</li>
+      <li>Lithium niobate modulators at 210 Gb/s and CMOS-compatible voltages: C. Wang et al., <a href="https://www.nature.com/articles/s41586-018-0551-y">Nature 562, 101–104 (2018)</a>.</li>
+      <li>Silicon carrier-depletion modulators at 40–50 Gb/s: G. T. Reed et al., <a href="https://www.ee.nthu.edu.tw/shhsu/journal%20papers/Nanopho_breakthroughs%20in%20silicon%20optical%20modulators.pdf">Nanophotonics 3, 229–245 (2014)</a>.</li>
+      <li>Electrical SerDes at 212 Gb/s per lane: <a href="https://www.mediatek.com/tek-talk-blogs/ultra-high-speed-wireline-performance-with-dsp-based-pam-4-serdes-for-custom-asics">MediaTek, DSP-based PAM-4 SerDes</a>; 112G PHY at under 5 pJ/bit: <a href="https://www.synopsys.com/designware-ip/technical-bulletin/best-112g-serdes-ip-performance.html">Synopsys</a>.</li>
+    </ol>
+  </div>
+</div>
+
+<script type="application/json" id="circuit">{"source":"klayout/EBeam_heaters_atharvdubey_FastXOR (SiEPIC extraction), chip/speed/td.py","ports":33,"fibre":{"mon":0,"laser1":2,"xor":4},"S":[[0,0,-0.030737804652518623,-0.003459081979899937],[0,1,0.7436067558878476,0.09760612558431263],[1,0,0.7568685587159092,0.020828522691114307],[1,1,0.07506380043082547,-0.025854513723699873],[2,2,-0.030737804652518623,-0.003459081979899937],[2,3,0.7436067558878476,0.09760612558431263],[3,2,0.7568685587159092,0.020828522691114307],[3,3,0.07506380043082547,-0.025854513723699873],[4,4,-0.030737804652518623,-0.003459081979899937],[4,5,0.7436067558878476,0.09760612558431263],[5,4,0.7568685587159092,0.020828522691114307],[5,5,0.07506380043082547,-0.025854513723699873],[6,6,0.03128240624884914,-0.01707017339412693],[6,7,0.469503647146312,0.5105852137774907],[6,8,0.46951423104322637,0.5104837979219511],[7,6,0.4727719205813478,0.5137778318045924],[7,7,0.03478388579131102,-0.07039158395737787],[7,8,-0.02056862277984384,0.04881205922007603],[8,6,0.4727955310130869,0.5136680443130062],[8,7,-0.02056857940379098,0.04881196599526399],[8,8,0.03471374212044053,-0.07036470287132154],[9,9,-0.0008462045082373017,0.0068388459712361346],[9,10,-0.0005202278516223951,0.00031772448291479623],[9,11,-0.12467284775203208,-0.6911110834637103],[9,12,-0.6948364119466431,-0.0016737175681701844],[10,9,-0.0005261341514076945,0.0003113602397043876],[10,10,-0.001037015747123476,0.006570447422810767],[10,11,0.4305501262536081,0.5449810186660129],[10,12,-0.6229686961339806,0.3284902285085797],[11,9,-0.12467583442574251,-0.6911211093072446],[11,10,0.4288615733022611,0.5429470737148826],[11,11,-0.00028893743396807585,0.00678021907746918],[11,12,-0.001053812668732385,0.0003919794823001319],[12,9,-0.6977838946192272,-0.0016066560799196015],[12,10,-0.6228966969790314,0.32853410823471585],[12,11,-0.0010455648540579861,0.00040711415067599146],[12,12,-0.00010772364538018309,0.006321784699896393],[13,13,-0.0008462045082373017,0.0068388459712361346],[13,14,-0.0005202278516223951,0.00031772448291479623],[13,15,-0.12467284775203208,-0.6911110834637103],[13,16,-0.6948364119466431,-0.0016737175681701844],[14,13,-0.0005261341514076945,0.0003113602397043876],[14,14,-0.001037015747123476,0.006570447422810767],[14,15,0.4305501262536081,0.5449810186660129],[14,16,-0.6229686961339806,0.3284902285085797],[15,13,-0.12467583442574251,-0.6911211093072446],[15,14,0.4288615733022611,0.5429470737148826],[15,15,-0.00028893743396807585,0.00678021907746918],[15,16,-0.001053812668732385,0.0003919794823001319],[16,13,-0.6977838946192272,-0.0016066560799196015],[16,14,-0.6228966969790314,0.32853410823471585],[16,15,-0.0010455648540579861,0.00040711415067599146],[16,16,-0.00010772364538018309,0.006321784699896393],[17,17,-0.0008462045082373017,0.0068388459712361346],[17,18,-0.0005202278516223951,0.00031772448291479623],[17,19,-0.12467284775203208,-0.6911110834637103],[17,20,-0.6948364119466431,-0.0016737175681701844],[18,17,-0.0005261341514076945,0.0003113602397043876],[18,18,-0.001037015747123476,0.006570447422810767],[18,19,0.4305501262536081,0.5449810186660129],[18,20,-0.6229686961339806,0.3284902285085797],[19,17,-0.12467583442574251,-0.6911211093072446],[19,18,0.4288615733022611,0.5429470737148826],[19,19,-0.00028893743396807585,0.00678021907746918],[19,20,-0.001053812668732385,0.0003919794823001319],[20,17,-0.6977838946192272,-0.0016066560799196015],[20,18,-0.6228966969790314,0.32853410823471585],[20,19,-0.0010455648540579861,0.00040711415067599146],[20,20,-0.00010772364538018309,0.006321784699896393],[23,23,-0.0008462045082373017,0.0068388459712361346],[23,24,-0.0005202278516223951,0.00031772448291479623],[23,25,-0.12467284775203208,-0.6911110834637103],[23,26,-0.6948364119466431,-0.0016737175681701844],[24,23,-0.0005261341514076945,0.0003113602397043876],[24,24,-0.001037015747123476,0.006570447422810767],[24,25,0.4305501262536081,0.5449810186660129],[24,26,-0.6229686961339806,0.3284902285085797],[25,23,-0.12467583442574251,-0.6911211093072446],[25,24,0.4288615733022611,0.5429470737148826],[25,25,-0.00028893743396807585,0.00678021907746918],[25,26,-0.001053812668732385,0.0003919794823001319],[26,23,-0.6977838946192272,-0.0016066560799196015],[26,24,-0.6228966969790314,0.32853410823471585],[26,25,-0.0010455648540579861,0.00040711415067599146],[26,26,-0.00010772364538018309,0.006321784699896393],[27,27,-0.0008462045082373017,0.0068388459712361346],[27,28,-0.0005202278516223951,0.00031772448291479623],[27,29,-0.12467284775203208,-0.6911110834637103],[27,30,-0.6948364119466431,-0.0016737175681701844],[28,27,-0.0005261341514076945,0.0003113602397043876],[28,28,-0.001037015747123476,0.006570447422810767],[28,29,0.4305501262536081,0.5449810186660129],[28,30,-0.6229686961339806,0.3284902285085797],[29,27,-0.12467583442574251,-0.6911211093072446],[29,28,0.4288615733022611,0.5429470737148826],[29,29,-0.00028893743396807585,0.00678021907746918],[29,30,-0.001053812668732385,0.0003919794823001319],[30,27,-0.6977838946192272,-0.0016066560799196015],[30,28,-0.6228966969790314,0.32853410823471585],[30,29,-0.0010455648540579861,0.00040711415067599146],[30,30,-0.00010772364538018309,0.006321784699896393]],"links":[{"p":1,"q":12,"re":-0.4142307468117109,"im":0.8732842984502402,"D":1.3771580922055657e-11,"heat":[]},{"p":3,"q":6,"re":0.9963100886123386,"im":-0.06114998896683607,"D":7.353096519993571e-13,"heat":[]},{"p":5,"q":11,"re":-0.4142307468117109,"im":0.8732842984502402,"D":1.3771580922055657e-11,"heat":[]},{"p":6,"q":3,"re":0.9963100886123386,"im":-0.06114998896683607,"D":7.353096519993571e-13,"heat":[]},{"p":7,"q":13,"re":-0.09374693286347212,"im":0.9904143946189425,"D":2.0933538870334035e-12,"heat":[]},{"p":8,"q":23,"re":-0.09374693286347212,"im":0.9904143946189425,"D":2.0933538870334035e-12,"heat":[]},{"p":9,"q":19,"re":0.4545498178528601,"im":0.8802588995159084,"D":3.784845672052445e-12,"heat":[["biasA",1.2581343855504994e-12]]},{"p":10,"q":29,"re":0.4545498178528601,"im":0.8802588995159084,"D":3.784845672052445e-12,"heat":[["biasB",1.2581343855504994e-12]]},{"p":11,"q":5,"re":-0.4142307468117109,"im":0.8732842984502402,"D":1.3771580922055657e-11,"heat":[]},{"p":12,"q":1,"re":-0.4142307468117109,"im":0.8732842984502402,"D":1.3771580922055657e-11,"heat":[]},{"p":13,"q":7,"re":-0.09374693286347212,"im":0.9904143946189425,"D":2.0933538870334035e-12,"heat":[]},{"p":14,"q":21,"re":1.0,"im":0.0,"D":0.0,"heat":[]},{"p":21,"q":14,"re":1.0,"im":0.0,"D":0.0,"heat":[]},{"p":15,"q":17,"re":0.7431740828907448,"im":-0.6588199935870976,"D":2.781078100717036e-12,"heat":[]},{"p":16,"q":18,"re":0.7496685567594508,"im":-0.6514203622101933,"D":2.7810920799881917e-12,"heat":[["A_mod",1.3936913759579134e-12]]},{"p":17,"q":15,"re":0.7431740828907448,"im":-0.6588199935870976,"D":2.781078100717036e-12,"heat":[]},{"p":18,"q":16,"re":0.7496685567594509,"im":-0.6514203622101933,"D":2.781092079988192e-12,"heat":[["A_mod",1.3874007040302783e-12]]},{"p":19,"q":9,"re":0.45454981785286014,"im":0.8802588995159084,"D":3.784845672052445e-12,"heat":[["biasA",2.5267112865019454e-12]]},{"p":20,"q":22,"re":1.0,"im":0.0,"D":0.0,"heat":[]},{"p":22,"q":20,"re":1.0,"im":0.0,"D":0.0,"heat":[]},{"p":23,"q":8,"re":-0.09374693286347212,"im":0.9904143946189425,"D":2.0933538870334035e-12,"heat":[]},{"p":24,"q":31,"re":1.0,"im":0.0,"D":0.0,"heat":[]},{"p":31,"q":24,"re":1.0,"im":0.0,"D":0.0,"heat":[]},{"p":25,"q":27,"re":0.7431740828907448,"im":-0.6588199935870976,"D":2.781078100717036e-12,"heat":[]},{"p":26,"q":28,"re":0.7496685567594508,"im":-0.6514203622101933,"D":2.7810920799881917e-12,"heat":[["B_mod",1.3936913759579134e-12]]},{"p":27,"q":25,"re":0.7431740828907448,"im":-0.6588199935870976,"D":2.781078100717036e-12,"heat":[]},{"p":28,"q":26,"re":0.7496685567594509,"im":-0.6514203622101933,"D":2.781092079988192e-12,"heat":[["B_mod",1.3874007040302783e-12]]},{"p":29,"q":10,"re":0.45454981785286014,"im":0.8802588995159084,"D":3.784845672052445e-12,"heat":[["biasB",2.5267112865019454e-12]]},{"p":30,"q":32,"re":1.0,"im":0.0,"D":0.0,"heat":[]},{"p":32,"q":30,"re":1.0,"im":0.0,"D":0.0,"heat":[]}],"base":{"A_mod":1.87362668660695,"B_mod":1.87362668660695,"biasA":5.796470914388938,"biasB":0.0},"inputs":{"A":{"role":"A_mod","on":5.002147526104136,"off":1.87362668660695},"B":{"role":"B_mod","on":5.010862068832541,"off":1.87362668660695}},"levels_W_per_W":{"00":1.7849896031651594e-09,"01":0.06284745398214518,"10":0.06476359198756462,"11":1.4223023904556915e-05},"latency_ps":18.96}</script>
+<script id="engine">/* Time-domain model of the single-pass optical XOR, ported from chip/speed/td.py.
+   The circuit (circuit.json) is the SiEPIC extraction of klayout/EBeam_heaters_atharvdubey_FastXOR:
+   every drawn waveguide is a delay line with its PDK group delay and complex transmission at 1550 nm,
+   couplers / Y-branches / grating couplers keep their PDK S-matrices, and the two input switches are
+   phase sections that change in time. Checked against the Python model (chip/speed/reference_run.json). */
+(function (root) {
+  "use strict";
+
+  function build(c, dt) {
+    const P = c.ports;
+    const L = c.links.length;
+    const lp = new Int32Array(L), lq = new Int32Array(L), D = new Int32Array(L);
+    const Fre = new Float64Array(L), Fim = new Float64Array(L);
+    const heat = [];
+    let R = 0;
+    c.links.forEach((l, i) => {
+      lp[i] = l.p; lq[i] = l.q; Fre[i] = l.re; Fim[i] = l.im;
+      D[i] = Math.max(1, Math.round(l.D / dt));
+      R = Math.max(R, D[i]);
+      l.heat.forEach(([role, d]) => heat.push({ i, role, d: Math.max(0, Math.round(d / dt)) }));
+    });
+    const nnz = c.S.length;
+    const Sr = new Int32Array(nnz), Sc = new Int32Array(nnz), Sre = new Float64Array(nnz), Sim = new Float64Array(nnz);
+    c.S.forEach(([r, col, re, im], k) => { Sr[k] = r; Sc[k] = col; Sre[k] = re; Sim[k] = im; });
+    return { c, dt, P, L, lp, lq, D, Fre, Fim, heat, R: R + 2, Sr, Sc, Sre, Sim };
+  }
+
+  /* phases: role -> Float64Array(n) or number (rad, per pass). Laser is CW, amplitude 1, into the
+     laser fibre port. Returns the complex field leaving the XOR fibre port. */
+  function run(net, n, phases, outName) {
+    const { P, L, lp, lq, D, Fre, Fim, heat, R, Sr, Sc, Sre, Sim } = net;
+    const src = net.c.fibre.laser1, out = net.c.fibre[outName || "xor"];
+    const hre = new Float64Array(R * P), him = new Float64Array(R * P);
+    const vre = new Float64Array(P), vim = new Float64Array(P);
+    const ore = new Float64Array(n), oim = new Float64Array(n);
+    const ph = (role, k) => {
+      const v = phases[role];
+      if (v === undefined) return 0;
+      return typeof v === "number" ? v : v[k < 0 ? 0 : k];
+    };
+    const hasHeat = new Uint8Array(L);
+    heat.forEach(h => { hasHeat[h.i] = 1; });
+    const fre = new Float64Array(L), fim = new Float64Array(L);
+    for (let s = 0; s < n; s++) {
+      fre.set(Fre); fim.set(Fim);
+      if (heat.length) {
+        const sum = new Float64Array(L);
+        for (const h of heat) sum[h.i] += ph(h.role, s - h.d);
+        for (let i = 0; i < L; i++) {
+          if (!hasHeat[i]) continue;
+          const c = Math.cos(sum[i]), si = Math.sin(sum[i]);
+          const a = fre[i], b = fim[i];
+          fre[i] = a * c - b * si; fim[i] = a * si + b * c;
+        }
+      }
+      vre.fill(0); vim.fill(0);
+      for (let i = 0; i < L; i++) {
+        let row = (s - D[i]) % R; if (row < 0) row += R;
+        const k = row * P + lp[i];
+        const a = hre[k], b = him[k];
+        vre[lq[i]] += fre[i] * a - fim[i] * b;
+        vim[lq[i]] += fre[i] * b + fim[i] * a;
+      }
+      vre[src] += 1;
+      const base = (s % R) * P;
+      for (let p = 0; p < P; p++) { hre[base + p] = 0; him[base + p] = 0; }
+      for (let k = 0; k < Sr.length; k++) {
+        const a = vre[Sc[k]], b = vim[Sc[k]];
+        hre[base + Sr[k]] += Sre[k] * a - Sim[k] * b;
+        him[base + Sr[k]] += Sre[k] * b + Sim[k] * a;
+      }
+      ore[s] = hre[base + out]; oim[s] = him[base + out];
+    }
+    return { re: ore, im: oim };
+  }
+
+  function erf(x) {                      // Abramowitz-Stegun 7.1.26, |error| < 1.5e-7
+    const s = x < 0 ? -1 : 1; x = Math.abs(x);
+    const t = 1 / (1 + 0.3275911 * x);
+    const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+    return s * y;
+  }
+
+  /* NRZ drive level 0..1 at every time step; bit k spans [lead + k T, lead + (k+1) T).
+     bw: modulator 3 dB bandwidth (Hz), Gaussian response; null = ideal (instant edges). */
+  function drive(bits, rate, dt, n, lead, bw) {
+    const out = new Float64Array(n);
+    const T = 1 / rate;
+    if (!bw) {
+      for (let s = 0; s < n; s++) {
+        const k = Math.floor((s - lead) * dt * rate);
+        out[s] = k >= 0 && k < bits.length ? bits[k] : 0;
+      }
+      return out;
+    }
+    const sigma = Math.sqrt(Math.LN2) / (2 * Math.PI * bw);
+    const edges = [];                     // (time, step) of every level change, starting from 0 before the data
+    let prev = 0;
+    for (let k = 0; k <= bits.length; k++) {
+      const v = k < bits.length ? bits[k] : 0;
+      if (v !== prev) edges.push([k * T, v - prev]);
+      prev = v;
+    }
+    const reach = 6 * sigma;
+    let first = 0, level = 0;
+    for (let s = 0; s < n; s++) {
+      const t = (s - lead) * dt;
+      while (first < edges.length && edges[first][0] < t - reach) { level += edges[first][1]; first++; }
+      let v = level;
+      for (let j = first; j < edges.length && edges[j][0] < t + reach; j++)
+        v += edges[j][1] * 0.5 * (1 + erf((t - edges[j][0]) / (Math.SQRT2 * sigma)));
+      out[s] = Math.min(1, Math.max(0, v));
+    }
+    return out;
+  }
+
+  /* Gaussian low-pass of a sampled signal, evaluated only at the requested sample indices. */
+  function filterAt(x, dt, bw, idx) {
+    if (!bw) return idx.map(i => x[i]);
+    const sigma = Math.sqrt(Math.LN2) / (2 * Math.PI * bw) / dt;
+    const K = Math.ceil(5 * sigma);
+    const w = new Float64Array(2 * K + 1);
+    let tot = 0;
+    for (let j = -K; j <= K; j++) { w[j + K] = Math.exp(-0.5 * (j / sigma) ** 2); tot += w[j + K]; }
+    return idx.map(i => {
+      let s = 0;
+      for (let j = -K; j <= K; j++) { const ii = Math.min(x.length - 1, Math.max(0, i + j)); s += w[j + K] * x[ii]; }
+      return s / tot;
+    });
+  }
+
+  function gauss(rng) {                 // Box-Muller from a uniform generator
+    let u = 0, v = 0;
+    while (u === 0) u = rng(); v = rng();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
+  /* The whole optical XOR box: two bit streams in, decided bits out.
+     opts: rate (b/s), bwMod, bwRx (Hz or null), pLaser (W), tia (A/rtHz), rng, dt (s). */
+  function xorStream(circuit, a, b, opts) {
+    const rate = opts.rate, dt = opts.dt || Math.min(0.05e-12, 1 / rate / 100);
+    const net = build(circuit, dt);
+    const T = 1 / rate, nb = a.length;
+    const lead = Math.round(40e-12 / dt);
+    const lat = circuit.latency_ps * 1e-12;
+    const n = lead + Math.ceil((nb * T + lat + 4 * T + 30e-12) / dt);
+    const phases = Object.assign({}, circuit.base);
+    for (const [key, bits] of [["A", a], ["B", b]]) {
+      const s = circuit.inputs[key];
+      const delta = ((s.on - s.off + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
+      const d = drive(bits, rate, dt, n, lead, opts.bwMod);
+      const arr = new Float64Array(n);
+      for (let i = 0; i < n; i++) arr[i] = s.off + delta * d[i];
+      phases[s.role] = arr;
+    }
+    const e = run(net, n, phases, "xor");
+    const pl = opts.pLaser || 10e-3;
+    const cur = new Float64Array(n);
+    for (let i = 0; i < n; i++) cur[i] = pl * (e.re[i] ** 2 + e.im[i] ** 2);      // photocurrent, A (1 A/W)
+    const idx = [];
+    for (let k = 0; k < nb; k++) idx.push(Math.min(n - 1, Math.round(lead + ((k + 0.5) * T + lat) / dt)));
+    const smp = filterAt(cur, dt, opts.bwRx, idx);
+    const one = pl * 0.5 * (circuit.levels_W_per_W["01"] + circuit.levels_W_per_W["10"]);
+    const zero = pl * 0.5 * (circuit.levels_W_per_W["00"] + circuit.levels_W_per_W["11"]);
+    const thr = 0.5 * (one + zero);
+    const bwN = opts.bwRx || 0.75 * rate;
+    const tia = opts.tia === undefined ? 20e-12 : opts.tia;
+    const rng = opts.rng || Math.random;
+    const q = 1.602176634e-19;
+    const noisy = smp.map(i => i + gauss(rng) * Math.sqrt((2 * q * Math.max(i, 0) + tia * tia) * bwN));
+    const out = noisy.map(i => (i > thr ? 1 : 0));
+    // eye trace: the filtered current on a coarse grid, folded on two bit periods centred on the samples
+    const per = Math.max(1, Math.round(T / dt / 48));
+    const grid = [];
+    for (let i = 0; i < n; i += per) grid.push(i);
+    const fil = filterAt(cur, dt, opts.bwRx, grid);
+    return { bits: out, samples: smp, threshold: thr, one, zero, trace: { t0: lead * dt + lat, dt: per * dt, y: fil, T }, latency_ps: circuit.latency_ps, dt, steps: n };
+  }
+
+  const api = { build, run, drive, filterAt, xorStream, erf };
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  else root.OptXOR = api;
+})(this);
+</script>
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const circuit = JSON.parse($("circuit").textContent);
+  const SERDES_MAX = 224e9;           // fastest single-lane electrical SerDes class today
+  const enc = new TextEncoder();
+  const dec = new TextDecoder("utf-8", { fatal: false });
+  let key = new Uint8Array(64);
+  const freshKey = () => { try { crypto.getRandomValues(key); } catch (e) { for (let i = 0; i < 64; i++) key[i] = Math.floor(Math.random() * 256); } };
+  freshKey();
+
+  // ---- worker running the optical model (falls back to the page thread)
+  let worker = null;
+  try {
+    const src = $("engine").textContent + `
+      function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+      onmessage = e => {
+        const d = e.data, rng = mulberry32(d.seed);
+        const a = OptXOR.xorStream(d.circuit, d.a, d.b, Object.assign({}, d.opts, { rng }));
+        const b = OptXOR.xorStream(d.circuit, a.bits, d.b, Object.assign({}, d.opts, { rng }));
+        postMessage({ id: d.id, enc: a, dec: b });
+      };`;
+    worker = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" })));
+  } catch (e) { worker = null; }
+  function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  let jobId = 0;
+  function simulate(a, b, opts) {
+    const id = ++jobId;
+    return new Promise(resolve => {
+      const local = () => {
+        const rng = mulberry32(12345);
+        const e1 = OptXOR.xorStream(circuit, a, b, Object.assign({}, opts, { rng }));
+        const e2 = OptXOR.xorStream(circuit, e1.bits, b, Object.assign({}, opts, { rng }));
+        resolve({ id, enc: e1, dec: e2 });
+      };
+      if (!worker) { setTimeout(local, 20); return; }
+      const h = ev => { if (ev.data.id === id) { worker.removeEventListener("message", h); resolve(ev.data); } };
+      worker.addEventListener("message", h);
+      worker.onerror = () => { worker = null; local(); };
+      worker.postMessage({ id, circuit, a, b, opts, seed: 12345 });
+    });
+  }
+
+  // ---- helpers
+  const bitsOf = bytes => { const out = []; for (const v of bytes) for (let i = 7; i >= 0; i--) out.push((v >> i) & 1); return out; };
+  const bytesOf = bits => { const out = new Uint8Array(bits.length >> 3); for (let i = 0; i < out.length; i++) { let v = 0; for (let j = 0; j < 8; j++) v = (v << 1) | bits[i * 8 + j]; out[i] = v; } return out; };
+  const hex = v => v.toString(16).padStart(2, "0");
+  const fmtT = s => s < 1e-9 ? `${(s * 1e12).toFixed(s < 1e-11 ? 1 : 0)} ps` : `${(s * 1e9).toFixed(s < 1e-8 ? 2 : 1)} ns`;
+  const val = name => document.querySelector(`input[name="${name}"]:checked`).value;
+  function msgBytes() {
+    let b = enc.encode($("msg").value);
+    while (b.length > 64) { $("msg").value = $("msg").value.slice(0, -1); b = enc.encode($("msg").value); }
+    return b;
+  }
+  function setStatus(kind, text) { const s = $("status"); s.className = "status " + kind; s.querySelector("span").textContent = text; }
+  function pill(kind, text) { return `<span class="pill ${kind}">${text}</span>`; }
+
+  // ---- electronic model
+  function electronic(rate, clk) {
+    const W = Math.ceil(rate / clk);
+    const f = rate / W;
+    return { W, f, word: 1 / f, latency: 3 / f };
+  }
+  function drawSlots(W) {
+    for (const [gid, y] of [["slotsA", 30], ["slotsB", 122]]) {
+      const g = $(gid); g.innerHTML = "";
+      const n = 8;
+      for (let i = 0; i < n; i++) {
+        const r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        r.setAttribute("x", 142 + i * 12.5); r.setAttribute("y", y); r.setAttribute("width", 10); r.setAttribute("height", 24); r.setAttribute("rx", 2);
+        r.setAttribute("fill", i < 7 ? "#16232a" : "none"); r.setAttribute("stroke", "#8fe3ff"); r.setAttribute("stroke-width", "1");
+        if (i === 6) r.setAttribute("stroke-dasharray", "2 2");
+        g.appendChild(r);
+      }
+    }
+    $("wordText").textContent = `word: ${W} bits`;
+    $("gateText").textContent = `${W} XOR`;
+  }
+
+  // ---- drawing
+  function setupCanvas(cv, heightOf) {
+    const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    const w = Math.max(260, Math.round(r.width)), h = Math.round(heightOf(w));
+    cv.style.height = h + "px";
+    cv._w = w; cv._h = h;
+    const ctx = cv.getContext("2d");
+    if (cv._sw !== w || cv._sh !== h) { cv._sw = w; cv._sh = h; cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    ctx.setTransform(cv.width / w, 0, 0, cv.height / h, 0, 0);
+    return ctx;
+  }
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  function drawEye(res, exactBits) {
+    const cv = $("eye");
+    const ctx = setupCanvas(cv, w => w / 2), w = cv._w, h = cv._h;
+    ctx.clearRect(0, 0, w, h);
+    const tr = res.trace, T = tr.T;
+    const top = Math.max(res.one * 1.18, 1e-9);
+    const pad = { l: 46, r: 10, t: 12, b: 26 };
+    const X = t => pad.l + (t + T) / (2 * T) * (w - pad.l - pad.r);
+    const Y = v => pad.t + (1 - v / top) * (h - pad.t - pad.b);
+    ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
+    ctx.font = `10px ${css("--f-mono")}`; ctx.fillStyle = css("--faint");
+    const stepUA = [50, 100, 200, 250, 500, 1000].find(s => s * 4 >= top * 1e6) || 1000;
+    for (let v = 0; v <= top * 1e6; v += stepUA) {
+      const y = Y(v * 1e-6);
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+      ctx.fillText(`${v}`, 4, y + 3);
+    }
+    ctx.fillText("µA", 4, h - 8);
+    for (const t of [-T, -T / 2, 0, T / 2, T]) {
+      const x = X(t); ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, h - pad.b); ctx.stroke();
+    }
+    ctx.textAlign = "center";
+    ctx.fillText(`−1 bit`, X(-T) + 18, h - 8); ctx.fillText(`sample`, X(0), h - 8); ctx.fillText(`+1 bit`, X(T) - 18, h - 8);
+    ctx.textAlign = "left";
+    ctx.strokeStyle = "rgba(255,90,71,.22)"; ctx.lineWidth = 1;
+    const nb = exactBits.length;
+    for (let k = 0; k < nb; k++) {
+      const c = tr.t0 + (k + 0.5) * T;
+      const i0 = Math.max(0, Math.floor((c - T) / tr.dt)), i1 = Math.min(tr.y.length - 1, Math.ceil((c + T) / tr.dt));
+      ctx.beginPath();
+      for (let i = i0; i <= i1; i++) { const x = X(i * tr.dt - c), y = Y(tr.y[i]); i === i0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
+      ctx.stroke();
+    }
+    ctx.strokeStyle = css("--petg"); ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(pad.l, Y(res.threshold)); ctx.lineTo(w - pad.r, Y(res.threshold)); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  let raceAnim = 0;
+  function drawRace(nb, rate, latO, latE, msgBits, cO, cE, sweep) {
+    const cv = $("race");
+    const ctx = setupCanvas(cv, w => (w < 560 ? 250 : w * 0.23)), w = cv._w, h = cv._h;
+    ctx.clearRect(0, 0, w, h);
+    const D = nb / rate, tmax = (D + Math.max(latO, latE)) * 1.06;
+    const narrow = w < 560;
+    const pad = { l: narrow ? 8 : 150, r: 14, t: narrow ? 22 : 18, b: 30 };
+    const X = t => pad.l + t / tmax * (w - pad.l - pad.r);
+    const rowH = narrow ? 18 : 22;
+    const gap = (h - pad.t - pad.b - 3 * rowH) / 2.6;
+    const rows = [
+      { label: "message enters", bits: msgBits, start: 0, col: css("--fg") },
+      { label: "optical out", bits: cO, start: latO, col: css("--laser") },
+      { label: "electronic out", bits: cE, start: latE, col: css("--beam") },
+    ];
+    const cut = sweep === undefined ? Infinity : sweep;
+    ctx.font = `11px ${css("--f-mono")}`;
+    rows.forEach((r, i) => {
+      const y = pad.t + i * (rowH + gap) + (narrow ? 12 : 0);
+      ctx.fillStyle = css("--muted");
+      if (narrow) ctx.fillText(r.label, pad.l, y - 4); else ctx.fillText(r.label, 8, y + rowH / 2 + 4);
+      ctx.fillStyle = "rgba(34,49,58,.55)";
+      ctx.fillRect(X(r.start), y, Math.max(1, X(r.start + D) - X(r.start)), rowH);
+      ctx.fillStyle = r.col;
+      const bw = (X(r.start + 1 / rate) - X(r.start));
+      for (let k = 0; k < r.bits.length; k++) {
+        const t = r.start + k / rate;
+        if (t > cut) break;
+        if (r.bits[k]) ctx.fillRect(X(t), y + 3, Math.max(0.8, bw - (bw > 3 ? 1 : 0)), rowH - 6);
+      }
+      if (i > 0) {
+        ctx.fillStyle = r.col;
+        ctx.fillRect(X(0), y + rowH / 2 - 1, Math.max(1, X(r.start) - X(0)), 2);
+        ctx.fillText(`+${fmtT(r.start)}`, X(r.start) + 4 + (i === 1 ? 0 : 0), y + rowH + 13);
+      }
+    });
+    // axis
+    const yA = h - pad.b + 6;
+    ctx.strokeStyle = css("--line"); ctx.beginPath(); ctx.moveTo(pad.l, yA); ctx.lineTo(w - pad.r, yA); ctx.stroke();
+    const raw = tmax / 6, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 5, 10].map(m => m * mag).find(s => s >= raw);
+    ctx.fillStyle = css("--faint"); ctx.textAlign = "center";
+    for (let t = 0; t <= tmax + 1e-15; t += step) {
+      const x = X(t); ctx.beginPath(); ctx.moveTo(x, yA); ctx.lineTo(x, yA + 4); ctx.stroke();
+      ctx.fillText(t === 0 ? "0" : fmtT(t).replace(".00", ""), x, yA + 16);
+    }
+    ctx.textAlign = "left";
+    if (sweep !== undefined && sweep < tmax) {
+      ctx.strokeStyle = css("--petg"); ctx.beginPath(); ctx.moveTo(X(sweep), pad.t - 4); ctx.lineTo(X(sweep), yA); ctx.stroke();
+    }
+  }
+
+  // ---- main update
+  let last = null, pending = null;
+  async function update() {
+    const bytes = msgBytes();
+    $("msgInfo").textContent = `${bytes.length} bytes · ${bytes.length * 8} bits`;
+    const k = key.slice(0, bytes.length);
+    $("keyHex").textContent = Array.from(k, hex).join(" ") || "–";
+    if (!bytes.length) { setStatus("", "Type a message"); return; }
+    const rate = +val("rate") * 1e9, mod = +val("mod"), clk = +val("clk") * 1e9;
+    const bw = mod ? mod * 1e9 : null;
+    const mBits = bitsOf(bytes), kBits = bitsOf(k);
+    const exact = bytes.map((v, i) => v ^ k[i]);
+    const eBits = bitsOf(exact);
+
+    // electronic side (instant)
+    const E = electronic(rate, clk);
+    drawSlots(E.W);
+    $("eleLat").textContent = fmtT(E.latency);
+    $("eleGates").innerHTML = `${E.W} XOR gates <small>(plus 2 receivers, 1 transmitter, clocking)</small>`;
+    $("eleSplit").textContent = `3 word times of ${fmtT(E.word)}: collect ${E.W} bits, XOR on a clock edge, hand over to the transmit clock`;
+    $("clkText").textContent = `one word per ${fmtT(E.word)} (${(E.f / 1e9).toFixed(2)} GHz)`;
+    $("eleErr").innerHTML = rate <= SERDES_MAX ? pill("ok", "0, digital and retimed") : pill("warn", "model only");
+    $("eleRate").innerHTML = rate <= SERDES_MAX ? `${rate / 1e9} Gb/s on one electrical lane` : `${rate / 1e9} Gb/s is beyond today's single-lane electrical links (about 224 Gb/s); it would need ${Math.ceil(rate / SERDES_MAX)} lanes`;
+    $("eleHex").textContent = Array.from(exact, hex).join(" ");
+    $("elePlain").textContent = $("msg").value;
+
+    // optical side (simulated)
+    setStatus("busy", `Simulating ${mBits.length} bits at ${rate / 1e9} Gb/s through the optical XOR…`);
+    const t0 = performance.now();
+    const res = await simulate(mBits, kBits, { rate, bwMod: bw, bwRx: bw });
+    if (res.id !== jobId) return;               // a newer run started
+    const oBits = res.enc.bits, dBits = res.dec.bits;
+    const oBytes = bytesOf(oBits), dBytes = bytesOf(dBits);
+    let errE = 0, errD = 0;
+    for (let i = 0; i < eBits.length; i++) { if (oBits[i] !== eBits[i]) errE++; if (dBits[i] !== mBits[i]) errD++; }
+    $("optLat").textContent = fmtT(circuit.latency_ps * 1e-12);
+    $("optErrE").innerHTML = errE ? pill("bad", `${errE} of ${eBits.length} bits wrong`) : pill("ok", `0 of ${eBits.length} bits`);
+    $("optErrD").innerHTML = errD ? pill("bad", `${errD} of ${mBits.length} bits wrong`) : pill("ok", `0 of ${mBits.length} bits`);
+    $("optHex").innerHTML = Array.from(oBytes, (v, i) => v === exact[i] ? hex(v) : `<span class="e" title="should be ${hex(exact[i])}">${hex(v)}</span>`).join(" ");
+    $("optPlain").textContent = dec.decode(dBytes);
+    let lo1 = Infinity, hi0 = -Infinity;
+    res.enc.samples.forEach((s, i) => { if (eBits[i]) lo1 = Math.min(lo1, s); else hi0 = Math.max(hi0, s); });
+    const open = (lo1 - hi0) / res.enc.one * 100;
+    $("eyeCap").textContent = `Every ciphertext bit overlaid on two bit periods; amber line: decision threshold. Eye opening ${open > 0 ? open.toFixed(0) + "%" : "closed"} at ${rate / 1e9} Gb/s with ${bw ? mod + " GHz" : "ideal"} modulators and photodiode.`;
+    last = { res, eBits, mBits, oBits, rate, E };
+    drawEye(res.enc, eBits);
+    const latO = circuit.latency_ps * 1e-12;
+    const D = mBits.length / rate;
+    $("raceCap").textContent = `${mBits.length} bits take ${fmtT(D)} to send at ${rate / 1e9} Gb/s. The optical ciphertext starts ${fmtT(latO)} after the first message bit; the electronic one ${fmtT(E.latency)} after it, ${Math.round(E.latency / latO)} times later. Both then run at the same rate.`;
+    animateRace(mBits.length, rate, latO, E.latency, mBits, oBits, eBits);
+    const ms = performance.now() - t0;
+    setStatus("done", `Simulated ${res.enc.steps.toLocaleString()} time steps of ${(res.enc.dt * 1e12).toFixed(3)} ps twice (encrypt and decrypt) in ${(ms / 1000).toFixed(1)} s`);
+  }
+
+  function animateRace(nb, rate, latO, latE, a, b, c) {
+    cancelAnimationFrame(raceAnim);
+    const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const tmax = (nb / rate + Math.max(latO, latE)) * 1.06;
+    if (reduce) { drawRace(nb, rate, latO, latE, a, b, c); return; }
+    const t0 = performance.now(), dur = 1800;
+    const step = now => {
+      const f = Math.min(1, (now - t0) / dur);
+      drawRace(nb, rate, latO, latE, a, b, c, f < 1 ? f * tmax : undefined);
+      if (f < 1) raceAnim = requestAnimationFrame(step);
+    };
+    drawRace(nb, rate, latO, latE, a, b, c);
+    raceAnim = requestAnimationFrame(step);
+  }
+
+  function schedule(delay) { clearTimeout(pending); pending = setTimeout(update, delay); }
+  $("msg").addEventListener("input", () => schedule(450));
+  $("controls").addEventListener("change", () => schedule(10));
+  $("controls").addEventListener("submit", e => { e.preventDefault(); schedule(0); });
+  $("newKey").addEventListener("click", () => { freshKey(); schedule(0); });
+  let rz = 0;
+  window.addEventListener("resize", () => {
+    clearTimeout(rz);
+    rz = setTimeout(() => { if (last) { drawEye(last.res.enc, last.eBits); drawRace(last.mBits.length, last.rate, circuit.latency_ps * 1e-12, last.E.latency, last.mBits, last.oBits, last.eBits); } }, 120);
+  });
+  update();
+})();
+</script>
+
+</body>
+</html>

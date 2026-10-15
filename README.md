@@ -4,6 +4,10 @@ An interactive Three.js page that starts on the optical half adder from our pape
 
 Open `index.html` in a browser. Scroll to zoom out; drag to look around.
 
+`encrypt/index.html` is a second page: type a message and it is encrypted with a one-time pad on the single-pass optical XOR (simulated live in the browser from its layout, `encrypt/engine.js`, checked against `chip/speed/td.py`) and on a modelled electronic SerDes chip, with the latency of each on one time axis. Rebuild it with `python3 encrypt/build.py` after changing `encrypt/src/`, `engine.js` or `circuit.json` (exported by `chip/speed/export_web.py`).
+
+The chip designs (full adder, 4-bit ALU, single-pass XOR) and their simulations are in [`chip/`](chip/README.md).
+
 ## What the page shows
 
 1. **The bench.** The half adder from *Using Polarisation and Interference for Optical Computing* (Figure 14, section 4.1): a linearly polarised laser, beamsplitters S1 (5), S2 (6) and S3 (7), polarisers (3, 4) for intensity marking, mirrors (1, 2) converging both beams on the carry photoresistor, and a Michelson interferometer with mirrors (9, 10), two lenses (8) and a screen (11) with a hole on a dark fringe. Inputs A and B can be toggled.

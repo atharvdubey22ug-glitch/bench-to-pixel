@@ -1,0 +1,462 @@
+<div class="wrap">
+  <div class="top">
+    <a class="brand" href="https://atharvdubey22ug-glitch.github.io/bench-to-pixel/" aria-label="Back to Bench to Pixel">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#111a1e"/><path d="M8 40 L28 24 L56 24" stroke="#ff5a47" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="28" cy="24" r="5" fill="#eba340"/></svg>
+      Bench to Pixel <span class="t">/ encrypt</span>
+    </a>
+    <span class="crumb">one-time pad · XOR at line rate</span>
+  </div>
+
+  <header class="hero">
+    <h1>The same XOR, on <em>light</em> and on <b>silicon</b></h1>
+    <p class="lede">Type a message. It is encrypted with a one-time pad, bit by bit: <strong>ciphertext = message XOR key</strong>, then decrypted the same way. The left chip is the single-pass interference XOR from this project, simulated live in your browser from its layout. The right chip is a conventional electronic chip doing the same job. Both run at the bit rate you pick; the question is how long each one makes the data wait.</p>
+  </header>
+
+  <form class="controls" id="controls" autocomplete="off">
+    <div class="field">
+      <label for="msg">Message (up to 64 bytes)</label>
+      <input class="msg" id="msg" maxlength="64" value="Light did this XOR in 19 picoseconds.">
+      <span class="hint" id="msgInfo">0 bytes · 0 bits</span>
+      <span class="lab" id="keyLab">Key (one-time pad, random)</span>
+      <div class="keyrow">
+        <div class="keyhex" id="keyHex" aria-labelledby="keyLab"></div>
+        <button type="button" class="btn" id="newKey">New key</button>
+      </div>
+    </div>
+    <div class="right">
+      <div class="field">
+        <span class="lab">Bit rate on each input</span>
+        <div class="seg" role="radiogroup" aria-label="Bit rate">
+          <input type="radio" name="rate" id="r25" value="25"><label for="r25">25 Gb/s</label>
+          <input type="radio" name="rate" id="r50" value="50"><label for="r50">50</label>
+          <input type="radio" name="rate" id="r100" value="100" checked><label for="r100">100</label>
+          <input type="radio" name="rate" id="r200" value="200"><label for="r200">200</label>
+          <input type="radio" name="rate" id="r400" value="400"><label for="r400">400</label>
+        </div>
+      </div>
+      <div class="field">
+        <span class="lab">Optical chip: modulators and photodiode</span>
+        <div class="seg light" role="radiogroup" aria-label="Modulator speed">
+          <input type="radio" name="mod" id="m50" value="50"><label for="m50">50 GHz silicon</label>
+          <input type="radio" name="mod" id="m100" value="100" checked><label for="m100">100 GHz lithium niobate</label>
+          <input type="radio" name="mod" id="m0" value="0"><label for="m0">ideal</label>
+        </div>
+      </div>
+      <div class="field">
+        <span class="lab">Electronic chip: logic clock</span>
+        <div class="seg elec" role="radiogroup" aria-label="Logic clock">
+          <input type="radio" name="clk" id="c1" value="1"><label for="c1">1 GHz</label>
+          <input type="radio" name="clk" id="c15" value="1.5" checked><label for="c15">1.5 GHz</label>
+          <input type="radio" name="clk" id="c2" value="2"><label for="c2">2 GHz</label>
+          <input type="radio" name="clk" id="c3" value="3"><label for="c3">3 GHz</label>
+        </div>
+      </div>
+      <div class="status" id="status" role="status"><i></i><span>Ready</span></div>
+    </div>
+  </form>
+
+  <div class="duel">
+    <article class="chip opt" aria-labelledby="optTitle">
+      <header>
+        <span class="tag">Optical · interference XOR</span>
+        <h2 id="optTitle">One coupler does the logic</h2>
+        <p>Message and key ride on one laser through two modulators; the beams meet at a coupler and cancel when both bits are 1.</p>
+      </header>
+      <svg class="schem" viewBox="0 0 520 176" role="img" aria-label="Optical XOR: a laser is split into two arms with a modulator each, the arms meet at a coupler, and a photodiode reads the ciphertext.">
+        <defs><marker id="arR" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#ff5a47"/></marker></defs>
+        <rect x="6" y="72" width="62" height="32" rx="6" fill="#16232a" stroke="#22313a"/>
+        <text x="37" y="92" text-anchor="middle" fill="#e3ebed" font-family="JetBrains Mono, monospace" font-size="11">laser</text>
+        <path class="wg" d="M68 88 H96 C112 88 112 40 132 40 H156 M96 88 C112 88 112 136 132 136 H156" fill="none" stroke="#ff5a47" stroke-width="2"/>
+        <rect x="156" y="26" width="104" height="28" rx="5" fill="#16232a" stroke="#ff5a47"/>
+        <text x="208" y="44" text-anchor="middle" fill="#e3ebed" font-family="JetBrains Mono, monospace" font-size="11">message</text>
+        <rect x="156" y="122" width="104" height="28" rx="5" fill="#16232a" stroke="#eba340"/>
+        <text x="208" y="140" text-anchor="middle" fill="#eba340" font-family="JetBrains Mono, monospace" font-size="11">key</text>
+        <path class="wg flow" d="M260 40 H330 C352 40 352 84 372 84 H392 M260 136 H330 C352 136 352 92 372 92 H392" fill="none" stroke="#ff5a47" stroke-width="2"/>
+        <rect x="372" y="78" width="20" height="20" rx="3" fill="none" stroke="#5d6f77" stroke-dasharray="2 2"/>
+        <path class="wg flow" d="M392 84 C406 84 410 60 424 60 H452" fill="none" stroke="#ff5a47" stroke-width="2" marker-end="url(#arR)"/>
+        <path d="M392 92 C406 92 410 116 424 116 H446" fill="none" stroke="#5d6f77" stroke-width="1.5"/>
+        <rect x="456" y="46" width="58" height="28" rx="5" fill="#16232a" stroke="#22313a"/>
+        <text x="485" y="64" text-anchor="middle" fill="#e3ebed" font-family="JetBrains Mono, monospace" font-size="10">photo-</text>
+        <text x="485" y="88" text-anchor="middle" fill="#8b9ea5" font-family="JetBrains Mono, monospace" font-size="9.5">diode</text>
+        <text x="452" y="128" fill="#5d6f77" font-family="JetBrains Mono, monospace" font-size="9.5">monitor</text>
+        <text x="382" y="114" text-anchor="middle" fill="#8b9ea5" font-family="JetBrains Mono, monospace" font-size="9.5">coupler</text>
+        <path d="M208 162 H382" stroke="#5d6f77" stroke-width="1"/><path d="M208 157 V167 M382 157 V167" stroke="#5d6f77"/>
+        <text x="295" y="173" text-anchor="middle" fill="#8b9ea5" font-family="JetBrains Mono, monospace" font-size="9.5">gate: 5.2 ps</text>
+      </svg>
+      <div class="big"><span class="v" id="optLat">19 ps</span><span class="k">from bit in<br>to ciphertext out</span></div>
+      <dl class="facts">
+        <dt>Logic</dt><dd>1 interference coupler <small>(plus 2 modulators, 1 photodiode)</small></dd>
+        <dt>Where the time goes</dt><dd id="optSplit">5.2 ps in the gate, 13.8 ps in the waveguide to the fibre</dd>
+        <dt>Encrypt errors</dt><dd id="optErrE">–</dd>
+        <dt>Decrypt errors</dt><dd id="optErrD">–</dd>
+      </dl>
+      <div class="eyebox">
+        <h3>Ciphertext eye at the photodiode</h3>
+        <canvas id="eye" width="760" height="380" aria-label="Eye diagram of the optical ciphertext"></canvas>
+        <span class="cap" id="eyeCap">Every bit of the ciphertext, overlaid on two bit periods. Amber line: decision threshold.</span>
+      </div>
+      <div class="out">
+        <h3>Ciphertext (hex)</h3>
+        <div class="hexline" id="optHex"></div>
+      </div>
+      <div class="out">
+        <h3>Decrypted on the optical chip</h3>
+        <div class="plain" id="optPlain"></div>
+      </div>
+    </article>
+
+    <article class="chip ele" aria-labelledby="eleTitle">
+      <header>
+        <span class="tag">Electronic · SerDes + CMOS logic</span>
+        <h2 id="eleTitle">Gates wait for words</h2>
+        <p>Transistor logic cannot toggle at tens of GHz, so the chip first gathers the serial bits into wide words, XORs a word per clock, and shifts the result back out.</p>
+      </header>
+      <svg class="schem" viewBox="0 0 520 176" role="img" aria-label="Electronic XOR: two serial receivers, word registers, an array of XOR gates and a serial transmitter.">
+        <defs><marker id="arC" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#8fe3ff"/></marker></defs>
+        <text x="4" y="20" fill="#e3ebed" font-family="JetBrains Mono, monospace" font-size="10">message</text>
+        <text x="4" y="168" fill="#eba340" font-family="JetBrains Mono, monospace" font-size="10">key</text>
+        <path d="M4 42 H40 M4 134 H40" stroke="#8fe3ff" stroke-width="2" marker-end="url(#arC)"/>
+        <rect x="42" y="24" width="78" height="36" rx="5" fill="#16232a" stroke="#8fe3ff"/>
+        <text x="81" y="46" text-anchor="middle" fill="#e3ebed" font-family="JetBrains Mono, monospace" font-size="10.5">receiver</text>
+        <rect x="42" y="116" width="78" height="36" rx="5" fill="#16232a" stroke="#8fe3ff"/>
+        <text x="81" y="138" text-anchor="middle" fill="#e3ebed" font-family="JetBrains Mono, monospace" font-size="10.5">receiver</text>
+        <g id="slotsA"></g><g id="slotsB"></g>
+        <path d="M120 42 H140 M120 134 H140" stroke="#8fe3ff" stroke-width="1.5"/>
+        <path d="M244 42 C262 42 262 70 282 70 M244 134 C262 134 262 106 282 106" stroke="#8fe3ff" stroke-width="1.5" fill="none"/>
+        <rect x="282" y="58" width="84" height="60" rx="5" fill="#16232a" stroke="#8fe3ff"/>
+        <text x="324" y="84" text-anchor="middle" fill="#e3ebed" font-family="JetBrains Mono, monospace" font-size="10.5" id="gateText">128 XOR</text>
+        <text x="324" y="100" text-anchor="middle" fill="#8b9ea5" font-family="JetBrains Mono, monospace" font-size="9.5">gates</text>
+        <path d="M366 88 H392" stroke="#8fe3ff" stroke-width="1.5"/>
+        <rect x="392" y="70" width="80" height="36" rx="5" fill="#16232a" stroke="#8fe3ff"/>
+        <text x="432" y="92" text-anchor="middle" fill="#e3ebed" font-family="JetBrains Mono, monospace" font-size="10.5">transmitter</text>
+        <path d="M472 88 H514" stroke="#8fe3ff" stroke-width="2" marker-end="url(#arC)"/>
+        <text x="192" y="16" text-anchor="middle" fill="#8b9ea5" font-family="JetBrains Mono, monospace" font-size="9.5" id="wordText">word: W bits</text>
+        <text x="350" y="168" text-anchor="middle" fill="#8b9ea5" font-family="JetBrains Mono, monospace" font-size="9.5" id="clkText">one word per clock</text>
+      </svg>
+      <div class="big"><span class="v" id="eleLat">2.0 ns</span><span class="k">at least, from bit in<br>to ciphertext out</span></div>
+      <dl class="facts">
+        <dt>Logic</dt><dd id="eleGates">–</dd>
+        <dt>Where the time goes</dt><dd id="eleSplit">–</dd>
+        <dt>Encrypt errors</dt><dd id="eleErr">–</dd>
+        <dt>Line rate</dt><dd id="eleRate">–</dd>
+      </dl>
+      <div class="out">
+        <h3>Ciphertext (hex)</h3>
+        <div class="hexline" id="eleHex"></div>
+      </div>
+      <div class="out">
+        <h3>Decrypted on the electronic chip</h3>
+        <div class="plain" id="elePlain"></div>
+      </div>
+    </article>
+  </div>
+
+  <section class="race" aria-labelledby="raceTitle">
+    <div class="row">
+      <h2 id="raceTitle">Same message, same clock on the wall</h2>
+      <div class="legend"><span><i style="background:var(--fg)"></i>message enters</span><span><i style="background:var(--laser)"></i>optical ciphertext</span><span><i style="background:var(--beam)"></i>electronic ciphertext</span></div>
+    </div>
+    <canvas id="race" width="1000" height="230" aria-label="Timeline of the message and the two ciphertexts"></canvas>
+    <p class="cap" id="raceCap"></p>
+  </section>
+
+  <div class="notes">
+    <section>
+      <h3>What this shows</h3>
+      <p>Both chips produce the same ciphertext at the same bit rate. The difference is how long a bit waits. Light reaches the photodiode about <strong>19 ps</strong> after the modulators flip, and only 5.2 ps of that is the gate itself. The electronic chip must collect a whole word before its gates can act, so even a minimal design holds each bit for about three clock cycles, which is <strong>about 100 times longer</strong>. One coupler also replaces a whole array of gates.</p>
+    </section>
+    <section>
+      <h3>What it doesn't show</h3>
+      <ul>
+        <li>Throughput is the same: both keep up with the line rate.</li>
+        <li>The electronic chip regenerates the signal with a fresh clock; the optical chip passes the inputs' timing jitter straight through.</li>
+        <li>The interference XOR needs message and key on one laser, so it fits a transmitter, not two unrelated fibres.</li>
+        <li>Energy is not compared. Both sides spend most of it in drivers and receivers at their edges.</li>
+        <li>Both latencies leave out the analog front ends (modulator drivers and photodiode amplifier; receiver clock recovery and equalisation), so the electronic figure is a floor.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>How each side is computed</h3>
+      <p><strong>Optical:</strong> your bits drive the time-domain model of the single-pass XOR layout (<code>FastXOR</code>, SiEPIC extraction), in a worker in this page. It is the same model as the Python study, matching it to 1e-16. Modulators and photodiode have Gaussian responses at the chosen bandwidth; 10 mW laser, 1 A/W photodiode, 20 pA/√Hz amplifier noise. Each bit is decided at its centre, 19 ps after it was sent. The errors you see come out of that simulation.</p>
+      <p><strong>Electronic:</strong> a model, not a simulation. Word width W = ⌈rate ÷ clock⌉; a bit waits one word to be collected, one clock for the XOR register and one to cross into the transmit clock: three word times.</p>
+    </section>
+  </div>
+
+  <div class="src">
+    <strong style="color:var(--muted);font-weight:500">Sources</strong>
+    <ol>
+      <li>Layout, circuit model and speed study: <a href="https://github.com/atharvdubey22ug-glitch/bench-to-pixel/tree/main/chip/speed">chip/speed in the Bench to Pixel repository</a>.</li>
+      <li>Lithium niobate modulators at 210 Gb/s and CMOS-compatible voltages: C. Wang et al., <a href="https://www.nature.com/articles/s41586-018-0551-y">Nature 562, 101–104 (2018)</a>.</li>
+      <li>Silicon carrier-depletion modulators at 40–50 Gb/s: G. T. Reed et al., <a href="https://www.ee.nthu.edu.tw/shhsu/journal%20papers/Nanopho_breakthroughs%20in%20silicon%20optical%20modulators.pdf">Nanophotonics 3, 229–245 (2014)</a>.</li>
+      <li>Electrical SerDes at 212 Gb/s per lane: <a href="https://www.mediatek.com/tek-talk-blogs/ultra-high-speed-wireline-performance-with-dsp-based-pam-4-serdes-for-custom-asics">MediaTek, DSP-based PAM-4 SerDes</a>; 112G PHY at under 5 pJ/bit: <a href="https://www.synopsys.com/designware-ip/technical-bulletin/best-112g-serdes-ip-performance.html">Synopsys</a>.</li>
+    </ol>
+  </div>
+</div>
+
+<script type="application/json" id="circuit">/*CIRCUIT*/</script>
+<script id="engine">/*ENGINE*/</script>
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const circuit = JSON.parse($("circuit").textContent);
+  const SERDES_MAX = 224e9;           // fastest single-lane electrical SerDes class today
+  const enc = new TextEncoder();
+  const dec = new TextDecoder("utf-8", { fatal: false });
+  let key = new Uint8Array(64);
+  const freshKey = () => { try { crypto.getRandomValues(key); } catch (e) { for (let i = 0; i < 64; i++) key[i] = Math.floor(Math.random() * 256); } };
+  freshKey();
+
+  // ---- worker running the optical model (falls back to the page thread)
+  let worker = null;
+  try {
+    const src = $("engine").textContent + `
+      function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+      onmessage = e => {
+        const d = e.data, rng = mulberry32(d.seed);
+        const a = OptXOR.xorStream(d.circuit, d.a, d.b, Object.assign({}, d.opts, { rng }));
+        const b = OptXOR.xorStream(d.circuit, a.bits, d.b, Object.assign({}, d.opts, { rng }));
+        postMessage({ id: d.id, enc: a, dec: b });
+      };`;
+    worker = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" })));
+  } catch (e) { worker = null; }
+  function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  let jobId = 0;
+  function simulate(a, b, opts) {
+    const id = ++jobId;
+    return new Promise(resolve => {
+      const local = () => {
+        const rng = mulberry32(12345);
+        const e1 = OptXOR.xorStream(circuit, a, b, Object.assign({}, opts, { rng }));
+        const e2 = OptXOR.xorStream(circuit, e1.bits, b, Object.assign({}, opts, { rng }));
+        resolve({ id, enc: e1, dec: e2 });
+      };
+      if (!worker) { setTimeout(local, 20); return; }
+      const h = ev => { if (ev.data.id === id) { worker.removeEventListener("message", h); resolve(ev.data); } };
+      worker.addEventListener("message", h);
+      worker.onerror = () => { worker = null; local(); };
+      worker.postMessage({ id, circuit, a, b, opts, seed: 12345 });
+    });
+  }
+
+  // ---- helpers
+  const bitsOf = bytes => { const out = []; for (const v of bytes) for (let i = 7; i >= 0; i--) out.push((v >> i) & 1); return out; };
+  const bytesOf = bits => { const out = new Uint8Array(bits.length >> 3); for (let i = 0; i < out.length; i++) { let v = 0; for (let j = 0; j < 8; j++) v = (v << 1) | bits[i * 8 + j]; out[i] = v; } return out; };
+  const hex = v => v.toString(16).padStart(2, "0");
+  const fmtT = s => s < 1e-9 ? `${(s * 1e12).toFixed(s < 1e-11 ? 1 : 0)} ps` : `${(s * 1e9).toFixed(s < 1e-8 ? 2 : 1)} ns`;
+  const val = name => document.querySelector(`input[name="${name}"]:checked`).value;
+  function msgBytes() {
+    let b = enc.encode($("msg").value);
+    while (b.length > 64) { $("msg").value = $("msg").value.slice(0, -1); b = enc.encode($("msg").value); }
+    return b;
+  }
+  function setStatus(kind, text) { const s = $("status"); s.className = "status " + kind; s.querySelector("span").textContent = text; }
+  function pill(kind, text) { return `<span class="pill ${kind}">${text}</span>`; }
+
+  // ---- electronic model
+  function electronic(rate, clk) {
+    const W = Math.ceil(rate / clk);
+    const f = rate / W;
+    return { W, f, word: 1 / f, latency: 3 / f };
+  }
+  function drawSlots(W) {
+    for (const [gid, y] of [["slotsA", 30], ["slotsB", 122]]) {
+      const g = $(gid); g.innerHTML = "";
+      const n = 8;
+      for (let i = 0; i < n; i++) {
+        const r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        r.setAttribute("x", 142 + i * 12.5); r.setAttribute("y", y); r.setAttribute("width", 10); r.setAttribute("height", 24); r.setAttribute("rx", 2);
+        r.setAttribute("fill", i < 7 ? "#16232a" : "none"); r.setAttribute("stroke", "#8fe3ff"); r.setAttribute("stroke-width", "1");
+        if (i === 6) r.setAttribute("stroke-dasharray", "2 2");
+        g.appendChild(r);
+      }
+    }
+    $("wordText").textContent = `word: ${W} bits`;
+    $("gateText").textContent = `${W} XOR`;
+  }
+
+  // ---- drawing
+  function setupCanvas(cv, heightOf) {
+    const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    const w = Math.max(260, Math.round(r.width)), h = Math.round(heightOf(w));
+    cv.style.height = h + "px";
+    cv._w = w; cv._h = h;
+    const ctx = cv.getContext("2d");
+    if (cv._sw !== w || cv._sh !== h) { cv._sw = w; cv._sh = h; cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    ctx.setTransform(cv.width / w, 0, 0, cv.height / h, 0, 0);
+    return ctx;
+  }
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  function drawEye(res, exactBits) {
+    const cv = $("eye");
+    const ctx = setupCanvas(cv, w => w / 2), w = cv._w, h = cv._h;
+    ctx.clearRect(0, 0, w, h);
+    const tr = res.trace, T = tr.T;
+    const top = Math.max(res.one * 1.18, 1e-9);
+    const pad = { l: 46, r: 10, t: 12, b: 26 };
+    const X = t => pad.l + (t + T) / (2 * T) * (w - pad.l - pad.r);
+    const Y = v => pad.t + (1 - v / top) * (h - pad.t - pad.b);
+    ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
+    ctx.font = `10px ${css("--f-mono")}`; ctx.fillStyle = css("--faint");
+    const stepUA = [50, 100, 200, 250, 500, 1000].find(s => s * 4 >= top * 1e6) || 1000;
+    for (let v = 0; v <= top * 1e6; v += stepUA) {
+      const y = Y(v * 1e-6);
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+      ctx.fillText(`${v}`, 4, y + 3);
+    }
+    ctx.fillText("µA", 4, h - 8);
+    for (const t of [-T, -T / 2, 0, T / 2, T]) {
+      const x = X(t); ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, h - pad.b); ctx.stroke();
+    }
+    ctx.textAlign = "center";
+    ctx.fillText(`−1 bit`, X(-T) + 18, h - 8); ctx.fillText(`sample`, X(0), h - 8); ctx.fillText(`+1 bit`, X(T) - 18, h - 8);
+    ctx.textAlign = "left";
+    ctx.strokeStyle = "rgba(255,90,71,.22)"; ctx.lineWidth = 1;
+    const nb = exactBits.length;
+    for (let k = 0; k < nb; k++) {
+      const c = tr.t0 + (k + 0.5) * T;
+      const i0 = Math.max(0, Math.floor((c - T) / tr.dt)), i1 = Math.min(tr.y.length - 1, Math.ceil((c + T) / tr.dt));
+      ctx.beginPath();
+      for (let i = i0; i <= i1; i++) { const x = X(i * tr.dt - c), y = Y(tr.y[i]); i === i0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
+      ctx.stroke();
+    }
+    ctx.strokeStyle = css("--petg"); ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(pad.l, Y(res.threshold)); ctx.lineTo(w - pad.r, Y(res.threshold)); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  let raceAnim = 0;
+  function drawRace(nb, rate, latO, latE, msgBits, cO, cE, sweep) {
+    const cv = $("race");
+    const ctx = setupCanvas(cv, w => (w < 560 ? 250 : w * 0.23)), w = cv._w, h = cv._h;
+    ctx.clearRect(0, 0, w, h);
+    const D = nb / rate, tmax = (D + Math.max(latO, latE)) * 1.06;
+    const narrow = w < 560;
+    const pad = { l: narrow ? 8 : 150, r: 14, t: narrow ? 22 : 18, b: 30 };
+    const X = t => pad.l + t / tmax * (w - pad.l - pad.r);
+    const rowH = narrow ? 18 : 22;
+    const gap = (h - pad.t - pad.b - 3 * rowH) / 2.6;
+    const rows = [
+      { label: "message enters", bits: msgBits, start: 0, col: css("--fg") },
+      { label: "optical out", bits: cO, start: latO, col: css("--laser") },
+      { label: "electronic out", bits: cE, start: latE, col: css("--beam") },
+    ];
+    const cut = sweep === undefined ? Infinity : sweep;
+    ctx.font = `11px ${css("--f-mono")}`;
+    rows.forEach((r, i) => {
+      const y = pad.t + i * (rowH + gap) + (narrow ? 12 : 0);
+      ctx.fillStyle = css("--muted");
+      if (narrow) ctx.fillText(r.label, pad.l, y - 4); else ctx.fillText(r.label, 8, y + rowH / 2 + 4);
+      ctx.fillStyle = "rgba(34,49,58,.55)";
+      ctx.fillRect(X(r.start), y, Math.max(1, X(r.start + D) - X(r.start)), rowH);
+      ctx.fillStyle = r.col;
+      const bw = (X(r.start + 1 / rate) - X(r.start));
+      for (let k = 0; k < r.bits.length; k++) {
+        const t = r.start + k / rate;
+        if (t > cut) break;
+        if (r.bits[k]) ctx.fillRect(X(t), y + 3, Math.max(0.8, bw - (bw > 3 ? 1 : 0)), rowH - 6);
+      }
+      if (i > 0) {
+        ctx.fillStyle = r.col;
+        ctx.fillRect(X(0), y + rowH / 2 - 1, Math.max(1, X(r.start) - X(0)), 2);
+        ctx.fillText(`+${fmtT(r.start)}`, X(r.start) + 4 + (i === 1 ? 0 : 0), y + rowH + 13);
+      }
+    });
+    // axis
+    const yA = h - pad.b + 6;
+    ctx.strokeStyle = css("--line"); ctx.beginPath(); ctx.moveTo(pad.l, yA); ctx.lineTo(w - pad.r, yA); ctx.stroke();
+    const raw = tmax / 6, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 5, 10].map(m => m * mag).find(s => s >= raw);
+    ctx.fillStyle = css("--faint"); ctx.textAlign = "center";
+    for (let t = 0; t <= tmax + 1e-15; t += step) {
+      const x = X(t); ctx.beginPath(); ctx.moveTo(x, yA); ctx.lineTo(x, yA + 4); ctx.stroke();
+      ctx.fillText(t === 0 ? "0" : fmtT(t).replace(".00", ""), x, yA + 16);
+    }
+    ctx.textAlign = "left";
+    if (sweep !== undefined && sweep < tmax) {
+      ctx.strokeStyle = css("--petg"); ctx.beginPath(); ctx.moveTo(X(sweep), pad.t - 4); ctx.lineTo(X(sweep), yA); ctx.stroke();
+    }
+  }
+
+  // ---- main update
+  let last = null, pending = null;
+  async function update() {
+    const bytes = msgBytes();
+    $("msgInfo").textContent = `${bytes.length} bytes · ${bytes.length * 8} bits`;
+    const k = key.slice(0, bytes.length);
+    $("keyHex").textContent = Array.from(k, hex).join(" ") || "–";
+    if (!bytes.length) { setStatus("", "Type a message"); return; }
+    const rate = +val("rate") * 1e9, mod = +val("mod"), clk = +val("clk") * 1e9;
+    const bw = mod ? mod * 1e9 : null;
+    const mBits = bitsOf(bytes), kBits = bitsOf(k);
+    const exact = bytes.map((v, i) => v ^ k[i]);
+    const eBits = bitsOf(exact);
+
+    // electronic side (instant)
+    const E = electronic(rate, clk);
+    drawSlots(E.W);
+    $("eleLat").textContent = fmtT(E.latency);
+    $("eleGates").innerHTML = `${E.W} XOR gates <small>(plus 2 receivers, 1 transmitter, clocking)</small>`;
+    $("eleSplit").textContent = `3 word times of ${fmtT(E.word)}: collect ${E.W} bits, XOR on a clock edge, hand over to the transmit clock`;
+    $("clkText").textContent = `one word per ${fmtT(E.word)} (${(E.f / 1e9).toFixed(2)} GHz)`;
+    $("eleErr").innerHTML = rate <= SERDES_MAX ? pill("ok", "0, digital and retimed") : pill("warn", "model only");
+    $("eleRate").innerHTML = rate <= SERDES_MAX ? `${rate / 1e9} Gb/s on one electrical lane` : `${rate / 1e9} Gb/s is beyond today's single-lane electrical links (about 224 Gb/s); it would need ${Math.ceil(rate / SERDES_MAX)} lanes`;
+    $("eleHex").textContent = Array.from(exact, hex).join(" ");
+    $("elePlain").textContent = $("msg").value;
+
+    // optical side (simulated)
+    setStatus("busy", `Simulating ${mBits.length} bits at ${rate / 1e9} Gb/s through the optical XOR…`);
+    const t0 = performance.now();
+    const res = await simulate(mBits, kBits, { rate, bwMod: bw, bwRx: bw });
+    if (res.id !== jobId) return;               // a newer run started
+    const oBits = res.enc.bits, dBits = res.dec.bits;
+    const oBytes = bytesOf(oBits), dBytes = bytesOf(dBits);
+    let errE = 0, errD = 0;
+    for (let i = 0; i < eBits.length; i++) { if (oBits[i] !== eBits[i]) errE++; if (dBits[i] !== mBits[i]) errD++; }
+    $("optLat").textContent = fmtT(circuit.latency_ps * 1e-12);
+    $("optErrE").innerHTML = errE ? pill("bad", `${errE} of ${eBits.length} bits wrong`) : pill("ok", `0 of ${eBits.length} bits`);
+    $("optErrD").innerHTML = errD ? pill("bad", `${errD} of ${mBits.length} bits wrong`) : pill("ok", `0 of ${mBits.length} bits`);
+    $("optHex").innerHTML = Array.from(oBytes, (v, i) => v === exact[i] ? hex(v) : `<span class="e" title="should be ${hex(exact[i])}">${hex(v)}</span>`).join(" ");
+    $("optPlain").textContent = dec.decode(dBytes);
+    let lo1 = Infinity, hi0 = -Infinity;
+    res.enc.samples.forEach((s, i) => { if (eBits[i]) lo1 = Math.min(lo1, s); else hi0 = Math.max(hi0, s); });
+    const open = (lo1 - hi0) / res.enc.one * 100;
+    $("eyeCap").textContent = `Every ciphertext bit overlaid on two bit periods; amber line: decision threshold. Eye opening ${open > 0 ? open.toFixed(0) + "%" : "closed"} at ${rate / 1e9} Gb/s with ${bw ? mod + " GHz" : "ideal"} modulators and photodiode.`;
+    last = { res, eBits, mBits, oBits, rate, E };
+    drawEye(res.enc, eBits);
+    const latO = circuit.latency_ps * 1e-12;
+    const D = mBits.length / rate;
+    $("raceCap").textContent = `${mBits.length} bits take ${fmtT(D)} to send at ${rate / 1e9} Gb/s. The optical ciphertext starts ${fmtT(latO)} after the first message bit; the electronic one ${fmtT(E.latency)} after it, ${Math.round(E.latency / latO)} times later. Both then run at the same rate.`;
+    animateRace(mBits.length, rate, latO, E.latency, mBits, oBits, eBits);
+    const ms = performance.now() - t0;
+    setStatus("done", `Simulated ${res.enc.steps.toLocaleString()} time steps of ${(res.enc.dt * 1e12).toFixed(3)} ps twice (encrypt and decrypt) in ${(ms / 1000).toFixed(1)} s`);
+  }
+
+  function animateRace(nb, rate, latO, latE, a, b, c) {
+    cancelAnimationFrame(raceAnim);
+    const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const tmax = (nb / rate + Math.max(latO, latE)) * 1.06;
+    if (reduce) { drawRace(nb, rate, latO, latE, a, b, c); return; }
+    const t0 = performance.now(), dur = 1800;
+    const step = now => {
+      const f = Math.min(1, (now - t0) / dur);
+      drawRace(nb, rate, latO, latE, a, b, c, f < 1 ? f * tmax : undefined);
+      if (f < 1) raceAnim = requestAnimationFrame(step);
+    };
+    drawRace(nb, rate, latO, latE, a, b, c);
+    raceAnim = requestAnimationFrame(step);
+  }
+
+  function schedule(delay) { clearTimeout(pending); pending = setTimeout(update, delay); }
+  $("msg").addEventListener("input", () => schedule(450));
+  $("controls").addEventListener("change", () => schedule(10));
+  $("controls").addEventListener("submit", e => { e.preventDefault(); schedule(0); });
+  $("newKey").addEventListener("click", () => { freshKey(); schedule(0); });
+  let rz = 0;
+  window.addEventListener("resize", () => {
+    clearTimeout(rz);
+    rz = setTimeout(() => { if (last) { drawEye(last.res.enc, last.eBits); drawRace(last.mBits.length, last.rate, circuit.latency_ps * 1e-12, last.E.latency, last.mBits, last.oBits, last.eBits); } }, 120);
+  });
+  update();
+})();
+</script>
