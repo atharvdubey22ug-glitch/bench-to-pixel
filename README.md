@@ -6,7 +6,9 @@ Open `index.html` in a browser. Scroll to zoom out; drag to look around.
 
 `encrypt/index.html` is a second page: type a message and it is encrypted with a one-time pad on the single-pass optical XOR (simulated live in the browser from its layout, `encrypt/engine.js`, checked against `chip/speed/td.py`) and on a modelled electronic SerDes chip, with the latency of each on one time axis. Rebuild it with `python3 encrypt/build.py` after changing `encrypt/src/`, `engine.js` or `circuit.json` (exported by `chip/speed/export_web.py`).
 
-The chip designs (full adder, 4-bit ALU, single-pass XOR) and their simulations are in [`chip/`](chip/README.md).
+`alu/index.html` is a third page: the 4-bit optical ALU as a calculator (ADD, SUB, AND, OR, XOR), computing from each bit's simulated light levels (`alu/levels.json`, exported by `chip/alu4_export_web.py`; `alu/alu.js` reproduces `chip/alu4_sim.py`). Rebuild it with `python3 alu/build.py`.
+
+The chip designs (full adder, 4-bit ALU, single-pass XOR) and their simulations are in [`chip/`](chip/README.md). What the project shows, and what it doesn't, is summarised in [`CONCEPT.md`](CONCEPT.md).
 
 ## What the page shows
 

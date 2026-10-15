@@ -1,0 +1,269 @@
+<div class="wrap">
+  <div class="top">
+    <a class="brand" href="https://atharvdubey22ug-glitch.github.io/bench-to-pixel/" aria-label="Back to Bench to Pixel">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#111a1e"/><path d="M8 40 L28 24 L56 24" stroke="#ff5a47" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="28" cy="24" r="5" fill="#eba340"/></svg>
+      Bench to Pixel <span class="t">/ alu</span>
+    </a>
+    <nav class="crumb" aria-label="Related pages">
+      <a href="https://atharvdubey22ug-glitch.github.io/bench-to-pixel/encrypt/">Encrypt: light vs silicon</a>
+      <a href="https://github.com/atharvdubey22ug-glitch/bench-to-pixel/blob/main/CONCEPT.md">The idea</a>
+    </nav>
+  </div>
+
+  <header class="hero">
+    <h1>A 4-bit calculator built from <em>light</em></h1>
+    <p class="lede">Four copies of the optical full adder from the paper sit on one silicon chip. Each bit adds by interference: two Michelson XORs and a carry read from four photodiodes. The bits are chained electronically: a comparator reads each carry and sets the next bit's carry-in heater. <strong>Every answer below comes from the simulated light levels of the drawn chip</strong>, one circuit per bit, extracted from the KLayout layout.</p>
+  </header>
+
+  <section class="panel" aria-labelledby="calcTitle">
+    <h2 id="calcTitle" hidden>Calculator</h2>
+    <div class="calc">
+      <div class="inputs">
+        <div class="operand">
+          <span class="lab" id="labA">A</span>
+          <div class="oprow">
+            <div class="bits" id="bitsA" role="group" aria-labelledby="labA"></div>
+            <div class="dec"><button class="step" type="button" data-t="A" data-d="-1" aria-label="A minus one">−</button><output id="decA">11</output><button class="step" type="button" data-t="A" data-d="1" aria-label="A plus one">+</button></div>
+          </div>
+        </div>
+        <div class="operand">
+          <span class="lab" id="labB">B</span>
+          <div class="oprow">
+            <div class="bits" id="bitsB" role="group" aria-labelledby="labB"></div>
+            <div class="dec"><button class="step" type="button" data-t="B" data-d="-1" aria-label="B minus one">−</button><output id="decB">6</output><button class="step" type="button" data-t="B" data-d="1" aria-label="B plus one">+</button></div>
+          </div>
+        </div>
+        <div class="operand">
+          <span class="lab">Operation</span>
+          <div class="seg" role="radiogroup" aria-label="Operation" id="ops">
+            <input type="radio" name="op" id="oADD" value="ADD" checked><label for="oADD">ADD</label>
+            <input type="radio" name="op" id="oSUB" value="SUB"><label for="oSUB">SUB</label>
+            <input type="radio" name="op" id="oAND" value="AND"><label for="oAND">AND</label>
+            <input type="radio" name="op" id="oOR" value="OR"><label for="oOR">OR</label>
+            <input type="radio" name="op" id="oXOR" value="XOR"><label for="oXOR">XOR</label>
+          </div>
+        </div>
+        <div class="operand">
+          <span class="lab">Carry into bit 0 (ADD)</span>
+          <div class="seg" role="radiogroup" aria-label="Carry in">
+            <input type="radio" name="cin" id="cin0" value="0" checked><label for="cin0">0</label>
+            <input type="radio" name="cin" id="cin1" value="1"><label for="cin1">1</label>
+          </div>
+        </div>
+      </div>
+      <div class="answer" aria-live="polite">
+        <div class="eq" id="eq"></div>
+        <div class="binrow" id="bin"></div>
+        <div class="verdict" id="verdict"></div>
+        <p class="small" id="opNote"></p>
+        <div class="chiprow">
+          <div class="operand">
+            <label class="lab" for="die">Chip</label>
+            <select id="die"></select>
+            <p class="small" id="dieNote"></p>
+          </div>
+          <div class="operand">
+            <label class="lab" for="pw">Laser power</label>
+            <input type="range" id="pw" min="-6" max="-3" step="0.05" value="-3">
+            <div class="pw"><span>per bit <b id="pwBit">1 mW</b></span><span>whole ALU <b id="pwAll">4 mW</b></span></div>
+            <p class="small" id="pwNote"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="slTitle">
+    <div class="timing"><h2 id="slTitle">Inside the chip, bit by bit</h2></div>
+    <p class="small">Read right to left, like the number: bit 0 works first and hands its carry to bit 1. Bars are photocurrents from the simulation; the amber tick is that bit's comparator threshold. The highlighted reading is the one this operation uses.</p>
+    <div class="slices" id="slices"></div>
+    <div class="timing" id="timing"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="exTitle">
+    <h2 id="exTitle">Every operation, on this chip</h2>
+    <p class="small" id="exNote">All 1,536 operations: ADD with both carry-ins, SUB, AND, OR and XOR, each over all 256 pairs of A and B, with detector noise at the laser power above.</p>
+    <div class="ex" id="ex"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="chipTitle">
+    <div class="chippic">
+      <img id="layout" alt="Layout of the 4-bit ALU: four full adders in a 2 by 2 grid, each with two half adders, grating couplers on the left and heater pads on top." width="1200" height="1000">
+      <div style="display:grid;gap:14px">
+        <h2 id="chipTitle">The chip</h2>
+        <p class="small">Drawn in KLayout with the SiEPIC EBeam process design kit (Applied Nanotools): 220 nm silicon waveguides, titanium-tungsten heaters, a metal routing layer.</p>
+        <dl class="facts">
+          <dt>Die</dt><dd>3.72 × 3.08 mm</dd>
+          <dt>Parts</dt><dd>443: 34 grating couplers, 72 couplers, 32 Y-branches, 40 heaters, 201 waveguides</dd>
+          <dt>Probe pads</dt><dd>48</dd>
+          <dt>Test circuits</dt><dd>8, one per half adder, laid out for an automated fibre-array station</dd>
+          <dt>Checks</dt><dd>SiEPIC functional verification 0 errors; process DRC 0 violations; four bits identical</dd>
+          <dt>Status</dt><dd>Designed and simulated, not fabricated</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <div class="notes">
+    <section>
+      <h3>How one chip does five operations</h3>
+      <ul>
+        <li><strong>ADD:</strong> the carry ripples from bit 0 to bit 3.</li>
+        <li><strong>SUB:</strong> the heater driver inverts B and sets the first carry to 1, so A − B = A + not B + 1.</li>
+        <li><strong>AND, OR:</strong> each bit's carry output is a majority vote of A, B and carry-in. With carry-in 0 that is A AND B; with carry-in 1 it is A OR B.</li>
+        <li><strong>XOR:</strong> read each bit's first Michelson directly.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>Why calibration matters</h3>
+      <p>Heaters are the only thing that can be adjusted on this passive chip, so each bit is tuned after fabrication using only its own grating-coupler readings. Pick <strong>Stressed, uncalibrated</strong> above: with the nominal settings, bit 2's XOR level sinks below the shared threshold, the wrong X spoils its SUM, and 732 of 1,536 operations fail. Calibrate each bit and the same die makes no mistakes.</p>
+    </section>
+    <section>
+      <h3>What is real here</h3>
+      <p>The layout passes the foundry's checks. The light levels come from a circuit simulation of each bit using the design kit's component models, with drawn waveguide lengths and back-reflections. The comparators and heater drivers are modelled, not drawn. Thermal heaters switch in tens of microseconds, so this chip shows the logic, not speed; for how fast the light itself computes, see the <a href="https://atharvdubey22ug-glitch.github.io/bench-to-pixel/encrypt/">encryption page</a>.</p>
+    </section>
+  </div>
+
+  <div class="src">
+    <strong style="color:var(--muted);font-weight:500">Sources</strong>
+    <ol>
+      <li>Layout, simulation and results: <a href="https://github.com/atharvdubey22ug-glitch/bench-to-pixel/blob/main/chip/README.md#4-bit-alu">chip/README.md, 4-bit ALU</a> (<code>klayout/alu4_siepic.py</code>, <code>alu4_sim.py</code>).</li>
+      <li>The bench experiment: <cite>Using Polarisation and Interference for Optical Computing</cite>, Atharv Dubey, Sanya Davalbhakta and Proteep Mallik, Student Research Journal 2024, Azim Premji University.</li>
+      <li>Process design kit: <a href="https://github.com/SiEPIC/SiEPIC_EBeam_PDK">SiEPIC EBeam PDK</a>.</li>
+      <li>What the project shows, and what it doesn't: <a href="https://github.com/atharvdubey22ug-glitch/bench-to-pixel/blob/main/CONCEPT.md">CONCEPT.md</a>.</li>
+    </ol>
+  </div>
+</div>
+
+<script type="application/json" id="levels">/*LEVELS*/</script>
+<script>/*ALUJS*/</script>
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const L = JSON.parse($("levels").textContent);
+  $("layout").src = "/*LAYOUT*/";
+  const NOTES = {
+    nominal: "Every bit at 220 nm silicon and 500 nm waveguides.",
+    stressed: "Each bit at a different process corner (±10 nm silicon, ±20 nm width), each calibrated on its own.",
+    shared_heaters: "The stressed die driven with the nominal heater settings; only the comparator thresholds are set per bit.",
+    no_calibration: "The stressed die with the nominal heater settings and thresholds.",
+  };
+  const LABELS = { nominal: "Nominal", stressed: "Stressed, calibrated per bit", shared_heaters: "Stressed, shared heater settings", no_calibration: "Stressed, uncalibrated" };
+  const state = { A: 11, B: 6 };
+  for (const [k, d] of Object.entries(L.dies)) {
+    const o = document.createElement("option"); o.value = k; o.textContent = LABELS[k] || d.label; $("die").appendChild(o);
+  }
+  $("die").value = "stressed";
+
+  function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  const val = n => document.querySelector(`input[name="${n}"]:checked`).value;
+  const fmtP = w => w >= 1e-3 ? `${(w * 1e3).toFixed(w >= 1e-2 ? 0 : 1)} mW` : `${(w * 1e6).toFixed(w >= 1e-5 ? 0 : 1)} µW`;
+  const fmtI = a => a >= 1e-6 ? `${(a * 1e6).toFixed(a >= 1e-5 ? 1 : 2)} µA` : `${(a * 1e9).toFixed(0)} nA`;
+  const SYM = { ADD: "+", SUB: "−", AND: "AND", OR: "OR", XOR: "XOR" };
+
+  function bitButtons(t) {
+    const g = $("bits" + t); g.innerHTML = "";
+    for (let i = 3; i >= 0; i--) {
+      const b = document.createElement("button");
+      b.type = "button"; b.dataset.t = t; b.dataset.i = i;
+      b.setAttribute("aria-label", `${t} bit ${i} (value ${1 << i})`);
+      b.innerHTML = `<b></b><span>${1 << i}</span>`;
+      b.addEventListener("click", () => { state[t] ^= 1 << i; render(); });
+      g.appendChild(b);
+    }
+  }
+  bitButtons("A"); bitButtons("B");
+  document.querySelectorAll(".step").forEach(s => s.addEventListener("click", () => { const t = s.dataset.t; state[t] = (state[t] + +s.dataset.d + 16) % 16; render(); }));
+
+  function meter(name, key, r, b, pBit, used) {
+    const scale = Math.max(...b[key]) * L.detection.resp * pBit * 1.08;
+    const rd = r[key === "xor1" ? "xor1" : key];
+    const bitv = key === "xor1" ? r.X : key === "sum" ? r.S : r.C;
+    const w = Math.max(0, Math.min(100, rd.i / scale * 100)), t = Math.min(100, rd.thr / scale * 100);
+    return `<div class="meter m-${key}">
+      <div class="top"><span>${name}</span><b class="${bitv ? "one" : "zero"}">${bitv}</b></div>
+      <div class="bar"><i style="width:${w.toFixed(1)}%"></i><u style="left:${t.toFixed(1)}%"></u></div>
+      <div class="val">${fmtI(Math.max(rd.i, 0))} · threshold ${fmtI(rd.thr)}</div></div>`;
+  }
+
+  function render() {
+    const op = val("op"), cin = +val("cin"), die = L.dies[$("die").value];
+    const pBit = Math.pow(10, +$("pw").value);
+    document.querySelectorAll("input[name=cin]").forEach(i => { i.disabled = op !== "ADD"; });
+    for (const t of ["A", "B"]) {
+      $("dec" + t).textContent = state[t];
+      $("bits" + t).querySelectorAll("button").forEach(b => {
+        const on = (state[t] >> +b.dataset.i) & 1;
+        b.setAttribute("aria-pressed", on ? "true" : "false"); b.querySelector("b").textContent = on;
+      });
+    }
+    const seed = (state.A * 31 + state.B * 7 + "ASOXR".indexOf(op[0]) * 997 + cin * 13 + Math.round(+$("pw").value * 100)) | 0;
+    const r = OptALU.run(die, L.detection, op, state.A, state.B, cin, pBit, mulberry32(seed));
+    const ok = r.result === r.ref.result && (r.ref.cout === null || r.cout === r.ref.cout);
+
+    // headline
+    let shown = r.result, tail = "";
+    if (op === "ADD") { shown = r.result + 16 * r.cout; tail = cin ? `<span class="op">+ 1</span>` : ""; }
+    if (op === "SUB") { shown = r.cout ? r.result : r.result - 16; }
+    $("eq").innerHTML = `<span>${state.A}</span><span class="op">${SYM[op]}</span><span>${state.B}</span>${tail}<span class="op">=</span><span class="res">${shown}</span>`;
+    let bin = `<span class="k">result</span>`;
+    if (op === "ADD" || op === "SUB") bin = `<span class="k">${op === "ADD" ? "carry" : "no borrow"}</span><span class="cell flag ${r.cout ? "on" : ""}">${r.cout}</span><span class="k">bits</span>`;
+    for (let i = 3; i >= 0; i--) bin += `<span class="cell ${(r.result >> i) & 1 ? "on" : ""}">${(r.result >> i) & 1}</span>`;
+    $("bin").innerHTML = bin;
+    const refShown = op === "ADD" ? r.ref.result + 16 * r.ref.cout : op === "SUB" ? (r.ref.cout ? r.ref.result : r.ref.result - 16) : r.ref.result;
+    $("verdict").innerHTML = ok ? `<span class="pill ok">Correct</span><span class="small">matches ${refShown}</span>` : `<span class="pill bad">Wrong</span><span class="small">should be ${refShown}</span>`;
+    $("opNote").textContent = {
+      ADD: "Four sums; the carry ripples from bit 0 to bit 3, and the last carry is the 16s digit.",
+      SUB: "B is inverted in the heater driver and 1 is carried into bit 0: A − B = A + not B + 1. A carry out of 1 means no borrow; 0 means the answer is negative (shown here as A − B).",
+      AND: "Every carry-in set to 0, so each bit's carry output reads majority(A, B, 0) = A AND B.",
+      OR: "Every carry-in set to 1, so each bit's carry output reads majority(A, B, 1) = A OR B.",
+      XOR: "Each bit's first Michelson XOR, read directly.",
+    }[op];
+    $("dieNote").textContent = NOTES[$("die").value];
+    $("pwBit").textContent = fmtP(pBit); $("pwAll").textContent = fmtP(4 * pBit);
+    const minAll = L.min_laser_total_uW[$("die").value];
+    $("pwNote").textContent = minAll ? `Simulated minimum for this chip, every decision at Q ≥ 7: ${minAll.toFixed(0)} µW for the whole ALU.` : "";
+
+    // slices (DOM order bit 3 → bit 0)
+    const used = op === "XOR" ? "used-x" : (op === "AND" || op === "OR") ? "used-c" : "used-s";
+    let html = "";
+    for (let i = 3; i >= 0; i--) {
+      const s = r.bits[i], b = die.bits[i];
+      const bName = op === "SUB" ? "not B" : "B";
+      html += `<article class="slice ${used}" aria-label="bit ${i}">
+        <header><b>bit ${i}</b><span>${b.corner.thickness_nm} nm Si<br>${b.corner.width_nm} nm wide</span></header>
+        <div class="ins"><span class="chip">A <b>${s.a}</b></span><span class="chip">${bName} <b>${s.b}</b></span><span class="chip cin">carry in <b>${s.cin}</b></span></div>
+        ${meter("XOR 1 → X", "xor1", s, b, pBit)}
+        ${meter("SUM", "sum", s, b, pBit)}
+        ${meter("CARRY", "carry", s, b, pBit)}
+        <div class="outbit"><span>output</span><b class="${s.out ? "" : "z"}">${s.out}</b></div>
+        ${i < 3 && (op === "ADD" || op === "SUB") ? `<div class="hand">carry ${s.C} → bit ${i + 1} heaters</div>` : i === 3 && (op === "ADD" || op === "SUB") ? `<div class="hand">carry ${s.C} → out</div>` : ""}
+      </article>`;
+    }
+    $("slices").innerHTML = html;
+    $("timing").innerHTML = (op === "ADD" || op === "SUB")
+      ? `<span><b>5 heater steps in sequence:</b> set the inputs, then the carry hops through four bits.</span><span>Each step waits for a thermal heater (tens of µs).</span>`
+      : `<span><b>1 heater step:</b> every bit works at once; no carry is passed.</span>`;
+    exhaustive();
+  }
+
+  let exKey = "";
+  function exhaustive() {
+    const key = $("die").value + "|" + $("pw").value;
+    if (key === exKey) return;
+    exKey = key;
+    const pBit = Math.pow(10, +$("pw").value);
+    const res = OptALU.exhaustive(L.dies[$("die").value], L.detection, pBit, mulberry32(2024));
+    let html = "";
+    for (const [op, t] of Object.entries(res.tally)) html += `<div><span>${op} wrong</span><b class="${t.wrong ? "bad" : "ok"}">${t.wrong}</b><span>of ${t.total}</span></div>`;
+    html += `<div><span>ALL WRONG</span><b class="${res.wrong ? "bad" : "ok"}">${res.wrong.toLocaleString()}</b><span>of ${res.total.toLocaleString()} at ${fmtP(4 * pBit)}</span></div>`;
+    $("ex").innerHTML = html;
+  }
+
+  document.querySelectorAll("input[name=op],input[name=cin]").forEach(i => i.addEventListener("change", render));
+  $("die").addEventListener("change", render);
+  $("pw").addEventListener("input", render);
+  render();
+})();
+</script>

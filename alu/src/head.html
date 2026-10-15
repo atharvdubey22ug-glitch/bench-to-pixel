@@ -1,0 +1,164 @@
+<title>Optical 4-bit ALU</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="A 4-bit calculator built from the optical full adder: add, subtract, AND, OR and XOR on four simulated interference full adders with an electronic carry chain.">
+<meta name="author" content="Atharv Dubey">
+<meta name="theme-color" content="#0a1013">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: one column. Calculator first, then the four bit slices read right to left like a written number (carry flows leftward), then the exhaustive test, the chip and the notes.
+   Same look as Bench to Pixel: a lab with the lights off. Red is light, cyan is electrical data (the carry hand-off), amber is a comparator threshold. */
+:root{
+  --ink:#0a1013;
+  --ink-2:#111a1e;
+  --ink-3:#16232a;
+  --line:#22313a;
+  --fg:#e3ebed;
+  --muted:#8b9ea5;
+  --faint:#5d6f77;
+  --petg:#eba340;
+  --beam:#8fe3ff;
+  --laser:#ff5a47;
+  --good:#6fd9a2;
+  --f-display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+html{background:var(--ink)}
+body{margin:0;background:var(--ink);color:var(--fg);font-family:var(--f-body);font-size:15.5px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--fg);text-decoration-color:rgba(235,163,64,.7);text-underline-offset:3px}
+a:hover{color:var(--petg)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--beam);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 64px;display:grid;gap:28px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font:600 12px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--fg);text-decoration:none}
+.brand svg{width:26px;height:26px;flex:none}
+.brand .t{color:var(--muted);font-weight:500}
+.crumb{display:flex;gap:14px;flex-wrap:wrap;font:500 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase}
+.crumb a{color:var(--muted);text-decoration:none}
+.crumb a:hover{color:var(--petg)}
+h1{font:700 clamp(30px,5.2vw,54px)/1.02 var(--f-display);font-variation-settings:"wdth" 82;letter-spacing:-.02em;margin:0;text-wrap:balance;max-width:17ch}
+h1 em{font-style:normal;color:var(--laser)}
+h2{font:650 clamp(20px,2.4vw,26px)/1.15 var(--f-display);font-variation-settings:"wdth" 88;margin:0;text-wrap:balance}
+h3{font:600 12px/1.2 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0}
+.lede{max-width:68ch;color:var(--muted);margin:0;font-size:16.5px}
+.lede strong{color:var(--fg);font-weight:500}
+.hero{display:grid;gap:14px}
+.panel{border:1px solid var(--line);border-radius:12px;background:var(--ink-2);padding:18px;display:grid;gap:16px;min-width:0}
+.cap{font:400 12px/1.45 var(--f-mono);color:var(--faint);margin:0}
+
+/* calculator */
+.calc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:22px 32px}
+.inputs{display:grid;gap:18px;align-content:start;min-width:0}
+.operand{display:grid;gap:8px}
+.lab{font:500 11px/1.2 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.oprow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.bits{display:flex;gap:6px}
+.bits button{width:44px;height:52px;border-radius:8px;border:1px solid var(--line);background:var(--ink);cursor:pointer;display:grid;place-items:center;padding:4px 0}
+.bits button b{font:700 22px/1 var(--f-mono)}
+.bits button span{font:500 9.5px/1 var(--f-mono);color:var(--faint)}
+.bits button[aria-pressed="true"]{background:rgba(255,90,71,.14);border-color:var(--laser)}
+.bits button[aria-pressed="true"] b{color:var(--laser)}
+.dec{display:flex;align-items:center;gap:6px}
+.dec output{min-width:2.2ch;text-align:right;font:700 30px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.step{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--ink-3);cursor:pointer;font:600 16px/1 var(--f-mono)}
+.step:hover{border-color:var(--petg);color:var(--petg)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{padding:7px 12px;border-radius:999px;border:1px solid var(--line);cursor:pointer;font:500 12.5px/1 var(--f-mono);color:var(--muted);background:var(--ink)}
+.seg label:hover{color:var(--fg)}
+.seg input:checked+label{color:var(--ink);background:var(--fg);border-color:var(--fg)}
+.seg input:focus-visible+label{outline:2px solid var(--beam);outline-offset:2px}
+.seg input:disabled+label{opacity:.35;cursor:not-allowed}
+.answer{display:grid;gap:14px;align-content:start;min-width:0;padding:16px;border-radius:10px;background:var(--ink);border:1px solid var(--line)}
+.eq{font:700 clamp(34px,5vw,58px)/1 var(--f-display);font-variation-settings:"wdth" 80;font-variant-numeric:tabular-nums;letter-spacing:-.01em;display:flex;flex-wrap:wrap;gap:.25em;align-items:baseline}
+.eq .op{color:var(--muted);font-weight:500}
+.eq .res{color:var(--laser)}
+.binrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.binrow .cell{width:34px;height:38px;border-radius:6px;display:grid;place-items:center;font:700 18px/1 var(--f-mono);border:1px solid var(--line)}
+.binrow .cell.on{background:rgba(255,90,71,.16);border-color:var(--laser);color:var(--laser)}
+.binrow .cell.flag{border-style:dashed}
+.binrow .k{font:500 11px/1.2 var(--f-mono);color:var(--faint);margin-right:4px}
+.verdict{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-block;padding:3px 9px;border-radius:999px;font:600 12px/1.4 var(--f-mono);letter-spacing:.02em}
+.pill.ok{background:rgba(63,191,127,.14);color:var(--good)}
+.pill.bad{background:rgba(255,90,71,.15);color:#ff8a7c}
+.pill.info{background:rgba(143,227,255,.1);color:var(--beam)}
+.small{font-size:13.5px;color:var(--muted);margin:0}
+.chiprow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+select{width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--ink);color:var(--fg)}
+input[type=range]{width:100%;accent-color:var(--laser)}
+.pw{display:flex;justify-content:space-between;font:500 12px/1.3 var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.pw b{color:var(--fg);font-weight:600}
+
+/* bit slices */
+.slices{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;position:relative}
+.slice{border:1px solid var(--line);border-radius:10px;background:var(--ink);padding:12px;display:grid;gap:10px;align-content:start;min-width:0;position:relative}
+.slice.used-x .m-xor1,.slice.used-s .m-sum,.slice.used-c .m-carry{background:rgba(255,90,71,.06);border-color:rgba(255,90,71,.5)}
+.slice header{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.slice header b{font:650 17px/1 var(--f-display)}
+.slice header span{font:400 10.5px/1.2 var(--f-mono);color:var(--faint);text-align:right}
+.ins{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font:500 11.5px/1 var(--f-mono);padding:5px 7px;border-radius:6px;background:var(--ink-3);border:1px solid var(--line);color:var(--muted)}
+.chip b{color:var(--fg)}
+.chip.cin{border-color:rgba(143,227,255,.5)}
+.chip.cin b{color:var(--beam)}
+.meter{display:grid;gap:4px;padding:8px;border-radius:8px;border:1px solid var(--line)}
+.meter .top{display:flex;justify-content:space-between;font:500 11px/1.2 var(--f-mono);color:var(--muted);gap:6px}
+.meter .top b{font-weight:700}
+.meter .top .one{color:var(--laser)}
+.meter .top .zero{color:var(--faint)}
+.bar{position:relative;height:10px;border-radius:5px;background:var(--ink-3);overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--laser);border-radius:5px}
+.bar u{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--petg)}
+.meter .val{font:400 10.5px/1.2 var(--f-mono);color:var(--faint);font-variant-numeric:tabular-nums}
+.outbit{display:flex;justify-content:space-between;align-items:center;font:500 11px/1.2 var(--f-mono);color:var(--muted)}
+.outbit b{font:700 22px/1 var(--f-mono);color:var(--laser)}
+.outbit b.z{color:var(--faint)}
+.hand{font:500 10.5px/1.3 var(--f-mono);color:var(--beam);display:flex;align-items:center;gap:6px}
+.hand::before{content:"";width:18px;height:2px;background:var(--beam)}
+.timing{display:flex;gap:10px 24px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.timing b{color:var(--fg);font-weight:600}
+.timing h2{color:var(--fg)}
+
+/* exhaustive */
+.ex{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) minmax(0,1.3fr);gap:10px}
+.ex div{padding:10px 12px;border-radius:8px;background:var(--ink);border:1px solid var(--line);display:grid;gap:2px}
+.ex div span{font:500 11px/1.2 var(--f-mono);color:var(--faint);letter-spacing:.06em}
+.ex div b{font:700 22px/1.1 var(--f-display);font-variant-numeric:tabular-nums}
+.ex div b.bad{color:var(--laser)}
+.ex div b.ok{color:var(--good)}
+
+/* chip + notes */
+.chippic{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:22px;align-items:start}
+.chippic img{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);display:block}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0;font-size:14px}
+.facts dt{font:500 11.5px/1.5 var(--f-mono);color:var(--faint);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.facts dd{margin:0;font-variant-numeric:tabular-nums;min-width:0}
+.notes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 28px}
+.notes section{display:grid;gap:8px;align-content:start;min-width:0}
+.notes p,.notes li{color:var(--muted);font-size:14.5px;margin:0}
+.notes ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.notes strong{color:var(--fg);font-weight:500}
+.src{font-size:13px;color:var(--faint)}
+.src ol{margin:6px 0 0;padding-left:18px;display:grid;gap:4px}
+.src a{color:var(--muted)}
+code{font:400 .9em var(--f-mono);color:var(--fg)}
+
+@media (max-width:980px){
+  .calc,.chippic{grid-template-columns:minmax(0,1fr)}
+  .slices{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ex{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .notes{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:520px){
+  .slices{display:flex;flex-direction:column-reverse}
+  .chiprow{grid-template-columns:minmax(0,1fr)}
+  .ex{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .bits button{width:40px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>

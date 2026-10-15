@@ -43,7 +43,9 @@ button,input{font:inherit;color:inherit}
 .brand{display:flex;align-items:center;gap:10px;font:600 12px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--fg);text-decoration:none}
 .brand svg{width:26px;height:26px;flex:none}
 .brand .t{color:var(--muted);font-weight:500}
-.crumb{font:500 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.crumb{display:flex;gap:14px;flex-wrap:wrap;font:500 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase}
+.crumb a{color:var(--muted);text-decoration:none}
+.crumb a:hover{color:var(--petg)}
 h1{font:700 clamp(30px,5.2vw,54px)/1.02 var(--f-display);font-variation-settings:"wdth" 82;letter-spacing:-.02em;margin:0;text-wrap:balance;max-width:16ch}
 h1 em{font-style:normal;color:var(--laser)}
 h1 b{font-weight:700;color:var(--beam)}
@@ -146,7 +148,7 @@ code{font:400 .9em var(--f-mono);color:var(--fg)}
       <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#111a1e"/><path d="M8 40 L28 24 L56 24" stroke="#ff5a47" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="28" cy="24" r="5" fill="#eba340"/></svg>
       Bench to Pixel <span class="t">/ encrypt</span>
     </a>
-    <span class="crumb">one-time pad · XOR at line rate</span>
+    <nav class="crumb" aria-label="Related pages"><a href="https://atharvdubey22ug-glitch.github.io/bench-to-pixel/alu/">4-bit optical ALU</a><a href="https://github.com/atharvdubey22ug-glitch/bench-to-pixel/blob/main/CONCEPT.md">The idea</a></nav>
   </div>
 
   <header class="hero">

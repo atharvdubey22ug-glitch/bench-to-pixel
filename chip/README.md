@@ -8,6 +8,8 @@ The layout is a native KLayout / SiEPIC-Tools design, `klayout/EBeam_heaters_ath
 
 Four copies of it make a 4-bit ALU (ADD, SUB, AND, OR, XOR) on one 3.72 × 3.08 mm die: see [4-bit ALU](#4-bit-alu) below.
 
+The 4-bit ALU can be tried as a calculator on the [ALU page](../alu/), and the project is summarised in [`CONCEPT.md`](../CONCEPT.md).
+
 How fast the interference logic itself can compute is in [`speed/`](speed/README.md): a single-pass version of the paper's XOR runs at 200 Gb/s with 100 GHz modulators and adds 5 ps.
 
 Open either layout in KLayout with SiEPIC-Tools and the SiEPIC EBeam PDK installed. The EBeam technology then gives the layer colours and the PCells, so every waveguide and heater stays editable.
