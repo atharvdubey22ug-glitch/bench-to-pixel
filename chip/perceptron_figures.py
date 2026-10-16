@@ -118,10 +118,13 @@ def chip_scores(D, img):
         for i, ch in enumerate(D["font"][str(d)]):
             w[D["arm_of_pixel"][i]] = 1 if ch == "1" else -1
         s = x * w
-        p = np.concatenate([np.where(s > 0, pp[:16], pm[:16]), pp[16:]])
+        pa = np.where(s > 0, pp[:16], pm[:16])
+        err = np.array(c["M"]) @ (pa - pp[:16])                    # crosstalk the pattern sends each arm (rad)
+        pa = np.clip(pa - np.array(c["K"]) @ err, 0, 80)           # pre-corrected heater powers (mW)
+        p = np.concatenate([pa, pp[16:]])
         ph = (p * eta) @ X.T + phi0
         e = np.exp(1j * ph)
-        out.append((abs(e @ tp) ** 2 - abs(e @ tm) ** 2) * 1e3)   # uW at 1 mW
+        out.append((abs(e @ tp) ** 2 - c["lam"] * abs(e @ tm) ** 2) * 1e3)   # uW at 1 mW
     return np.array(out)
 
 

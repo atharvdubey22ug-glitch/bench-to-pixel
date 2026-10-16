@@ -55,7 +55,7 @@
 
   <section class="panel" aria-labelledby="accTitle">
     <h2 id="accTitle">How exact is the sum?</h2>
-    <p class="small">Each arm's phase is trimmed by its heater after fabrication, using only the two output readings. What is left: heaters warming their neighbours as the data changes, back-reflections between the trees, and the corner's couplers. Below, all 65,536 settings of the sixteen arms on this simulated die: the spread of the output at each value of the sum, against the gap to the next value.</p>
+    <p class="small">The chip is calibrated after fabrication using only its two output readings, in three steps: each arm's phase; a map of how much each heater warms its neighbours, which the driver then cancels pattern by pattern; and a weight on one photodiode that keeps the output a straight line when the output coupler is not exactly 50/50. Below, all 65,536 settings of the sixteen arms on this simulated die: the spread of the output at each value of the sum, against the gap to the next value.</p>
     <canvas class="chart" id="lin" aria-label="Output against the ideal sum for all 65,536 arm settings"></canvas>
     <div class="row" id="linRead"></div>
   </section>
@@ -162,28 +162,25 @@
     const c = D.corners[key];
     const X = D.X, A = new Float64Array(R * R);              // A[j][k] = X[j][k] * eta[k] (rad per mW)
     for (let j = 0; j < R; j++) for (let k = 0; k < R; k++) A[j * R + k] = X[j][k] * c.eta[k];
-    M = { key, c, A, tp: c.t_plus, tm: c.t_minus, pp: c.p_plus_mW, pm: c.p_minus_mW, phi0: c.phi0, gain: null, off: null };
-    const p = new Float64Array(R), base = new Float64Array(R);
-    // phase from the heaters that do not change with the data (all arms at +1), then the change per arm switched to -1
-    for (let k = 0; k < R; k++) p[k] = M.pp[k];
-    for (let j = 0; j < R; j++) { let s = M.phi0[j]; for (let k = 0; k < R; k++) s += A[j * R + k] * p[k]; base[j] = s; }
-    const dP = new Float64Array(N); for (let k = 0; k < N; k++) dP[k] = M.pm[k] - M.pp[k];
-    M.base = base; M.dP = dP;
+    const Mx = new Float64Array(N * N), K = new Float64Array(N * N);
+    for (let j = 0; j < N; j++) for (let k = 0; k < N; k++) { Mx[j * N + k] = c.M[j][k]; K[j * N + k] = c.K[j][k]; }
+    M = { key, c, A, Mx, K, tp: c.t_plus, tm: c.t_minus, pp: c.p_plus_mW, pm: c.p_minus_mW, phi0: c.phi0, lam: c.lam, gain: null, off: null };
   }
-  function outD(states) {           // states: +1/-1 per arm -> D per watt of laser
-    const c = M, ph = new Float64Array(R);
-    for (let j = 0; j < R; j++) {
-      let s = c.base[j];
-      for (let k = 0; k < N; k++) if (states[k] < 0) s += c.A[j * R + k] * c.dP[k];
-      ph[j] = s;
-    }
+  const pw = new Float64Array(R), err = new Float64Array(N), ph = new Float64Array(R);
+  function outD(states) {           // states: +1/-1 per arm -> readout per watt of laser (perceptron_sim.powers_for, Die.phases, readout)
+    const c = M;
+    for (let k = 0; k < N; k++) pw[k] = states[k] > 0 ? c.pp[k] : c.pm[k];
+    pw[N] = c.pp[N];
+    for (let j = 0; j < N; j++) { let s = 0; for (let k = 0; k < N; k++) s += c.Mx[j * N + k] * (pw[k] - c.pp[k]); err[j] = s; }
+    for (let j = 0; j < N; j++) { let s = 0; for (let k = 0; k < N; k++) s += c.K[j * N + k] * err[k]; pw[j] = Math.min(80, Math.max(0, pw[j] - s)); }
+    for (let j = 0; j < R; j++) { let s = c.phi0[j]; for (let k = 0; k < R; k++) s += c.A[j * R + k] * pw[k]; ph[j] = s; }
     let pr = 0, pi = 0, mr = 0, mi = 0;
     for (let j = 0; j < R; j++) {
       const cr = Math.cos(ph[j]), ci = Math.sin(ph[j]);
       pr += cr * c.tp[j][0] - ci * c.tp[j][1]; pi += cr * c.tp[j][1] + ci * c.tp[j][0];
       mr += cr * c.tm[j][0] - ci * c.tm[j][1]; mi += cr * c.tm[j][1] + ci * c.tm[j][0];
     }
-    return pr * pr + pi * pi - mr * mr - mi * mi;
+    return pr * pr + pi * pi - c.lam * (mr * mr + mi * mi);
   }
   function fit() {                  // gain and offset from all 65,536 settings (the "how exact" panel uses the same pass)
     const n = 1 << N, st = new Int8Array(N);
@@ -319,7 +316,7 @@
       g.fillStyle = C.laser; g.fillRect(cx - 4, Y(hi), 8, Math.max(2, Y(lo) - Y(hi)));
     }
     const wl = M.worstLevels, c = M.c;
-    $("linRead").innerHTML = `<span class="pill ${wl < 0.5 ? "ok" : "bad"}">${wl < 0.5 ? "All 17 levels apart" : "Levels merge"}</span><span class="small">red: the spread of the output over every setting with that sum; amber: half a level either side. Worst error on this die <strong>${wl.toFixed(2)} level</strong>; over ${c.dies} dies at this corner ${c.worst_max_error_levels.toFixed(2)} (full circuit model; this page's fitted model is within ${c.linear_model_error_levels.toFixed(2)} of it). Without crosstalk the same die is within ${D.results.example.without_crosstalk.toFixed(2)}.</span>`;
+    $("linRead").innerHTML = `<span class="pill ${wl < 0.5 ? "ok" : "bad"}">${wl < 0.5 ? "All 17 levels apart" : "Levels merge"}</span><span class="small">red: the spread of the output over every setting with that sum; amber: half a level either side. Worst error on this die <strong>${wl.toFixed(2)} level</strong>; over ${c.dies} dies at this corner ${c.worst_max_error_levels.toFixed(2)} with the full circuit model, against ${c.worst_uncorrected_max_error_levels.toFixed(2)} with the phase step alone.</span>`;
   }
 
   // ---------------------------------------------------------------- speed

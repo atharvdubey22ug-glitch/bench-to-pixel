@@ -3,8 +3,9 @@
 
 For each process corner: the linear field model of the drawn circuit (t, the field each of the 17
 waveguides delivers to each output), and the first simulated die of perceptron_sim.py (heater
-efficiencies, arm offsets, crosstalk, calibration), so the page computes the chip's outputs for any
-input with the same arithmetic as perceptron_sim.Die + Circuit.lin_fields. Plus the speed study's
+efficiencies, arm offsets, crosstalk, and its three-step calibration: phases, crosstalk map,
+balance weight), so the page computes the chip's outputs for any input with the same arithmetic as
+perceptron_sim.powers_for + Die.phases + Circuit.lin_fields + readout. Plus the speed study's
 eye traces and summary.
 """
 import base64
@@ -37,17 +38,19 @@ def main(seed=11):
     for corner in F.CORNERS:
         c = PS.Circuit(corner)
         die = PS.Die(c, np.random.default_rng(seed * 1000 + int(corner[0]) * 10 + int(corner[1]) + 0), X)   # die 0 of the study
-        cal = PS.calibrate(die)
+        cal = PS.calibrate_corrected(die)
         key = f"{int(corner[0])}nm_x_{int(corner[1])}nm"
         r = res["corners"][key]
         corners[key] = dict(t_plus=cx(c.t["plus"]), t_minus=cx(c.t["minus"]), eta=(die.eta * 1e-3).round(7).tolist(),   # rad per mW
                             phi0=die.phi0.round(7).tolist(), p_plus_mW=(cal["p_plus"] * 1e3).round(5).tolist(),
                             p_minus_mW=(cal["p_minus"] * 1e3).round(5).tolist(),
+                            M=(cal["M"] * 1e-3).round(7).tolist(), K=(cal["K"] * 1e3).round(5).tolist(), lam=round(cal["lam"], 5),
                             worst_max_error_levels=r["worst_max_error_levels"], worst_agree_with_ideal_pct=r["worst_agree_with_ideal_pct"],
+                            worst_uncorrected_max_error_levels=r["worst_uncorrected_max_error_levels"],
                             linear_model_error_levels=r["worst_linear_model_error_levels"], dies=r["dies"])
         if corner == F.NOMINAL:
             st = np.array([[1] * 16, [-1] * 16, [1, -1] * 8])
-            check = dict(states=st.tolist(), D=PS.diff_of(die.fields(PS.powers_for(cal, st), full=False)).round(9).tolist())
+            check = dict(states=st.tolist(), D=PS.readout(die.fields(PS.powers_for(cal, st), full=False), cal).round(9).tolist())
     z = np.load(os.path.join(HERE, "speed", "perceptron_eyes.npz"))
     full = max(float(np.abs(z[k]).max()) for k in z.files) * 1.02
     eyes = {}
@@ -64,6 +67,7 @@ def main(seed=11):
         roles=PS.ROLES, font=PS.FONT, arm_of_pixel=PS.ARM_OF_PIXEL, bias_arm=PS.BIAS_ARM, X=X.round(6).tolist(),
         resp=F.DET["resp"], corners=corners, check=check,
         results=dict(die_model=res["die_model"], example=dict(max_error_levels=res["example_nominal"]["max_error_levels"],
+                                                              uncorrected=res["example_nominal"]["uncorrected_max_error_levels"],
                                                               without_crosstalk=res["example_nominal"]["max_error_levels_without_crosstalk"]),
                      laser_uW=res["laser_uW_for_one_level_at_Q7"], spectral={k: v for k, v in res["spectral"].items() if k.startswith("+-")},
                      digits_nominal=res["corners"]["220nm_x_500nm"]["digits_example"], distances=res["digit_distances"]),

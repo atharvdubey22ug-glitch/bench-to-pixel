@@ -20,17 +20,23 @@ A simulated die adds:
     5% at the 100 um arm pitch, 0.9% at 200 um, 0.2% at 300 um (exp. decay, 60 um length);
   * process corners (silicon 210/220/230 nm x width 480/500/520 nm).
 Calibration uses only the two output grating couplers (0.2% reading noise, 16-bit 0..80 mW heater
-drivers): each arm's heater is swept in turn and set where the difference signal is largest (the
-arm in phase with the reference = +1); -1 is half a period away. Three passes, because each heater
-also warms its neighbours. In use, the arms switch between the two settings with the data, and the
-crosstalk that changes with the data is left uncorrected.
+drivers), in three steps:
+  1. phases: each arm's heater is swept in turn and set where the difference signal is largest (the
+     arm in phase with the reference = +1); -1 is half a period away. Three passes, because each
+     heater also warms its neighbours (calibrate()).
+  2. crosstalk map: how much each heater turns its neighbours and the reference, measured with the
+     neighbour a quarter period off (measure_crosstalk()); the driver then shifts every heater so
+     the heat that changes with the data is cancelled, pattern by pattern (powers_for()).
+  3. balance weight: P- is weighted so the readout is a straight line in S even when the output
+     coupler is not exactly 50/50 (balance_weight()).
+"Uncorrected" results use step 1 alone and the plain difference P+ - P-.
 
 Results (perceptron_results.json):
   linearity    D against S on 20 dies per corner: 7,522 arm patterns (470 for each value of S) through the
-               full model, and all 65,536 through the linear model
+               full model, with and without steps 2 and 3, and all 65,536 through the linear model
   digits       a 3x5-pixel digit font as stored weight patterns (one pass of light per digit); every
                digit with 0, 1 and 2 pixels flipped, the winner read from the chip's 10 outputs
-  spectral     D for S = +16 and -16 from 1500 to 1600 nm
+  spectral     D for S = +16 and -16 from 1500 to 1600 nm; path_delay: signal minus reference group delay
   noise        detector noise and the laser power needed to resolve one level
 """
 import json
@@ -125,8 +131,13 @@ class Circuit:
         return {o: v.reshape(phi.shape[:-1]) for o, v in f.items()}
 
 
-def diff_of(f):
-    return np.abs(f["plus"]) ** 2 - np.abs(f["minus"]) ** 2
+def diff_of(f, lam=1.0):
+    return np.abs(f["plus"]) ** 2 - lam * np.abs(f["minus"]) ** 2
+
+
+def readout(f, cal):
+    """The balanced output: P+ minus the calibrated balance weight times P-."""
+    return diff_of(f, cal.get("lam", 1.0))
 
 
 class Die:
@@ -146,6 +157,12 @@ class Die:
         d = diff_of(self.fields(powers))
         return d + MEAS_NOISE * np.abs(d).max() * self.rng.standard_normal(d.shape)
 
+    def measure_pm(self, powers):
+        f = self.fields(powers)
+        pp, pm = np.abs(f["plus"]) ** 2, np.abs(f["minus"]) ** 2
+        sc = MEAS_NOISE * max(pp.max(), pm.max())
+        return pp + sc * self.rng.standard_normal(pp.shape), pm + sc * self.rng.standard_normal(pm.shape)
+
 
 def calibrate(die, passes=3):
     p = np.zeros(len(ROLES))
@@ -163,10 +180,95 @@ def calibrate(die, passes=3):
     return dict(p_plus=p.copy(), p_minus=np.concatenate([dac(alt), p[N:]]), g=g_all)
 
 
+def measure_crosstalk(die, cal, repeats=16, reach=2):
+    """Crosstalk map from the two output readings only. M[j, k]: phase of arm j, relative to the
+    reference, per mW on heater k (j != k). Arm j is set a quarter period off its aligned point, where
+    the output responds linearly to its phase, and heater k is switched between its +1 and -1 powers;
+    repeating with arm j a quarter period the other way and subtracting cancels arm k's own flip and
+    every second-order term. Measured for the arms within `reach` of k, plus one far arm whose shift
+    is the heat reaching the reference (applied to every arm beyond reach). Also returns B[j], arm j's
+    swing in the difference signal."""
+    g, pp = cal["g"], cal["p_plus"]
+    dP = cal["p_minus"][:N] - pp[:N]
+    cfg = []
+    for j in range(N):
+        a = pp.copy(); b = pp.copy(); b[j] = cal["p_minus"][j]
+        cfg += [a, b]
+    Dm = die.measure(np.repeat(np.array(cfg), repeats, axis=0)).reshape(N, 2, repeats).mean(-1)
+    B = (Dm[:, 0] - Dm[:, 1]) / 2
+
+    def quarter(j, sgn):
+        v = pp[j] + sgn * (np.pi / 2) / g[j]
+        if v < 0:
+            v += 2 * np.pi / g[j]
+        if v > DAC_MAX:
+            v -= 2 * np.pi / g[j]
+        return v
+
+    pairs = []
+    for k in range(N):
+        far = N - 1 if k < N // 2 else 0
+        pairs += [(j, k) for j in range(N) if 0 < abs(j - k) <= reach] + [(far, k)]
+    cfg = []
+    for j, k in pairs:
+        for sj in (1, -1):
+            for kk in (0, 1):
+                p = pp.copy()
+                p[j] = quarter(j, sj)
+                if kk:
+                    p[k] = cal["p_minus"][k]
+                cfg.append(p)
+    Dm = die.measure(np.repeat(np.array(dac(cfg)), repeats, axis=0)).reshape(len(pairs), 2, 2, repeats).mean(-1)
+    M = np.zeros((N, N))
+    for i, (j, k) in enumerate(pairs):
+        eps = -((Dm[i, 0, 1] - Dm[i, 0, 0]) - (Dm[i, 1, 1] - Dm[i, 1, 0])) / (2 * B[j])
+        if abs(j - k) > reach:
+            for jj in range(N):
+                if abs(jj - k) > reach:
+                    M[jj, k] = eps / dP[k]
+        else:
+            M[j, k] = eps / dP[k]
+    return M, B
+
+
+def calibrate_corrected(die, passes=3):
+    """calibrate(), then the crosstalk map, so powers_for() can pre-correct every data pattern."""
+    cal = calibrate(die, passes)
+    M, B = measure_crosstalk(die, cal)
+    cal.update(M=M, B=B, K=np.linalg.inv(np.diag(cal["g"]) + M))
+    cal["lam"] = balance_weight(die, cal)
+    return cal
+
+
+def balance_weight(die, cal, repeats=16):
+    """If the output coupler is not exactly 50/50, P+ - P- keeps a small term in S^2 and the line
+    bends. Weighting P- by lam cancels it: lam is set so the readout of S = +16 and S = -16 averages
+    to the readout of S = 0 (sixteen balanced patterns), all from the two output readings."""
+    r = np.random.default_rng(1)
+    zero = np.ones((16, N), int)
+    for row in zero:
+        row[r.choice(N, N // 2, replace=False)] = -1
+    pats = np.vstack([np.ones((1, N), int), -np.ones((1, N), int), zero])
+    pp, pm = die.measure_pm(np.repeat(powers_for(cal, pats), repeats, axis=0))
+    pp, pm = pp.reshape(len(pats), repeats).mean(1), pm.reshape(len(pats), repeats).mean(1)
+    curv = lambda P: (P[0] + P[1]) / 2 - P[2:].mean()  # noqa: E731
+    return float(curv(pp) / curv(pm))
+
+
+def uncorrected(cal):
+    """The first calibration alone: no crosstalk map, plain difference of the two photocurrents."""
+    return {k: v for k, v in cal.items() if k not in ("M", "K", "lam")}
+
+
 def powers_for(cal, states):
-    """states: (..., 16) in {+1, -1} (arm aligned with the reference or opposite) -> heater powers."""
+    """states: (..., 16) in {+1, -1} (arm aligned with the reference or opposite) -> heater powers.
+    With a crosstalk map in cal, each arm's heater is shifted so the heat its neighbours send it (and
+    the reference) for this pattern is cancelled: (diag(g) + M) delta = -M dp."""
     s = np.asarray(states)
     pw = np.where(s > 0, cal["p_plus"][:N], cal["p_minus"][:N])
+    if "K" in cal:
+        e = (pw - cal["p_plus"][:N]) @ cal["M"].T
+        pw = np.clip(pw - e @ cal["K"].T, 0, DAC_MAX)
     ref = np.broadcast_to(cal["p_plus"][N:], s.shape[:-1] + (1,))
     return np.concatenate([pw, ref], -1)
 
@@ -191,7 +293,7 @@ def sample_states(rng, per_level=470):
 
 
 def linearity(die, cal, states, full=True):
-    D = diff_of(die.fields(powers_for(cal, states), full))
+    D = readout(die.fields(powers_for(cal, states), full), cal)
     S = states.sum(1)
     A = np.vstack([S, np.ones_like(S)]).T
     (gain, off), *_ = np.linalg.lstsq(A, D, rcond=None)
@@ -241,8 +343,9 @@ def digits(die, cal, laser_W=1e-3, bw=1e6):
     states = x[:, None, :] * W[None, :, :]                              # (n, 10, 16)
     f = die.fields(powers_for(cal, states))
     Pp, Pm = laser_W * np.abs(f["plus"]) ** 2, laser_W * np.abs(f["minus"]) ** 2
-    I = F.DET["resp"] * (Pp - Pm)
-    sig = np.sqrt((2 * F.P.QE * F.DET["resp"] * (Pp + Pm) + 2 * (F.DET["tia_pA"] * 1e-12) ** 2) * bw)
+    lam = cal.get("lam", 1.0)
+    I = F.DET["resp"] * (Pp - lam * Pm)
+    sig = np.sqrt((2 * F.P.QE * F.DET["resp"] * (Pp + lam ** 2 * Pm) + (1 + lam ** 2) * (F.DET["tia_pA"] * 1e-12) ** 2) * bw)
     I = I + sig * die.rng.standard_normal(I.shape)
     best = ideal.max(1, keepdims=True)
     unique = (ideal == best).sum(1) == 1                                # images with one clear nearest digit
@@ -262,6 +365,19 @@ def linear_check(c, rng, n=400):
     lin = c.lin_fields(phi)
     scale = max(np.abs(full["plus"]).max(), np.abs(full["minus"]).max())
     return float(max(np.abs(full[o] - lin[o]).max() for o in full) / scale)
+
+
+def path_delay(c, span=0.005):
+    """Group delay of the signal path (all arms) minus the reference path, in ps, from the phase of
+    signal / reference at the PLUS output across +-span um of wavelength."""
+    wl = np.linspace(1.55 - span, 1.55 + span, 41)
+    z = {r: np.zeros(wl.size) for r in ROLES}
+    e0 = c.fields(z, wl=wl)["plus"]
+    zr = dict(z)
+    zr["REF"] = np.full(wl.size, np.pi)
+    t_ref = (e0 - c.fields(zr, wl=wl)["plus"]) / 2
+    w = 2 * np.pi * 299792458.0 / (wl * 1e-6)
+    return float(np.polyfit(w, np.unwrap(np.angle((e0 - t_ref) / t_ref)), 1)[0] * 1e12)   # sax: fields go as exp(+i w t)
 
 
 def spectral(c):
@@ -288,63 +404,72 @@ def spectral(c):
                 D_minus16=out["minus16"][::4].round(5).tolist(), relative=r[::4].round(4).tolist())
 
 
-def main(n_dies=20, seed=11):
-    pos = geometry()
-    X = crosstalk_matrix(pos)
+def corner_study(args):
+    """One process corner: n_dies dies, each calibrated in three steps, then measured."""
+    corner, n_dies, seed = args
+    X = crosstalk_matrix(geometry())
+    c = Circuit(corner)
+    lc = linear_check(c, np.random.default_rng(seed))
+    S_all = all_states()
+    rows, example = [], None
+    for n in range(n_dies):
+        die = Die(c, np.random.default_rng(seed * 1000 + int(corner[0]) * 10 + int(corner[1]) + n), X)
+        cal = calibrate_corrected(die)
+        st = sample_states(np.random.default_rng(n))
+        lin = linearity(die, cal, st)
+        lin_u = linearity(die, uncorrected(cal), st)
+        ex = linearity(die, cal, S_all, full=False)
+        dl = readout(die.fields(powers_for(cal, st), full=False), cal)
+        dg = digits(die, cal)
+        rows.append(dict(max_error_levels=lin["max_error_levels"], rms_error_levels=lin["rms_error_levels"],
+                         uncorrected_max_error_levels=lin_u["max_error_levels"], balance_weight=cal["lam"],
+                         exhaustive_linear_model_max_error_levels=ex["max_error_levels"],
+                         linear_model_error_levels=float(np.abs(dl - lin["D"]).max() / lin["gain_per_level"]),
+                         gain_uW_per_level_at_1mW=lin["gain_per_level"] * 1e3, digits=dg))
+        if n == 0:
+            example = dict(points_uW_per_mW={str(S): (lin["D"][lin["S"] == S][:60] * 1e3).round(4).tolist() for S in range(-N, N + 1, 2)},
+                           gain_uW_per_level_at_1mW=lin["gain_per_level"] * 1e3, max_error_levels=lin["max_error_levels"],
+                           uncorrected_max_error_levels=lin_u["max_error_levels"], balance_weight=cal["lam"],
+                           calibration_mW=dict(plus=(cal["p_plus"] * 1e3).round(3).tolist(), minus=(cal["p_minus"] * 1e3).round(3).tolist()))
+        print(corner, n, round(lin_u["max_error_levels"], 3), "->", round(lin["max_error_levels"], 3), flush=True)
+    key = f"{int(corner[0])}nm_x_{int(corner[1])}nm"
+    r = lambda k: [row[k] for row in rows]  # noqa: E731
+    return key, dict(
+        dies=n_dies, linear_model_error=lc,
+        worst_max_error_levels=round(max(r("max_error_levels")), 3),
+        median_max_error_levels=round(float(np.median(r("max_error_levels"))), 3),
+        worst_uncorrected_max_error_levels=round(max(r("uncorrected_max_error_levels")), 3),
+        median_uncorrected_max_error_levels=round(float(np.median(r("uncorrected_max_error_levels"))), 3),
+        worst_rms_error_levels=round(max(r("rms_error_levels")), 4),
+        balance_weight_range=[round(min(r("balance_weight")), 3), round(max(r("balance_weight")), 3)],
+        worst_exhaustive_linear_model_max_error_levels=round(max(r("exhaustive_linear_model_max_error_levels")), 3),
+        worst_linear_model_error_levels=round(max(r("linear_model_error_levels")), 3),
+        level_uW_at_1mW=round(float(np.median(r("gain_uW_per_level_at_1mW"))), 2),
+        worst_agree_with_ideal_pct=round(min(row["digits"]["agree_with_ideal_pct"] for row in rows), 2),
+        digits_example=rows[0]["digits"]), example
+
+
+def main(n_dies=20, seed=11, procs=2):
+    import multiprocessing as mp
+    X = crosstalk_matrix(geometry())
     res = {"method": __doc__.strip().splitlines()[0], "netlist": os.path.relpath(EXTRACT, HERE),
            "die_model": dict(P_pi_mW=P_PI * 1e3, efficiency_spread=ETA_SPREAD, crosstalk=f"{XT0:.0%} at {XT_D0:.0f} um, decay length {XT_L:.0f} um",
                              nearest_neighbour_crosstalk=round(float(X[1, 0]), 4), measurement_noise=MEAS_NOISE,
                              dac="16-bit, 0-80 mW"),
            "font": FONT, "arm_of_pixel": ARM_OF_PIXEL, "bias_arm": BIAS_ARM}
-    rng = np.random.default_rng(seed)
-    S_all = all_states()
-    res["corners"], examples = {}, {}
-    for corner in F.CORNERS:
-        c = Circuit(corner)
-        lc = linear_check(c, rng)
-        rows = []
-        for n in range(n_dies):
-            die = Die(c, np.random.default_rng(seed * 1000 + int(corner[0]) * 10 + int(corner[1]) + n), X)
-            cal = calibrate(die)
-            st = sample_states(np.random.default_rng(n))
-            lin = linearity(die, cal, st)
-            ex = linearity(die, cal, S_all, full=False)
-            dl = diff_of(die.fields(powers_for(cal, st), full=False))
-            dg = digits(die, cal)
-            rows.append(dict(max_error_levels=lin["max_error_levels"], rms_error_levels=lin["rms_error_levels"],
-                             exhaustive_linear_model_max_error_levels=ex["max_error_levels"],
-                             linear_model_error_levels=float(np.abs(dl - lin["D"]).max() / lin["gain_per_level"]),
-                             gain_uW_per_level_at_1mW=lin["gain_per_level"] * 1e3, digits=dg))
-            if n == 0:
-                examples[corner] = (die, cal, lin)
-        key = f"{int(corner[0])}nm_x_{int(corner[1])}nm"
-        res["corners"][key] = dict(
-            dies=n_dies, linear_model_error=lc,
-            worst_max_error_levels=round(max(r["max_error_levels"] for r in rows), 3),
-            median_max_error_levels=round(float(np.median([r["max_error_levels"] for r in rows])), 3),
-            worst_rms_error_levels=round(max(r["rms_error_levels"] for r in rows), 4),
-            worst_exhaustive_linear_model_max_error_levels=round(max(r["exhaustive_linear_model_max_error_levels"] for r in rows), 3),
-            worst_linear_model_error_levels=round(max(r["linear_model_error_levels"] for r in rows), 3),
-            level_uW_at_1mW=round(float(np.median([r["gain_uW_per_level_at_1mW"] for r in rows])), 2),
-            worst_agree_with_ideal_pct=round(min(r["digits"]["agree_with_ideal_pct"] for r in rows), 2),
-            digits_example=rows[0]["digits"])
-        print(key, res["corners"][key]["worst_max_error_levels"], res["corners"][key]["worst_agree_with_ideal_pct"], f"lin {lc:.1e}", flush=True)
-    # example die at the nominal corner: the D vs S cloud, its calibration, and a no-crosstalk comparison
-    die, cal, lin = examples[F.NOMINAL]
-    cl = {}
-    for S in range(-N, N + 1, 2):
-        m = lin["S"] == S
-        cl[str(S)] = [float(lin["D"][m].min() * 1e6), float(lin["D"][m].max() * 1e6)]   # uW per W of laser = 1e6 * D ... per W
-    res["example_nominal"] = dict(D_range_by_S_uW_per_mW={k: [v[0] / 1e3, v[1] / 1e3] for k, v in cl.items()},
-                                  gain_uW_per_level_at_1mW=lin["gain_per_level"] * 1e6 / 1e3, max_error_levels=lin["max_error_levels"],
-                                  points_uW_per_mW={str(S): (lin["D"][lin["S"] == S][:60] * 1e3).round(4).tolist() for S in range(-N, N + 1, 2)},
-                                  calibration_mW=dict(plus=(cal["p_plus"] * 1e3).round(3).tolist(), minus=(cal["p_minus"] * 1e3).round(3).tolist()))
-    die0 = Die(die.c, np.random.default_rng(seed), np.eye(len(ROLES)))
-    cal0 = calibrate(die0)
+    with mp.get_context("spawn").Pool(procs) as pool:
+        out = pool.map(corner_study, [(c, n_dies, seed) for c in F.CORNERS], chunksize=1)
+    res["corners"] = {k: v for k, v, _ in out}
+    res["example_nominal"] = next(e for k, _, e in out if k == "220nm_x_500nm")
+    for k, v in res["corners"].items():
+        print(k, "uncorrected", v["worst_uncorrected_max_error_levels"], "corrected", v["worst_max_error_levels"], "digits", v["worst_agree_with_ideal_pct"])
+    c = Circuit()
+    die0 = Die(c, np.random.default_rng(seed), np.eye(len(ROLES)))
+    cal0 = calibrate_corrected(die0)
     res["example_nominal"]["max_error_levels_without_crosstalk"] = linearity(die0, cal0, sample_states(np.random.default_rng(0)))["max_error_levels"]
-    # noise: the laser power at which one level is 7 sigma at 1 MHz (heater chip) and at 10 GHz detection
-    g = lin["gain_per_level"]
-    out = {}
+    # noise: the laser power at which one level is 7 sigma at 1 MHz (heater chip) and at 10 and 50 GHz detection
+    g = res["example_nominal"]["gain_uW_per_level_at_1mW"] * 1e-3      # per W of laser
+    lp = {}
     for bw in (1e6, 1e10, 5e10):
         lo, hi = 1e-9, 1.0
         for _ in range(80):
@@ -352,13 +477,14 @@ def main(n_dies=20, seed=11):
             I1 = F.DET["resp"] * pl * g
             sig = math.sqrt((2 * F.P.QE * F.DET["resp"] * pl * 0.5 + 2 * (F.DET["tia_pA"] * 1e-12 if bw < 1e9 else 20e-12) ** 2) * bw)
             lo, hi = (pl, hi) if I1 / (2 * sig) < 7 else (lo, pl)
-        out[f"{bw:.0e}Hz"] = round(hi * 1e6, 2)
-    res["laser_uW_for_one_level_at_Q7"] = out
-    res["spectral"] = spectral(Circuit())
+        lp[f"{bw:.0e}Hz"] = round(hi * 1e6, 2)
+    res["laser_uW_for_one_level_at_Q7"] = lp
+    res["path_delay_signal_minus_reference_ps"] = path_delay(c)
+    res["spectral"] = spectral(c)
     res["digit_distances"] = {f"{a}-{b}": int(sum(x != y for x, y in zip(FONT[a], FONT[b]))) for a in FONT for b in FONT if a < b}
     with open(os.path.join(HERE, "perceptron_results.json"), "w") as f:
         json.dump(res, f, indent=1, default=float)
-    print("no crosstalk:", res["example_nominal"]["max_error_levels_without_crosstalk"], "laser:", out)
+    print("no crosstalk:", res["example_nominal"]["max_error_levels_without_crosstalk"], "laser:", lp, "delay ps:", res["path_delay_signal_minus_reference_ps"])
     print("spectral", {k: v for k, v in res["spectral"].items() if k.startswith("+-")})
 
 

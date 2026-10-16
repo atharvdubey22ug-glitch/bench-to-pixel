@@ -49,7 +49,7 @@ XC = 2 * XMID - X1 + 7.4 + 35.45 + 60.0   # output coupler centre
 YB = Y0P - 2.35                  # coupler centre (upper-left port at y = Y0P)
 Y_RT = YT + 7.5 * PITCH + 87.0   # OUT+ route, above the top arm's wiring
 Y_PAD_TOP = Y_RT + 40.0          # top pad row, bottom edge
-Y_REF = float(sys.argv[2]) if len(sys.argv) > 2 else -798.938   # reference depth (length-matched, see report)
+Y_REF = float(sys.argv[2]) if len(sys.argv) > 2 else -790.58   # reference depth (length-matched, see report)
 H = [4 * PITCH, 2 * PITCH, PITCH, PITCH / 2]
 
 b = Builder(TOP)
@@ -209,7 +209,8 @@ with open(os.path.join(OUT, "perceptron_extracted_netlist.json"), "w") as f:
     json.dump(dict(components=r["ext"]), f, indent=1)
 Ls = b.lengths
 arm_len = [round(Ls[f"arm{k}"], 3) for k in range(16)]
-Y_LEN = 14.8                    # a Y-branch, opt1 to opt2/3 (PDK cell, 15 um)
+Y_LEN = 12.71                   # a Y-branch's group delay in the PDK model, as waveguide length (drawn: 14.8 um); measured
+                                # from the circuit model's phase against wavelength, see perceptron_sim.path_delay()
 seg = [Ls[f"split{lv}"] / 2 ** (lv + 1) for lv in range(3)]
 signal_path = Ls["sig_in"] + 2 * sum(seg) + arm_len[0] + Ls["sig_out"] + 8 * Y_LEN
 mismatch = signal_path - Ls["ref"]
