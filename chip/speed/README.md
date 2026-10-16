@@ -65,6 +65,10 @@ The one cost appears when the modulators are slow compared with the bit. If A tu
 
 `parity_speed.py` runs the same model on the parity chip (`../klayout/EBeam_heaters_atharvdubey_Parity8`): eight independent random streams on eight phase sections of one arm, and their parity read at the output. The drives are aligned to the light's travel time, 14.7 ps from the first section to the last. With ideal modulators the eight-input gate costs 0.01 dB over a plain waveguide up to 400 Gb/s. With 100 GHz modulators it runs at 150 Gb/s (a single stream: 200). With 50 GHz modulators it runs at 75 Gb/s (a single stream: 150). The slow phase edges of eight sections add up. Without alignment it fails above 25 Gb/s. Details in [the chip README](../README.md#phase-encoded-parity).
 
+## Sixteen inputs: the optical neuron
+
+`perceptron_speed.py` runs the same model on the neuron chip (`../klayout/EBeam_heaters_atharvdubey_Perceptron16`). A stream of 3 × 5 pixel digit images drives its sixteen arms, one whole image per bit slot, with the weights holding a stored 7. The output is a ladder of levels, one per value of the weighted sum, and the neuron fires above a threshold. With the drives aligned to each section's place along its arm (up to 14.7 ps apart), every level stays apart to 100 G images/s with 100 GHz modulators, and the fires-on-7 decision holds at Q ≥ 7 to 125. With 50 GHz modulators it is 50 and 75, and 200 with ideal ones. Without alignment it fails above 25. Details in [the chip README](../README.md#optical-neuron).
+
 ## Limits
 
 - The modulators are lumped phase sections at the heaters' places. Real high-speed modulators are longer (millimetres for silicon depletion) and need travelling-wave electrodes. Their bandwidth is modelled as a Gaussian filter: ideal, 50 GHz or 100 GHz.
@@ -80,4 +84,5 @@ python3 ../klayout/run_drc.py ../klayout/EBeam_heaters_atharvdubey_FastXOR.oas .
 python3 speed_study.py                            # about 8 minutes; speed_results.json, speed_eyes.npz
 python3 figures.py
 python3 parity_speed.py                           # about 6 minutes; parity_speed_results.json, parity_eyes.npz
+python3 perceptron_speed.py                       # about 15 minutes; perceptron_speed_results.json, perceptron_eyes.npz
 ```

@@ -21,16 +21,21 @@ The trade-off: optics offers time-of-flight latency and very large bandwidth per
    - Every one of the 256 inputs is correct on 180 simulated dies across all process corners, calibrated from the grating-coupler readings alone.
    - With aligned drives it runs at 150 Gb/s with 100 GHz modulators.
    - The cost is that phase errors add along the chain, as the bits do. Each drive must be accurate to about 1–2%, because nothing restores the signal.
-6. **Three interactive pages.**
+6. **A neuron made of light** (`chip/README.md#optical-neuron`). The parity chip's phase sections are put side by side instead of in a row. Sixteen arms each carry one input as a phase, 0 or π, set by whether the input agrees with its weight. A combiner tree adds the sixteen fields in one pass, and balanced detection against a reference reads the signed sum. That is a binary-weight neuron (the XNOR-and-count unit of binarised neural networks), and the optical version of the bench's carry gate, where polarisers set the weights.
+   - With 3 × 5 pixel digits stored as weights, the chip picks the same digit as an ideal neuron on all 180 simulated dies across the process corners.
+   - It needs a three-step calibration from the output readings alone (phases, a heater-crosstalk map the driver cancels, a balance weight on one photodiode). With it every output level stays distinct on all 180 dies; without it they merge on some dies.
+   - With aligned drives and 100 GHz modulators, one neuron takes a whole image per bit slot: every output level stays distinct to 100 G images/s, and its yes/no decision holds to 125.
+7. **Four interactive pages.**
    - [`encrypt/`](encrypt/): one-time-pad encryption on the simulated optical XOR against a modelled electronic SerDes chip, with first-bit latency 19 ps against at least 2 ns.
    - [`alu/`](alu/): the 4-bit ALU computing ADD, SUB, AND, OR and XOR from each bit's simulated light levels, including what happens without per-bit calibration.
    - [`parity/`](parity/): the parity chip live, the cost of drive errors along the chain, and its eye diagrams at up to 400 Gb/s.
+   - [`perceptron/`](perceptron/): draw a digit and read the neuron chip's ten scores, how exact its sum is, and its eye diagrams.
 
 ## Questions to expect
 
 - **"Isn't a CMOS gate also a few picoseconds?"** Yes. The difference is not gate delay but that CMOS cannot operate serially at line rate, so it pays the deserialisation cost. Per-gate bandwidth is the real distinction.
 - **"Is throughput higher?"** No. Both keep up with the line rate. The gain is latency, and simplicity: one coupler against an array of gates plus serialiser–deserialiser circuits.
-- **"Does it scale to general computing?"** Not as digital logic. Interference gates lack gain and need a common phase reference. Phase encoding lets XORs chain (the parity chip), but errors accumulate without regeneration, and AND/OR still need a nonlinearity or electronics. Linear operations, such as optical matrix–vector multiplication for neural networks, scale better, and that is where the field is moving.
+- **"Does it scale to general computing?"** Not as digital logic. Interference gates lack gain and need a common phase reference. Phase encoding lets XORs chain (the parity chip), but errors accumulate without regeneration, and AND/OR still need a nonlinearity or electronics. Linear operations scale better: the neuron chip adds sixteen weighted inputs in one pass, and the field is moving toward optical matrix–vector multiplication for neural networks. Linear operations, such as optical matrix–vector multiplication for neural networks, scale better, and that is where the field is moving.
 - **"What is measured and what is simulated?"** The bench gates were measured. Everything on chip is simulated from the foundry's component models, the electronic latency is a lower-bound model, and nothing has been fabricated.
 
 ## The open question

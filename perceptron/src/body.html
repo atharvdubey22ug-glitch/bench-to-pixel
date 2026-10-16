@@ -108,7 +108,7 @@
   <div class="notes">
     <section>
       <h3>What is real here</h3>
-      <p>The layout passes the foundry's checks. The light comes from a circuit simulation of the extracted layout with the design kit's component models, at nine process corners, with heater spread, random arm offsets and thermal crosstalk on every simulated die, calibrated from the two output readings alone. The page computes the outputs from a sum over the seventeen waveguides fitted to that simulation; the speed runs use the same circuit in the time domain. Nothing is fabricated yet.</p>
+      <p>The layout passes the foundry's checks. The light comes from a circuit simulation of the extracted layout with the design kit's component models, at nine process corners, with heater spread, random arm offsets and thermal crosstalk on every simulated die, calibrated from the two output readings alone. The page computes the outputs from a sum over the seventeen waveguides fitted to that simulation, which leaves out reflections between arms and sits within 0.1 to 0.27 of a level of it, depending on the corner; the speed runs use the same circuit in the time domain. Nothing is fabricated yet.</p>
     </section>
     <section>
       <h3>Where it comes from</h3>
@@ -261,10 +261,10 @@
     const mx = Math.max(...scores.map(Math.abs)) * 1.05;
     $("bars").innerHTML = scores.map((y, d) => {
       const w = Math.abs(y) / mx * 50, left = y >= 0 ? 50 : 50 - w;
-      return `<button type="button" class="bar ${d === win ? "win" : ""} ${sel === d ? "sel" : ""}" data-d="${d}" aria-label="Stored ${d}: output ${(y * 1e3).toFixed(1)} microwatts, ideal sum ${ideal[d]}"><b>${d}</b><span class="tr"><i style="left:${left.toFixed(2)}%;width:${w.toFixed(2)}%"></i></span><span class="k">${(y * 1e3).toFixed(1)} µW · ${ideal[d] > 0 ? "+" : ""}${ideal[d]}</span></button>`;
+      return `<button type="button" class="bar ${d === win ? "win" : ""} ${sel === d ? "sel" : ""}" data-d="${d}" aria-label="Stored ${d}: output ${(y * 1e3).toFixed(1)} microwatts, ideal sum ${ideal[d]}"><b>${d}</b><span class="tr"><i style="left:${left.toFixed(2)}%;width:${w.toFixed(2)}%"></i></span><span class="k">${(y * 1e3).toFixed(1)} µW</span><span class="s">${ideal[d] > 0 ? "+" : ""}${ideal[d]}</span></button>`;
     }).join("");
     $("bars").querySelectorAll(".bar").forEach(b => b.addEventListener("click", () => { sel = +b.dataset.d; update(); }));
-    $("barsCap").textContent = `Each bar is one pass of light with that digit stored as the weights: the balanced output for 1 mW of laser into the chip, then the ideal sum (16 − 2 × pixels that differ, the 16th arm a fixed +1). Tap a bar to look inside that pass.`;
+    $("barsCap").textContent = `Each bar is one pass of light with that digit stored as the weights: the balanced output for 1 mW of laser into the chip, and on the right the ideal sum (16 − 2 × pixels that differ, the 16th arm a fixed +1). Tap a bar to look inside that pass.`;
     inside(sel === null ? win : sel, x, scores, ideal);
   }
 
@@ -302,7 +302,7 @@
     const ymax = Math.max(Math.abs(M.lo[0]), Math.abs(M.hi[N])) * 1.08 * 1e3;
     const X = S => x0 + (S + N) / (2 * N) * (x1 - x0), Y = uw => y0 - (uw + ymax) / (2 * ymax) * (y0 - y1);
     g.strokeStyle = C.line; g.fillStyle = C.faint; g.lineWidth = 1;
-    const step = ymax > 30 ? 20 : ymax > 12 ? 10 : 5;
+    const step = [5, 10, 20, 25, 50, 100, 200].find(v => ymax / v <= 4.5) || 500;
     for (let t = -Math.floor(ymax / step) * step; t <= ymax; t += step) { g.beginPath(); g.moveTo(x0, Y(t)); g.lineTo(x1, Y(t)); g.stroke(); g.textAlign = "right"; g.fillText(`${t}`, x0 - 6, Y(t) + 4); }
     g.textAlign = "center";
     for (let S = -N; S <= N; S += 4) g.fillText(`${S}`, X(S), y0 + 16);

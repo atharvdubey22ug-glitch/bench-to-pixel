@@ -10,7 +10,9 @@ Open `index.html` in a browser. Scroll to zoom out; drag to look around.
 
 `parity/index.html` is a fourth page: the phase-encoded parity chip, eight input bits in one pass of light, with its light levels, the cost of drive errors and its eye diagrams from the simulation (`parity/data.json`, exported by `chip/parity_export_web.py`). Rebuild it with `python3 parity/build.py`.
 
-The chip designs (full adder, 4-bit ALU, single-pass XOR, phase-encoded parity) and their simulations are in [`chip/`](chip/README.md). What the project shows, and what it doesn't, is summarised in [`CONCEPT.md`](CONCEPT.md).
+`perceptron/index.html` is a fifth page: the optical neuron. Draw a 3 × 5 pixel digit and the simulated chip compares it with ten stored digits, one pass of light each (`perceptron/data.json`, exported by `chip/perceptron_export_web.py`; the page repeats `chip/perceptron_sim.py`'s arithmetic). Rebuild it with `python3 perceptron/build.py`.
+
+The chip designs (full adder, 4-bit ALU, single-pass XOR, phase-encoded parity, optical neuron) and their simulations are in [`chip/`](chip/README.md). What the project shows, and what it doesn't, is summarised in [`CONCEPT.md`](CONCEPT.md).
 
 ## What the page shows
 

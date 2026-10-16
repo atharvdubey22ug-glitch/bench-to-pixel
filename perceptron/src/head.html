@@ -88,7 +88,7 @@ input[type=range]{width:100%;accent-color:var(--laser)}
 .big .op{color:var(--muted);font-weight:500}
 .verdict{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .bars{display:grid;gap:5px}
-.bar{display:grid;grid-template-columns:22px minmax(0,1fr) 92px;gap:10px;align-items:center;font:500 12px/1.2 var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;cursor:pointer;border-radius:6px;padding:2px 4px;border:1px solid transparent;background:none;text-align:left}
+.bar{display:grid;grid-template-columns:22px minmax(0,1fr) 74px 34px;white-space:nowrap;gap:10px;align-items:center;font:500 12px/1.2 var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;cursor:pointer;border-radius:6px;padding:2px 4px;border:1px solid transparent;background:none;text-align:left}
 .bar:hover{border-color:var(--line)}
 .bar.sel{border-color:var(--petg)}
 .bar b{font:700 15px/1 var(--f-mono);color:var(--fg)}
@@ -97,7 +97,8 @@ input[type=range]{width:100%;accent-color:var(--laser)}
 .bar .tr i{position:absolute;top:0;bottom:0;border-radius:4px;background:var(--faint)}
 .bar.win .tr i{background:var(--laser)}
 .bar.win b{color:var(--laser)}
-.bar span.k{text-align:right}
+.bar span.k,.bar span.s{text-align:right}
+.bar span.s{color:var(--faint)}
 
 /* one pass inside */
 .arms{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:5px}
@@ -155,7 +156,7 @@ code{font:400 .9em var(--f-mono);color:var(--fg)}
 @media (max-width:420px){
   .grid35{grid-template-columns:repeat(3,48px)}
   .px{width:48px;height:48px}
-  .bar{grid-template-columns:18px minmax(0,1fr) 78px;gap:6px}
+  .bar{grid-template-columns:16px minmax(0,1fr) 64px 28px;gap:6px;font-size:11px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
