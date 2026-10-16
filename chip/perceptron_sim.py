@@ -28,7 +28,7 @@ drivers), in three steps:
      neighbour a quarter period off (measure_crosstalk()); the driver then shifts every heater so
      the heat that changes with the data is cancelled, pattern by pattern (powers_for()).
   3. balance weight: P- is weighted so the readout is a straight line in S even when the output
-     coupler is not exactly 50/50 (balance_weight()).
+     coupler is not exactly 50/50; fitted from known patterns at nine values of S (balance_weight()).
 "Uncorrected" results use step 1 alone and the plain difference P+ - P-.
 
 Results (perceptron_results.json):
@@ -240,19 +240,24 @@ def calibrate_corrected(die, passes=3):
     return cal
 
 
-def balance_weight(die, cal, repeats=16):
-    """If the output coupler is not exactly 50/50, P+ - P- keeps a small term in S^2 and the line
-    bends. Weighting P- by lam cancels it: lam is set so the readout of S = +16 and S = -16 averages
-    to the readout of S = 0 (sixteen balanced patterns), all from the two output readings."""
+def balance_weight(die, cal, repeats=8, per_level=6):
+    """If the output coupler is not exactly 50/50, P+ - P- keeps a term in S^2 and the line bends.
+    Weighting P- by lam cancels it. Known patterns at nine values of S (per_level random ones each,
+    the single patterns at S = +-16) are read at both outputs; each output is fitted as
+    a + b S + c S^2, and lam = c+ / c- removes the S^2 term. Output readings only."""
     r = np.random.default_rng(1)
-    zero = np.ones((16, N), int)
-    for row in zero:
-        row[r.choice(N, N // 2, replace=False)] = -1
-    pats = np.vstack([np.ones((1, N), int), -np.ones((1, N), int), zero])
+    pats, S = [], []
+    for m in range(0, N + 1, 2):                 # m arms at -1
+        for _ in range(1 if m in (0, N) else per_level):
+            row = np.ones(N, int)
+            row[r.choice(N, m, replace=False)] = -1
+            pats.append(row)
+            S.append(N - 2 * m)
+    pats, S = np.array(pats), np.array(S)
     pp, pm = die.measure_pm(np.repeat(powers_for(cal, pats), repeats, axis=0))
     pp, pm = pp.reshape(len(pats), repeats).mean(1), pm.reshape(len(pats), repeats).mean(1)
-    curv = lambda P: (P[0] + P[1]) / 2 - P[2:].mean()  # noqa: E731
-    return float(curv(pp) / curv(pm))
+    A = np.vstack([S ** 2, S, np.ones_like(S)]).T
+    return float(np.linalg.lstsq(A, pp, rcond=None)[0][0] / np.linalg.lstsq(A, pm, rcond=None)[0][0])
 
 
 def uncorrected(cal):
@@ -457,10 +462,24 @@ def main(n_dies=20, seed=11, procs=2):
                              nearest_neighbour_crosstalk=round(float(X[1, 0]), 4), measurement_noise=MEAS_NOISE,
                              dac="16-bit, 0-80 mW"),
            "font": FONT, "arm_of_pixel": ARM_OF_PIXEL, "bias_arm": BIAS_ARM}
+    parts = os.environ.get("PERCEPTRON_PARTS")          # optional: keep each finished corner, resume after a restart
+    key_of = lambda c: f"{int(c[0])}nm_x_{int(c[1])}nm"  # noqa: E731
+    done = {}
+    if parts:
+        os.makedirs(parts, exist_ok=True)
+        for c in F.CORNERS:
+            fn = os.path.join(parts, key_of(c) + ".json")
+            if os.path.exists(fn):
+                done[key_of(c)] = json.load(open(fn))
+    todo = [c for c in F.CORNERS if key_of(c) not in done]
     with mp.get_context("spawn").Pool(procs) as pool:
-        out = pool.map(corner_study, [(c, n_dies, seed) for c in F.CORNERS], chunksize=1)
-    res["corners"] = {k: v for k, v, _ in out}
-    res["example_nominal"] = next(e for k, _, e in out if k == "220nm_x_500nm")
+        for k, v, e in pool.imap_unordered(corner_study, [(c, n_dies, seed) for c in todo]):
+            done[k] = dict(result=v, example=e)
+            if parts:
+                with open(os.path.join(parts, k + ".json"), "w") as f:
+                    json.dump(done[k], f, default=float)
+    res["corners"] = {key_of(c): done[key_of(c)]["result"] for c in F.CORNERS}
+    res["example_nominal"] = done["220nm_x_500nm"]["example"]
     for k, v in res["corners"].items():
         print(k, "uncorrected", v["worst_uncorrected_max_error_levels"], "corrected", v["worst_max_error_levels"], "digits", v["worst_agree_with_ideal_pct"])
     c = Circuit()
