@@ -1,0 +1,390 @@
+<div class="wrap">
+  <div class="top">
+    <a class="brand" href="https://atharvdubey22ug-glitch.github.io/bench-to-pixel/" aria-label="Back to Bench to Pixel">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#111a1e"/><path d="M8 40 L28 24 L56 24" stroke="#ff5a47" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="28" cy="24" r="5" fill="#eba340"/></svg>
+      Bench to Pixel <span class="t">/ neuron</span>
+    </a>
+    <nav class="crumb" aria-label="Related pages">
+      <a href="https://atharvdubey22ug-glitch.github.io/bench-to-pixel/parity/">Parity</a>
+      <a href="https://atharvdubey22ug-glitch.github.io/bench-to-pixel/alu/">4-bit ALU</a>
+      <a href="https://atharvdubey22ug-glitch.github.io/bench-to-pixel/encrypt/">Encrypt</a>
+      <a href="https://github.com/atharvdubey22ug-glitch/bench-to-pixel/blob/main/CONCEPT.md">The idea</a>
+    </nav>
+  </div>
+
+  <header class="hero">
+    <h1>A neuron made of <em>light</em></h1>
+    <p class="lede">Sixteen arms, one pass. Each input pixel and its weight set one arm's phase to 0 or π. The light of all sixteen arms adds up, and two photodiodes read the sum with its sign. Store a digit as the weights and the sum says how closely the input matches it: <strong>16 minus twice the number of pixels that differ</strong>. Draw a digit below. The chip compares it with all ten stored digits, one pass of light each, and every number on this page comes from the simulated light of the drawn chip.</p>
+  </header>
+
+  <section class="panel" aria-labelledby="drawTitle">
+    <h2 id="drawTitle" hidden>Draw a digit</h2>
+    <div class="duo">
+      <div class="pad">
+        <span class="lab" id="padLab">Input: 3 × 5 pixels, click to draw</span>
+        <div class="grid35" id="grid" role="group" aria-labelledby="padLab"></div>
+        <div class="field">
+          <span class="lab" id="digLab">Start from a digit</span>
+          <div class="digits" id="presets" role="group" aria-labelledby="digLab"></div>
+        </div>
+        <div class="row">
+          <button class="btn" type="button" id="noise">Flip a random pixel</button>
+          <button class="btn" type="button" id="clear">Clear</button>
+        </div>
+        <div class="field">
+          <label class="lab" for="corner">Process corner</label>
+          <select id="corner"></select>
+        </div>
+      </div>
+      <div class="ans" aria-live="polite">
+        <div class="big" id="big"></div>
+        <div class="verdict" id="verdict"></div>
+        <div class="bars" id="bars" role="group" aria-label="The chip's output for each stored digit"></div>
+        <p class="cap" id="barsCap"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="inTitle">
+    <h2 id="inTitle">One pass, inside the chip</h2>
+    <p class="small" id="inNote"></p>
+    <div class="arms" id="arms"></div>
+    <div class="gauge" id="gauge" aria-hidden="true"></div>
+    <p class="cap" id="inCap"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="accTitle">
+    <h2 id="accTitle">How exact is the sum?</h2>
+    <p class="small">Each arm's phase is trimmed by its heater after fabrication, using only the two output readings. What is left: heaters warming their neighbours as the data changes, back-reflections between the trees, and the corner's couplers. Below, all 65,536 settings of the sixteen arms on this simulated die: the spread of the output at each value of the sum, against the gap to the next value.</p>
+    <canvas class="chart" id="lin" aria-label="Output against the ideal sum for all 65,536 arm settings"></canvas>
+    <div class="row" id="linRead"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="spTitle">
+    <h2 id="spTitle">How fast: one image per bit slot</h2>
+    <p class="small">Time-domain simulation of the drawn circuit: a stream of digit images (random digits, up to two pixels flipped) drives the sixteen arms, one whole image per bit slot. The weights hold the stored <span id="spDigit">7</span> and the neuron fires when the sum is at least <span id="spThr">12</span>. The sections sit at different points along their arms, about <b id="skewV">15 ps</b> apart, so each input is delayed by its section's position (aligned). They are treated as fast phase modulators placed where the heaters are.</p>
+    <div class="ctl">
+      <div class="field"><span class="lab" id="ioLab">Modulators and photodiodes</span>
+        <div class="seg" role="radiogroup" aria-labelledby="ioLab">
+          <input type="radio" name="io" id="io0" value="lithium_niobate_100GHz" checked><label for="io0">100 GHz</label>
+          <input type="radio" name="io" id="io1" value="silicon_50GHz"><label for="io1">50 GHz</label>
+          <input type="radio" name="io" id="io2" value="ideal"><label for="io2">Ideal</label>
+        </div></div>
+      <div class="field"><span class="lab" id="mdLab">Inputs</span>
+        <div class="seg" role="radiogroup" aria-labelledby="mdLab">
+          <input type="radio" name="md" id="md0" value="aligned" checked><label for="md0">16, aligned</label>
+          <input type="radio" name="md" id="md1" value="unaligned"><label for="md1">16, unaligned</label>
+          <input type="radio" name="md" id="md2" value="wire"><label for="md2">1 only</label>
+        </div></div>
+      <div class="field"><span class="lab" id="rtLab">Gb/s per input = G images/s</span>
+        <div class="seg" role="radiogroup" aria-labelledby="rtLab" id="rtSeg"></div></div>
+    </div>
+    <div class="speed">
+      <canvas class="chart" id="eye" aria-label="Eye diagram of the neuron's output"></canvas>
+      <div style="display:grid;gap:14px">
+        <div class="verdict" id="eyeV"></div>
+        <dl class="facts" id="eyeF"></dl>
+        <div class="race">
+          <span class="lab">First decision out, after its image arrives</span>
+          <div class="racebar"><span>light</span><span class="tr"><i id="barO" style="background:var(--laser)"></i></span><b id="latO"></b></div>
+          <div class="racebar"><span>electronics</span><span class="tr"><i id="barE" style="background:var(--beam)"></i></span><b id="latE"></b></div>
+          <p class="cap" id="raceCap"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="chipTitle">
+    <div class="chippic">
+      <img id="layout" alt="Layout of the neuron chip: three grating couplers on the left, a 1 to 16 splitter tree, sixteen straight arms with a staircase of heaters wired to pad rows at the top and bottom, a 16 to 1 combiner tree, a reference arm along the bottom and an output coupler on the right." width="1500" height="1500">
+      <div style="display:grid;gap:14px">
+        <h2 id="chipTitle">The chip</h2>
+        <p class="small">Drawn in KLayout with the SiEPIC EBeam process design kit (Applied Nanotools): 220 nm silicon waveguides, titanium-tungsten heaters, a metal routing layer. The two trees are mirror images and every arm is a straight line between them, so all sixteen paths are the same length; the reference arm is routed to match them.</p>
+        <dl class="facts" id="chipF"></dl>
+      </div>
+    </div>
+  </section>
+
+  <div class="notes">
+    <section>
+      <h3>What is real here</h3>
+      <p>The layout passes the foundry's checks. The light comes from a circuit simulation of the extracted layout with the design kit's component models, at nine process corners, with heater spread, random arm offsets and thermal crosstalk on every simulated die, calibrated from the two output readings alone. The page computes the outputs from a sum over the seventeen waveguides fitted to that simulation; the speed runs use the same circuit in the time domain. Nothing is fabricated yet.</p>
+    </section>
+    <section>
+      <h3>Where it comes from</h3>
+      <p>On the bench, polarisers marked beams with weights and a photoresistor added their intensities: that carry gate was already a weighted sum. The parity chip showed that phase, 0 or π, carries a bit through interference without loss of meaning. Put the phases side by side instead of in a row and the light adds them: a binary-weight neuron, the XNOR-and-count unit of binarised neural networks, and a matched filter for the stored pattern.</p>
+    </section>
+    <section>
+      <h3>What it does not do</h3>
+      <ul>
+        <li>Weights are only +1 or −1. Values in between need an amplitude control (one more interferometer) per arm.</li>
+        <li>One neuron: ten digits take ten passes here, or ten copies of the chip side by side.</li>
+        <li>The decision itself, and anything after it, is electronic. A deep network would need light-to-light nonlinearity or a detector between layers.</li>
+        <li>Each arm gets one sixteenth of the light; wider neurons need more laser power.</li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="src">
+    <strong style="color:var(--muted);font-weight:500">Sources</strong>
+    <ol>
+      <li>Layout, simulation and results: <a href="https://github.com/atharvdubey22ug-glitch/bench-to-pixel/blob/main/chip/README.md#optical-neuron">chip/README.md, optical neuron</a> (<code>klayout/perceptron_siepic.py</code>, <code>perceptron_sim.py</code>, <code>speed/perceptron_speed.py</code>).</li>
+      <li>The bench experiment: <cite>Using Polarisation and Interference for Optical Computing</cite>, Atharv Dubey, Sanya Davalbhakta and Proteep Mallik, Student Research Journal 2024, Azim Premji University.</li>
+      <li>Process design kit: <a href="https://github.com/SiEPIC/SiEPIC_EBeam_PDK">SiEPIC EBeam PDK</a>.</li>
+      <li>What the project shows, and what it doesn't: <a href="https://github.com/atharvdubey22ug-glitch/bench-to-pixel/blob/main/CONCEPT.md">CONCEPT.md</a>.</li>
+    </ol>
+  </div>
+</div>
+
+<script type="application/json" id="data">/*DATA*/</script>
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const D = JSON.parse($("data").textContent);
+  $("layout").src = "/*LAYOUT*/";
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const C = { ink: css("--ink"), line: css("--line"), fg: css("--fg"), muted: css("--muted"), faint: css("--faint"), laser: css("--laser"), beam: css("--beam"), petg: css("--petg") };
+  const val = n => document.querySelector(`input[name="${n}"]:checked`).value;
+  function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  const fmtT = s => s < 1e-9 ? `${(s * 1e12).toFixed(0)} ps` : `${(s * 1e9).toFixed(2)} ns`;
+  const N = 16, R = 17;
+
+  // ---------------------------------------------------------------- the chip model (perceptron_sim: Die.phases + Circuit.lin_fields)
+  const W = {};                       // stored weights per digit, by arm
+  for (let d = 0; d < 10; d++) {
+    const w = new Int8Array(N).fill(1);
+    [...D.font[d]].forEach((ch, i) => { w[D.arm_of_pixel[i]] = ch === "1" ? 1 : -1; });
+    W[d] = w;
+  }
+  let M = null;
+  function loadCorner(key) {
+    const c = D.corners[key];
+    const X = D.X, A = new Float64Array(R * R);              // A[j][k] = X[j][k] * eta[k] (rad per mW)
+    for (let j = 0; j < R; j++) for (let k = 0; k < R; k++) A[j * R + k] = X[j][k] * c.eta[k];
+    M = { key, c, A, tp: c.t_plus, tm: c.t_minus, pp: c.p_plus_mW, pm: c.p_minus_mW, phi0: c.phi0, gain: null, off: null };
+    const p = new Float64Array(R), base = new Float64Array(R);
+    // phase from the heaters that do not change with the data (all arms at +1), then the change per arm switched to -1
+    for (let k = 0; k < R; k++) p[k] = M.pp[k];
+    for (let j = 0; j < R; j++) { let s = M.phi0[j]; for (let k = 0; k < R; k++) s += A[j * R + k] * p[k]; base[j] = s; }
+    const dP = new Float64Array(N); for (let k = 0; k < N; k++) dP[k] = M.pm[k] - M.pp[k];
+    M.base = base; M.dP = dP;
+  }
+  function outD(states) {           // states: +1/-1 per arm -> D per watt of laser
+    const c = M, ph = new Float64Array(R);
+    for (let j = 0; j < R; j++) {
+      let s = c.base[j];
+      for (let k = 0; k < N; k++) if (states[k] < 0) s += c.A[j * R + k] * c.dP[k];
+      ph[j] = s;
+    }
+    let pr = 0, pi = 0, mr = 0, mi = 0;
+    for (let j = 0; j < R; j++) {
+      const cr = Math.cos(ph[j]), ci = Math.sin(ph[j]);
+      pr += cr * c.tp[j][0] - ci * c.tp[j][1]; pi += cr * c.tp[j][1] + ci * c.tp[j][0];
+      mr += cr * c.tm[j][0] - ci * c.tm[j][1]; mi += cr * c.tm[j][1] + ci * c.tm[j][0];
+    }
+    return pr * pr + pi * pi - mr * mr - mi * mi;
+  }
+  function fit() {                  // gain and offset from all 65,536 settings (the "how exact" panel uses the same pass)
+    const n = 1 << N, st = new Int8Array(N);
+    let sx = 0, sy = 0, sxx = 0, sxy = 0;
+    const lo = new Float64Array(N + 1).fill(Infinity), hi = new Float64Array(N + 1).fill(-Infinity);
+    for (let m = 0; m < n; m++) {
+      let S = 0;
+      for (let k = 0; k < N; k++) { st[k] = (m >> k) & 1 ? -1 : 1; S += st[k]; }
+      const y = outD(st);
+      sx += S; sy += y; sxx += S * S; sxy += S * y;
+      const b = (S + N) >> 1; if (y < lo[b]) lo[b] = y; if (y > hi[b]) hi[b] = y;
+    }
+    const g = (n * sxy - sx * sy) / (n * sxx - sx * sx), o = (sy - g * sx) / n;
+    M.gain = g; M.off = o; M.lo = lo; M.hi = hi;
+    let worst = 0;
+    for (let b = 0; b <= N; b++) { const S = 2 * b - N; worst = Math.max(worst, Math.abs(lo[b] - (g * S + o)), Math.abs(hi[b] - (g * S + o))); }
+    M.worstLevels = worst / (2 * g);
+  }
+  const Sof = y => (y - M.off) / M.gain;            // chip output -> estimated sum
+
+  // ---------------------------------------------------------------- input pad
+  let img = [...D.font[7]].map(Number);
+  let sel = null;                                   // stored digit shown in "inside" (null: the winner)
+  const NAMES = ["220nm_x_500nm", "210nm_x_480nm", "210nm_x_500nm", "210nm_x_520nm", "220nm_x_480nm", "220nm_x_520nm", "230nm_x_480nm", "230nm_x_500nm", "230nm_x_520nm"];
+  for (const k of NAMES) {
+    const [t, w] = k.replace(/nm/g, "").split("_x_");
+    const o = document.createElement("option");
+    o.value = k; o.textContent = `${t} nm Si, ${w} nm wide${k === "220nm_x_500nm" ? " (nominal)" : ""}`;
+    $("corner").appendChild(o);
+  }
+  for (let i = 0; i < 15; i++) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "px";
+    b.setAttribute("aria-label", `pixel row ${Math.floor(i / 3) + 1}, column ${i % 3 + 1}`);
+    b.addEventListener("click", () => { img[i] ^= 1; sel = null; update(); });
+    $("grid").appendChild(b);
+  }
+  for (let d = 0; d < 10; d++) {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = d; b.setAttribute("aria-label", `Draw the digit ${d}`);
+    b.addEventListener("click", () => { img = [...D.font[d]].map(Number); sel = null; update(); });
+    $("presets").appendChild(b);
+  }
+  let rs = 3;
+  $("noise").addEventListener("click", () => { const r = mulberry32(rs++ * 7919); img[Math.floor(r() * 15)] ^= 1; sel = null; update(); });
+  $("clear").addEventListener("click", () => { img = img.map(() => 0); sel = null; update(); });
+  $("corner").addEventListener("change", () => { loadCorner($("corner").value); fit(); update(); lin(); });
+
+  function armInputs() {
+    const x = new Int8Array(N).fill(1);
+    img.forEach((v, i) => { x[D.arm_of_pixel[i]] = v ? 1 : -1; });
+    return x;
+  }
+  const dial = (neg) => {
+    const x = neg ? 6 : 26, col = neg ? C.laser : C.beam;
+    return `<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="none" stroke="${C.line}" stroke-width="1.5"/><line x1="16" y1="16" x2="${x}" y2="16" stroke="${col}" stroke-width="3" stroke-linecap="round"/><circle cx="${x}" cy="16" r="3" fill="${col}"/></svg>`;
+  };
+
+  function update() {
+    $("grid").querySelectorAll(".px").forEach((b, i) => b.setAttribute("aria-pressed", img[i] ? "true" : "false"));
+    const x = armInputs();
+    const scores = [], ideal = [];
+    for (let d = 0; d < 10; d++) {
+      const st = new Int8Array(N); let s = 0;
+      for (let k = 0; k < N; k++) { st[k] = x[k] * W[d][k]; s += st[k]; }
+      scores.push(outD(st)); ideal.push(s);
+    }
+    const win = scores.indexOf(Math.max(...scores));
+    const best = Math.max(...ideal), nearest = ideal.map((v, d) => v === best ? d : -1).filter(d => d >= 0);
+    const diffs = d => (N - ideal[d]) / 2;
+    $("big").innerHTML = `<span class="op">chip reads</span> <span class="res">${win}</span>`;
+    const margin = (scores[win] - Math.max(...scores.filter((_, d) => d !== win))) / (2 * M.gain);
+    let v;
+    if (nearest.length === 1 && nearest[0] === win) v = `<span class="pill ok">Nearest stored digit</span><span class="small">${diffs(win) ? `${diffs(win)} pixel${diffs(win) > 1 ? "s" : ""} differ from the stored ${win}` : `exactly the stored ${win}`}; ${margin.toFixed(1)} level${Math.abs(margin - 1) < 0.05 ? "" : "s"} ahead of the next</span>`;
+    else if (nearest.includes(win)) v = `<span class="pill warn">A tie</span><span class="small">equally close to ${nearest.join(" and ")} (${diffs(win)} pixel${diffs(win) > 1 ? "s" : ""} each): the light picks one by a hair</span>`;
+    else v = `<span class="pill bad">Wrong</span><span class="small">nearest is ${nearest.join(", ")}</span>`;
+    $("verdict").innerHTML = v;
+    const mx = Math.max(...scores.map(Math.abs)) * 1.05;
+    $("bars").innerHTML = scores.map((y, d) => {
+      const w = Math.abs(y) / mx * 50, left = y >= 0 ? 50 : 50 - w;
+      return `<button type="button" class="bar ${d === win ? "win" : ""} ${sel === d ? "sel" : ""}" data-d="${d}" aria-label="Stored ${d}: output ${(y * 1e3).toFixed(1)} microwatts, ideal sum ${ideal[d]}"><b>${d}</b><span class="tr"><i style="left:${left.toFixed(2)}%;width:${w.toFixed(2)}%"></i></span><span class="k">${(y * 1e3).toFixed(1)} µW · ${ideal[d] > 0 ? "+" : ""}${ideal[d]}</span></button>`;
+    }).join("");
+    $("bars").querySelectorAll(".bar").forEach(b => b.addEventListener("click", () => { sel = +b.dataset.d; update(); }));
+    $("barsCap").textContent = `Each bar is one pass of light with that digit stored as the weights: the balanced output for 1 mW of laser into the chip, then the ideal sum (16 − 2 × pixels that differ, the 16th arm a fixed +1). Tap a bar to look inside that pass.`;
+    inside(sel === null ? win : sel, x, scores, ideal);
+  }
+
+  function inside(d, x, scores, ideal) {
+    let html = "";
+    for (let k = N - 1; k >= 0; k--) {
+      const p = D.arm_of_pixel.indexOf(k), s = x[k] * W[d][k];
+      const name = k === D.bias_arm ? "bias" : `px${p + 1}`;
+      html += `<div class="arm ${s < 0 ? "neg" : ""}" title="arm ${k}: input ${x[k] > 0 ? "+1" : "−1"}, weight ${W[d][k] > 0 ? "+1" : "−1"}, phase ${s < 0 ? "π" : "0"}"><span class="nm">${name}</span><span class="v x">${x[k] > 0 ? "+" : "−"}</span><span class="v w">${W[d][k] > 0 ? "+" : "−"}</span>${dial(s < 0)}</div>`;
+    }
+    $("arms").innerHTML = html;
+    $("inNote").innerHTML = `The pass with the stored <strong>${d}</strong> as weights. Each arm, top to bottom of the chip: the input (cyan, +1 for a lit pixel), the weight (amber) and the arm's light, 0 when they agree and π when they differ. The combiner adds the sixteen fields; the photodiodes read the total against the reference.`;
+    const est = Sof(scores[d]);
+    let g = `<div class="ax"></div>`;
+    for (let S = -N; S <= N; S += 2) { const l = (S + N) / (2 * N) * 100; g += `<span class="tk" style="left:${l}%"></span>${S % 4 === 0 ? `<span class="tl" style="left:${l}%">${S}</span>` : ""}`; }
+    g += `<span class="mk" style="left:${((est + N) / (2 * N) * 100).toFixed(2)}%"></span><span class="id" style="left:${((ideal[d] + N) / (2 * N) * 100).toFixed(2)}%">${ideal[d]}</span>`;
+    $("gauge").innerHTML = g;
+    const agree = (N + ideal[d]) / 2;
+    $("inCap").textContent = `${agree} arms agree and ${N - agree} differ: ideal sum ${ideal[d]}. The red mark is what the chip's light says, ${est.toFixed(2)} on the same scale.`;
+  }
+
+  // ---------------------------------------------------------------- canvas helpers
+  function setup(cv) {
+    const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+    g.font = `11px ${css("--f-mono")}`;
+    return { g, w, h };
+  }
+
+  // ---------------------------------------------------------------- how exact
+  function lin() {
+    const { g, w, h } = setup($("lin"));
+    const L = 52, Rr = 12, T = 14, B = 30, x0 = L, x1 = w - Rr, y0 = h - B, y1 = T;
+    const ymax = Math.max(Math.abs(M.lo[0]), Math.abs(M.hi[N])) * 1.08 * 1e3;
+    const X = S => x0 + (S + N) / (2 * N) * (x1 - x0), Y = uw => y0 - (uw + ymax) / (2 * ymax) * (y0 - y1);
+    g.strokeStyle = C.line; g.fillStyle = C.faint; g.lineWidth = 1;
+    const step = ymax > 30 ? 20 : ymax > 12 ? 10 : 5;
+    for (let t = -Math.floor(ymax / step) * step; t <= ymax; t += step) { g.beginPath(); g.moveTo(x0, Y(t)); g.lineTo(x1, Y(t)); g.stroke(); g.textAlign = "right"; g.fillText(`${t}`, x0 - 6, Y(t) + 4); }
+    g.textAlign = "center";
+    for (let S = -N; S <= N; S += 4) g.fillText(`${S}`, X(S), y0 + 16);
+    g.fillText("ideal sum", (x0 + x1) / 2, h - 2);
+    g.save(); g.translate(12, (y0 + y1) / 2); g.rotate(-Math.PI / 2); g.fillText("µW at 1 mW", 0, 0); g.restore();
+    g.strokeStyle = C.faint; g.setLineDash([4, 4]); g.beginPath(); g.moveTo(X(-N), Y((M.gain * -N + M.off) * 1e3)); g.lineTo(X(N), Y((M.gain * N + M.off) * 1e3)); g.stroke(); g.setLineDash([]);
+    const half = M.gain * 1e3;                         // half a level, in uW
+    for (let b = 0; b <= N; b++) {
+      const S = 2 * b - N, cx = X(S), lo = M.lo[b] * 1e3, hi = M.hi[b] * 1e3, mid = (M.gain * S + M.off) * 1e3;
+      g.fillStyle = "rgba(235,163,64,.12)"; g.fillRect(cx - 7, Y(mid + half), 14, Y(mid - half) - Y(mid + half));
+      g.fillStyle = C.laser; g.fillRect(cx - 4, Y(hi), 8, Math.max(2, Y(lo) - Y(hi)));
+    }
+    const wl = M.worstLevels, c = M.c;
+    $("linRead").innerHTML = `<span class="pill ${wl < 0.5 ? "ok" : "bad"}">${wl < 0.5 ? "All 17 levels apart" : "Levels merge"}</span><span class="small">red: the spread of the output over every setting with that sum; amber: half a level either side. Worst error on this die <strong>${wl.toFixed(2)} level</strong>; over ${c.dies} dies at this corner ${c.worst_max_error_levels.toFixed(2)} (full circuit model; this page's fitted model is within ${c.linear_model_error_levels.toFixed(2)} of it). Without crosstalk the same die is within ${D.results.example.without_crosstalk.toFixed(2)}.</span>`;
+  }
+
+  // ---------------------------------------------------------------- speed
+  const Sp = D.speed;
+  $("skewV").textContent = `${Math.max(...Object.values(Sp.skew_ps)).toFixed(1)} ps`;
+  $("spDigit").textContent = Sp.digit; $("spThr").textContent = Sp.threshold;
+  const decoded = {};
+  function traces(key) {
+    if (!decoded[key]) { const s = atob(Sp.eyes[key].b64), a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); decoded[key] = a; }
+    return decoded[key];
+  }
+  let rate = 100;
+  function rates() {
+    const io = val("io"), md = val("md");
+    const rr = Object.keys(Sp.eyes).filter(k => k.startsWith(`${io}|${md}|`)).map(k => +k.split("|")[2]).sort((a, b) => a - b);
+    if (!rr.includes(rate)) rate = rr.reduce((b, r) => Math.abs(r - rate) < Math.abs(b - rate) ? r : b, rr[0]);
+    $("rtSeg").innerHTML = rr.map(r => `<input type="radio" name="rt" id="rt${r}" value="${r}" ${r === rate ? "checked" : ""}><label for="rt${r}">${r}</label>`).join("");
+    document.querySelectorAll("input[name=rt]").forEach(i => i.addEventListener("change", () => { rate = +i.value; speed(); }));
+  }
+  function speed() {
+    const io = val("io"), md = val("md"), key = `${io}|${md}|${rate}`, e = Sp.eyes[key], a = traces(key), P = Sp.points;
+    const { g, w, h } = setup($("eye"));
+    const L = 50, Rr = 10, T = 12, B = 30, x0 = L, x1 = w - Rr, y0 = h - B, y1 = T, F = Sp.full_uA;
+    const X = t => x0 + (t + 1) / 2 * (x1 - x0), Y = ua => y0 - (ua + F) / (2 * F) * (y0 - y1);
+    g.strokeStyle = C.line; g.fillStyle = C.faint; g.lineWidth = 1;
+    const st = F > 2500 ? 1000 : 500;
+    for (let t = -Math.floor(F / st) * st; t <= F; t += st) { g.beginPath(); g.moveTo(x0, Y(t)); g.lineTo(x1, Y(t)); g.stroke(); g.textAlign = "right"; g.fillText(`${(t / 1000).toFixed(1)}`, x0 - 6, Y(t) + 4); }
+    g.textAlign = "center";
+    for (const t of [-1, -0.5, 0, 0.5, 1]) g.fillText(`${t}`, X(t), y0 + 16);
+    g.fillText(`time, bit periods (one image = ${(1000 / rate).toFixed(rate > 100 ? 1 : 0)} ps)`, (x0 + x1) / 2, h - 2);
+    g.save(); g.translate(12, (y0 + y1) / 2); g.rotate(-Math.PI / 2); g.fillText("mA", 0, 0); g.restore();
+    const ok = e.opening > 0 && e.width >= 0.3;
+    g.strokeStyle = ok ? C.beam : "#ff8a7c"; g.globalAlpha = 0.33; g.lineWidth = 1.1;
+    for (let k = 0; k < e.n; k++) {
+      g.beginPath();
+      for (let i = 0; i < P; i++) { const px = X(-1 + 2 * i / (P - 1)), py = Y((a[k * P + i] / 255 * 2 - 1) * F); i ? g.lineTo(px, py) : g.moveTo(px, py); }
+      g.stroke();
+    }
+    g.globalAlpha = 1;
+    const ioName = { ideal: "ideal", silicon_50GHz: "50 GHz", lithium_niobate_100GHz: "100 GHz" }[io];
+    $("eyeV").innerHTML = (ok ? `<span class="pill ok">All levels apart</span>` : `<span class="pill bad">Levels merge</span>`) + `<span class="small">${md === "wire" ? "one input toggling" : "a digit image per slot"} at ${rate} Gb/s, ${ioName} modulators</span>`;
+    const best = Sp.summary[io][md];
+    $("eyeF").innerHTML = `<dt>Levels</dt><dd>${e.levels.length} present; closest pair ${e.opening > 0 ? (100 * e.opening).toFixed(0) + "% of a level apart" : "overlapping"}</dd>
+      <dt>Window</dt><dd>${(100 * e.width).toFixed(0)}% <small>of the slot with every level apart</small></dd>
+      <dt>Fires on 7</dt><dd>${e.Q === null ? "– <small>(one input: the sum never drops below the threshold)</small>" : e.decision_ok && e.Q >= 7 ? `Q ${e.Q.toFixed(0)} <small>error rate below 1e-12</small>` : e.decision_ok ? `Q ${e.Q.toFixed(1)} <small>right, but noisy</small>` : "<small>wrong decisions</small>"}</dd>
+      <dt>Fastest</dt><dd>${best.all_levels ? best.all_levels + " Gb/s" : "below 25 Gb/s"} <small>with every level apart</small></dd>`;
+    const lo = Sp.latency_ps * 1e-12, Wd = Math.ceil(rate * 1e9 / 1.5e9), f = rate * 1e9 / Wd, le = 3 / f, m = Math.max(lo, le);
+    $("barO").style.width = `${Math.max(1.5, 100 * lo / m).toFixed(1)}%`; $("barE").style.width = `${(100 * le / m).toFixed(1)}%`;
+    $("latO").textContent = fmtT(lo); $("latE").textContent = `≥ ${fmtT(le)}`;
+    $("raceCap").textContent = `Light: the first section to the output fibre, ${Sp.coupler_to_fibre_ps.toFixed(0)} ps of it the waveguide to the edge coupler; a comparator adds tens of ps. Electronics: sixteen ${rate} Gb/s streams deserialised into ${Wd}-bit words at a 1.5 GHz clock, counted and compared, serialised again: at least three word times.`;
+  }
+  document.querySelectorAll("input[name=io],input[name=md]").forEach(i => i.addEventListener("change", () => { rates(); speed(); }));
+
+  // ---------------------------------------------------------------- chip facts
+  const ch = D.chip;
+  $("chipF").innerHTML = `<dt>Die</dt><dd>${(ch.die_um[0] / 1000).toFixed(2)} × ${(ch.die_um[1] / 1000).toFixed(2)} mm</dd>
+    <dt>Parts</dt><dd>${ch.components}: 3 grating couplers, 31 Y-branches, a coupler, 17 heaters, 67 waveguides; 20 probe pads</dd>
+    <dt>Paths</dt><dd>16 arms of ${ch.arm_um.toFixed(3)} µm; signal ${ch.signal_um.toFixed(1)} µm, reference ${ch.ref_um.toFixed(1)} µm</dd>
+    <dt>Checks</dt><dd>SiEPIC functional verification ${ch.errors} errors; process DRC 0 violations</dd>
+    <dt>Status</dt><dd>Designed and simulated, not fabricated</dd>`;
+
+  loadCorner("220nm_x_500nm"); fit();
+  update(); lin(); rates(); speed();
+  let rz = 0;
+  window.addEventListener("resize", () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(() => { lin(); speed(); }); });
+  window.__check = () => D.check.states.map((s, i) => [outD(Int8Array.from(s)), D.check.D[i]]);
+})();
+</script>

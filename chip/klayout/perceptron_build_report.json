@@ -1,0 +1,203 @@
+{
+ "top_cell": "EBeam_heaters_atharvdubey_Perceptron16",
+ "die_um": [
+  2099.0,
+  2130.0
+ ],
+ "siepic_verification_errors": 0,
+ "components": 119,
+ "waveguide_crossings": [],
+ "dangling_optical_pins": [],
+ "lengths_um": {
+  "laser_in": 52.6,
+  "sig_in": 92.097,
+  "split0": 858.694,
+  "split1": 917.388,
+  "split2": 1034.776,
+  "combine0": 858.694,
+  "combine1": 917.388,
+  "combine2": 1034.776,
+  "arm8": 1453.494,
+  "arm9": 1453.494,
+  "arm10": 1453.494,
+  "arm11": 1453.494,
+  "arm12": 1453.494,
+  "arm13": 1453.494,
+  "arm14": 1453.494,
+  "arm15": 1453.494,
+  "arm7": 1453.494,
+  "arm6": 1453.494,
+  "arm5": 1453.494,
+  "arm4": 1453.494,
+  "arm3": 1453.494,
+  "arm2": 1453.494,
+  "arm1": 1453.494,
+  "arm0": 1453.494,
+  "ref": 3366.97,
+  "sig_out": 126.897,
+  "out_plus": 3641.093,
+  "out_minus": 3500.269
+ },
+ "arm_lengths_um": [
+  1453.494,
+  1453.494,
+  1453.494,
+  1453.494,
+  1453.494,
+  1453.494,
+  1453.494,
+  1453.494,
+  1453.494,
+  1453.494,
+  1453.494,
+  1453.494,
+  1453.494,
+  1453.494,
+  1453.494,
+  1453.494
+ ],
+ "reference_depth_um": -798.938,
+ "signal_path_um": 3366.97,
+ "reference_path_um": 3366.97,
+ "path_mismatch_um": 0.0,
+ "heater_pads": [
+  {
+   "name": "A08",
+   "arm": 8,
+   "between": [
+    "Neuron_T0",
+    "Neuron_T1"
+   ]
+  },
+  {
+   "name": "A09",
+   "arm": 9,
+   "between": [
+    "Neuron_T1",
+    "Neuron_T2"
+   ]
+  },
+  {
+   "name": "A10",
+   "arm": 10,
+   "between": [
+    "Neuron_T2",
+    "Neuron_T3"
+   ]
+  },
+  {
+   "name": "A11",
+   "arm": 11,
+   "between": [
+    "Neuron_T3",
+    "Neuron_T4"
+   ]
+  },
+  {
+   "name": "A12",
+   "arm": 12,
+   "between": [
+    "Neuron_T4",
+    "Neuron_T5"
+   ]
+  },
+  {
+   "name": "A13",
+   "arm": 13,
+   "between": [
+    "Neuron_T5",
+    "Neuron_T6"
+   ]
+  },
+  {
+   "name": "A14",
+   "arm": 14,
+   "between": [
+    "Neuron_T6",
+    "Neuron_T7"
+   ]
+  },
+  {
+   "name": "A15",
+   "arm": 15,
+   "between": [
+    "Neuron_T7",
+    "Neuron_T8"
+   ]
+  },
+  {
+   "name": "A07",
+   "arm": 7,
+   "between": [
+    "Neuron_B0",
+    "Neuron_B1"
+   ]
+  },
+  {
+   "name": "A06",
+   "arm": 6,
+   "between": [
+    "Neuron_B1",
+    "Neuron_B2"
+   ]
+  },
+  {
+   "name": "A05",
+   "arm": 5,
+   "between": [
+    "Neuron_B2",
+    "Neuron_B3"
+   ]
+  },
+  {
+   "name": "A04",
+   "arm": 4,
+   "between": [
+    "Neuron_B3",
+    "Neuron_B4"
+   ]
+  },
+  {
+   "name": "A03",
+   "arm": 3,
+   "between": [
+    "Neuron_B4",
+    "Neuron_B5"
+   ]
+  },
+  {
+   "name": "A02",
+   "arm": 2,
+   "between": [
+    "Neuron_B5",
+    "Neuron_B6"
+   ]
+  },
+  {
+   "name": "A01",
+   "arm": 1,
+   "between": [
+    "Neuron_B6",
+    "Neuron_B7"
+   ]
+  },
+  {
+   "name": "A00",
+   "arm": 0,
+   "between": [
+    "Neuron_B7",
+    "Neuron_B8"
+   ]
+  },
+  {
+   "name": "REF",
+   "arm": "reference",
+   "between": [
+    "Neuron_R0",
+    "Neuron_R1"
+   ]
+  }
+ ],
+ "pitch_um": 100.0,
+ "staircase_step_um": 150.0
+}

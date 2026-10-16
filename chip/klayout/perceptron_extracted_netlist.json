@@ -1,0 +1,1685 @@
+{
+ "components": [
+  {
+   "idx": 0,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 1,
+    "opt2": 0
+   },
+   "center": [
+    200.0,
+    1077.75
+   ],
+   "length_um": 92.097
+  },
+  {
+   "idx": 1,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 2,
+    "opt2": 3
+   },
+   "center": [
+    245.0,
+    911.375
+   ],
+   "length_um": 429.347
+  },
+  {
+   "idx": 2,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 4,
+    "opt2": 5
+   },
+   "center": [
+    1875.0,
+    911.375
+   ],
+   "length_um": 429.347
+  },
+  {
+   "idx": 3,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 7,
+    "opt2": 6
+   },
+   "center": [
+    1201.3,
+    1186.375
+   ],
+   "length_um": 1126.747
+  },
+  {
+   "idx": 4,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 9,
+    "opt2": 8
+   },
+   "center": [
+    1276.3,
+    1239.125
+   ],
+   "length_um": 976.7470000000001
+  },
+  {
+   "idx": 5,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 11,
+    "opt2": 10
+   },
+   "center": [
+    1351.3,
+    1386.375
+   ],
+   "length_um": 826.747
+  },
+  {
+   "idx": 6,
+   "kind": "wg_heater",
+   "bit": 0,
+   "pins": {
+    "opt1": 13,
+    "opt2": 12
+   },
+   "center": [
+    1050.0,
+    1462.75
+   ],
+   "length_um": 120.0,
+   "role": "A11"
+  },
+  {
+   "idx": 7,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 15,
+    "opt2": 14
+   },
+   "center": [
+    758.7,
+    1586.375
+   ],
+   "length_um": 806.7470000000001
+  },
+  {
+   "idx": 8,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 17,
+    "opt2": 16
+   },
+   "center": [
+    833.7,
+    1639.125
+   ],
+   "length_um": 956.747
+  },
+  {
+   "idx": 9,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 19,
+    "opt2": 18
+   },
+   "center": [
+    908.7,
+    1786.375
+   ],
+   "length_um": 1106.7469999999998
+  },
+  {
+   "idx": 10,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 21,
+    "opt2": 20
+   },
+   "center": [
+    983.7,
+    1839.125
+   ],
+   "length_um": 1256.7469999999998
+  },
+  {
+   "idx": 11,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 22,
+    "opt2": 23
+   },
+   "center": [
+    1201.3,
+    1039.125
+   ],
+   "length_um": 1126.747
+  },
+  {
+   "idx": 12,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 24,
+    "opt2": 25
+   },
+   "center": [
+    1276.3,
+    986.375
+   ],
+   "length_um": 976.7470000000001
+  },
+  {
+   "idx": 13,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 26,
+    "opt2": 27
+   },
+   "center": [
+    1351.3,
+    839.125
+   ],
+   "length_um": 826.747
+  },
+  {
+   "idx": 14,
+   "kind": "wg_heater",
+   "bit": 0,
+   "pins": {
+    "opt1": 28,
+    "opt2": 29
+   },
+   "center": [
+    1050.0,
+    762.75
+   ],
+   "length_um": 120.0,
+   "role": "A04"
+  },
+  {
+   "idx": 15,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 30,
+    "opt2": 31
+   },
+   "center": [
+    758.7,
+    639.125
+   ],
+   "length_um": 806.7470000000001
+  },
+  {
+   "idx": 16,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 32,
+    "opt2": 33
+   },
+   "center": [
+    833.7,
+    586.375
+   ],
+   "length_um": 956.747
+  },
+  {
+   "idx": 17,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 34,
+    "opt2": 35
+   },
+   "center": [
+    908.7,
+    439.125
+   ],
+   "length_um": 1106.7469999999998
+  },
+  {
+   "idx": 18,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 36,
+    "opt2": 37
+   },
+   "center": [
+    983.7,
+    386.375
+   ],
+   "length_um": 1256.7469999999998
+  },
+  {
+   "idx": 19,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 38,
+    "opt2": 39
+   },
+   "center": [
+    1163.7,
+    639.556
+   ],
+   "length_um": 2401.285
+  },
+  {
+   "idx": 20,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 40,
+    "opt2": 41
+   },
+   "center": [
+    1937.4,
+    1077.75
+   ],
+   "length_um": 126.897
+  },
+  {
+   "idx": 21,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 43,
+    "opt2": 42
+   },
+   "center": [
+    1089.3,
+    1496.25
+   ],
+   "length_um": 3641.0930000000003
+  },
+  {
+   "idx": 22,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 45,
+    "opt2": 44
+   },
+   "center": [
+    1089.3,
+    619.556
+   ],
+   "length_um": 3500.269
+  },
+  {
+   "idx": 23,
+   "kind": "wg_heater",
+   "bit": 0,
+   "pins": {
+    "opt1": 14,
+    "opt2": 46
+   },
+   "center": [
+    1200.0,
+    1562.75
+   ],
+   "length_um": 120.0,
+   "role": "A12"
+  },
+  {
+   "idx": 24,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 46,
+    "opt2": 47
+   },
+   "center": [
+    1501.3,
+    1586.375
+   ],
+   "length_um": 526.7470000000001
+  },
+  {
+   "idx": 25,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 50,
+    "opt2": 48,
+    "opt3": 49
+   },
+   "center": [
+    1800.0,
+    1712.75
+   ]
+  },
+  {
+   "idx": 26,
+   "kind": "wg_heater",
+   "bit": 0,
+   "pins": {
+    "opt1": 16,
+    "opt2": 51
+   },
+   "center": [
+    1350.0,
+    1662.75
+   ],
+   "length_um": 120.0,
+   "role": "A13"
+  },
+  {
+   "idx": 27,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 51,
+    "opt2": 52
+   },
+   "center": [
+    1576.3,
+    1639.125
+   ],
+   "length_um": 376.74699999999996
+  },
+  {
+   "idx": 28,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 48,
+    "opt2": 53
+   },
+   "center": [
+    1775.0,
+    1764.125
+   ],
+   "length_um": 129.347
+  },
+  {
+   "idx": 29,
+   "kind": "wg_heater",
+   "bit": 0,
+   "pins": {
+    "opt1": 18,
+    "opt2": 54
+   },
+   "center": [
+    1500.0,
+    1762.75
+   ],
+   "length_um": 120.0,
+   "role": "A14"
+  },
+  {
+   "idx": 30,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 54,
+    "opt2": 55
+   },
+   "center": [
+    1651.3,
+    1786.375
+   ],
+   "length_um": 226.74699999999999
+  },
+  {
+   "idx": 31,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 49,
+    "opt2": 56
+   },
+   "center": [
+    1775.0,
+    1661.375
+   ],
+   "length_um": 129.347
+  },
+  {
+   "idx": 32,
+   "kind": "wg_heater",
+   "bit": 0,
+   "pins": {
+    "opt1": 20,
+    "opt2": 57
+   },
+   "center": [
+    1650.0,
+    1862.75
+   ],
+   "length_um": 120.0,
+   "role": "A15"
+  },
+  {
+   "idx": 33,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 57,
+    "opt2": 58
+   },
+   "center": [
+    1726.3,
+    1839.125
+   ],
+   "length_um": 76.747
+  },
+  {
+   "idx": 34,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 61,
+    "opt2": 59,
+    "opt3": 60
+   },
+   "center": [
+    1800.0,
+    1312.75
+   ]
+  },
+  {
+   "idx": 35,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 59,
+    "opt2": 62
+   },
+   "center": [
+    1775.0,
+    1364.125
+   ],
+   "length_um": 129.347
+  },
+  {
+   "idx": 36,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 60,
+    "opt2": 63
+   },
+   "center": [
+    1775.0,
+    1261.375
+   ],
+   "length_um": 129.347
+  },
+  {
+   "idx": 37,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 53,
+    "opt2": 58,
+    "opt3": 55
+   },
+   "center": [
+    1750.0,
+    1812.75
+   ]
+  },
+  {
+   "idx": 38,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 56,
+    "opt2": 52,
+    "opt3": 47
+   },
+   "center": [
+    1750.0,
+    1612.75
+   ]
+  },
+  {
+   "idx": 39,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 62,
+    "opt2": 64,
+    "opt3": 10
+   },
+   "center": [
+    1750.0,
+    1412.75
+   ]
+  },
+  {
+   "idx": 40,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 63,
+    "opt2": 8,
+    "opt3": 6
+   },
+   "center": [
+    1750.0,
+    1212.75
+   ]
+  },
+  {
+   "idx": 41,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 65,
+    "opt2": 66
+   },
+   "center": [
+    1875.0,
+    1314.125
+   ],
+   "length_um": 429.347
+  },
+  {
+   "idx": 42,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 40,
+    "opt2": 65,
+    "opt3": 4
+   },
+   "center": [
+    1900.0,
+    1112.75
+   ]
+  },
+  {
+   "idx": 43,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 66,
+    "opt2": 67,
+    "opt3": 68
+   },
+   "center": [
+    1850.0,
+    1512.75
+   ]
+  },
+  {
+   "idx": 44,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 67,
+    "opt2": 50
+   },
+   "center": [
+    1825.0,
+    1614.125
+   ],
+   "length_um": 229.347
+  },
+  {
+   "idx": 45,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 12,
+    "opt2": 64
+   },
+   "center": [
+    1426.3,
+    1439.125
+   ],
+   "length_um": 676.747
+  },
+  {
+   "idx": 46,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 68,
+    "opt2": 61
+   },
+   "center": [
+    1825.0,
+    1411.375
+   ],
+   "length_um": 229.347
+  },
+  {
+   "idx": 47,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 69,
+    "opt2": 21,
+    "opt3": 19
+   },
+   "center": [
+    370.0,
+    1812.75
+   ]
+  },
+  {
+   "idx": 48,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 70,
+    "opt2": 17,
+    "opt3": 15
+   },
+   "center": [
+    370.0,
+    1612.75
+   ]
+  },
+  {
+   "idx": 49,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 73,
+    "opt2": 72,
+    "opt3": 71
+   },
+   "center": [
+    370.0,
+    1412.75
+   ]
+  },
+  {
+   "idx": 50,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 76,
+    "opt2": 75,
+    "opt3": 74
+   },
+   "center": [
+    370.0,
+    1212.75
+   ]
+  },
+  {
+   "idx": 51,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 74,
+    "opt2": 77
+   },
+   "center": [
+    458.7,
+    1186.375
+   ],
+   "length_um": 206.74699999999999
+  },
+  {
+   "idx": 52,
+   "kind": "wg_heater",
+   "bit": 0,
+   "pins": {
+    "opt1": 77,
+    "opt2": 7
+   },
+   "center": [
+    600.0,
+    1162.75
+   ],
+   "length_um": 120.0,
+   "role": "A08"
+  },
+  {
+   "idx": 53,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 0,
+    "opt2": 78,
+    "opt3": 2
+   },
+   "center": [
+    220.0,
+    1112.75
+   ]
+  },
+  {
+   "idx": 54,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 75,
+    "opt2": 79
+   },
+   "center": [
+    533.7,
+    1239.125
+   ],
+   "length_um": 356.74699999999996
+  },
+  {
+   "idx": 55,
+   "kind": "wg_heater",
+   "bit": 0,
+   "pins": {
+    "opt1": 79,
+    "opt2": 9
+   },
+   "center": [
+    750.0,
+    1262.75
+   ],
+   "length_um": 120.0,
+   "role": "A09"
+  },
+  {
+   "idx": 56,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 78,
+    "opt2": 80
+   },
+   "center": [
+    245.0,
+    1314.125
+   ],
+   "length_um": 429.347
+  },
+  {
+   "idx": 57,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 71,
+    "opt2": 81
+   },
+   "center": [
+    608.7,
+    1386.375
+   ],
+   "length_um": 506.747
+  },
+  {
+   "idx": 58,
+   "kind": "wg_heater",
+   "bit": 0,
+   "pins": {
+    "opt1": 81,
+    "opt2": 11
+   },
+   "center": [
+    900.0,
+    1362.75
+   ],
+   "length_um": 120.0,
+   "role": "A10"
+  },
+  {
+   "idx": 59,
+   "kind": "GC_TE_1550_8degOxide_BB",
+   "bit": 0,
+   "pins": {
+    "opt1": 42
+   },
+   "center": [
+    100.015,
+    1167.084
+   ],
+   "role": "plus"
+  },
+  {
+   "idx": 60,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 72,
+    "opt2": 13
+   },
+   "center": [
+    683.7,
+    1439.125
+   ],
+   "length_um": 656.747
+  },
+  {
+   "idx": 61,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 80,
+    "opt2": 82,
+    "opt3": 83
+   },
+   "center": [
+    270.0,
+    1512.75
+   ]
+  },
+  {
+   "idx": 62,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 82,
+    "opt2": 84
+   },
+   "center": [
+    295.0,
+    1614.125
+   ],
+   "length_um": 229.347
+  },
+  {
+   "idx": 63,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 83,
+    "opt2": 85
+   },
+   "center": [
+    295.0,
+    1411.375
+   ],
+   "length_um": 229.347
+  },
+  {
+   "idx": 64,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 84,
+    "opt2": 86,
+    "opt3": 87
+   },
+   "center": [
+    320.0,
+    1712.75
+   ]
+  },
+  {
+   "idx": 65,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 86,
+    "opt2": 69
+   },
+   "center": [
+    345.0,
+    1764.125
+   ],
+   "length_um": 129.347
+  },
+  {
+   "idx": 66,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 87,
+    "opt2": 70
+   },
+   "center": [
+    345.0,
+    1661.375
+   ],
+   "length_um": 129.347
+  },
+  {
+   "idx": 67,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 85,
+    "opt2": 88,
+    "opt3": 89
+   },
+   "center": [
+    320.0,
+    1312.75
+   ]
+  },
+  {
+   "idx": 68,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 88,
+    "opt2": 73
+   },
+   "center": [
+    345.0,
+    1364.125
+   ],
+   "length_um": 129.347
+  },
+  {
+   "idx": 69,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 89,
+    "opt2": 76
+   },
+   "center": [
+    345.0,
+    1261.375
+   ],
+   "length_um": 129.347
+  },
+  {
+   "idx": 70,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 91,
+    "opt2": 90
+   },
+   "center": [
+    345.0,
+    564.125
+   ],
+   "length_um": 129.347
+  },
+  {
+   "idx": 71,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 93,
+    "opt2": 92
+   },
+   "center": [
+    608.7,
+    839.125
+   ],
+   "length_um": 506.747
+  },
+  {
+   "idx": 72,
+   "kind": "wg_heater",
+   "bit": 0,
+   "pins": {
+    "opt1": 92,
+    "opt2": 26
+   },
+   "center": [
+    900.0,
+    862.75
+   ],
+   "length_um": 120.0,
+   "role": "A05"
+  },
+  {
+   "idx": 73,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 95,
+    "opt2": 94
+   },
+   "center": [
+    345.0,
+    461.375
+   ],
+   "length_um": 129.347
+  },
+  {
+   "idx": 74,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 96,
+    "opt2": 28
+   },
+   "center": [
+    683.7,
+    786.375
+   ],
+   "length_um": 656.747
+  },
+  {
+   "idx": 75,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 97,
+    "opt2": 98
+   },
+   "center": [
+    295.0,
+    611.375
+   ],
+   "length_um": 229.347
+  },
+  {
+   "idx": 76,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 99,
+    "opt2": 1,
+    "opt3": 100
+   },
+   "center": [
+    180.0,
+    1040.0
+   ]
+  },
+  {
+   "idx": 77,
+   "kind": "GC_TE_1550_8degOxide_BB",
+   "bit": 0,
+   "pins": {
+    "opt1": 101
+   },
+   "center": [
+    100.015,
+    1040.084
+   ],
+   "role": "laser1"
+  },
+  {
+   "idx": 78,
+   "kind": "GC_TE_1550_8degOxide_BB",
+   "bit": 0,
+   "pins": {
+    "opt1": 44
+   },
+   "center": [
+    100.015,
+    913.084
+   ],
+   "role": "minus"
+  },
+  {
+   "idx": 79,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 102,
+    "opt2": 103,
+    "opt3": 104
+   },
+   "center": [
+    370.0,
+    1012.75
+   ]
+  },
+  {
+   "idx": 80,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 105,
+    "opt2": 93,
+    "opt3": 96
+   },
+   "center": [
+    370.0,
+    812.75
+   ]
+  },
+  {
+   "idx": 81,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 90,
+    "opt2": 30,
+    "opt3": 32
+   },
+   "center": [
+    370.0,
+    612.75
+   ]
+  },
+  {
+   "idx": 82,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 94,
+    "opt2": 34,
+    "opt3": 36
+   },
+   "center": [
+    370.0,
+    412.75
+   ]
+  },
+  {
+   "idx": 83,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 101,
+    "opt2": 99
+   },
+   "center": [
+    146.3,
+    1040.0
+   ],
+   "length_um": 52.599999999999994
+  },
+  {
+   "idx": 84,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 3,
+    "opt2": 106,
+    "opt3": 97
+   },
+   "center": [
+    270.0,
+    712.75
+   ]
+  },
+  {
+   "idx": 85,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 106,
+    "opt2": 107
+   },
+   "center": [
+    295.0,
+    814.125
+   ],
+   "length_um": 229.347
+  },
+  {
+   "idx": 86,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 107,
+    "opt2": 108,
+    "opt3": 109
+   },
+   "center": [
+    320.0,
+    912.75
+   ]
+  },
+  {
+   "idx": 87,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 108,
+    "opt2": 102
+   },
+   "center": [
+    345.0,
+    964.125
+   ],
+   "length_um": 129.347
+  },
+  {
+   "idx": 88,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 109,
+    "opt2": 105
+   },
+   "center": [
+    345.0,
+    861.375
+   ],
+   "length_um": 129.347
+  },
+  {
+   "idx": 89,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 100,
+    "opt2": 110
+   },
+   "center": [
+    213.7,
+    639.156
+   ],
+   "length_um": 845.685
+  },
+  {
+   "idx": 90,
+   "kind": "wg_heater",
+   "bit": 0,
+   "pins": {
+    "opt1": 110,
+    "opt2": 38
+   },
+   "center": [
+    300.0,
+    241.062
+   ],
+   "length_um": 120.0,
+   "role": "REF"
+  },
+  {
+   "idx": 91,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 103,
+    "opt2": 111
+   },
+   "center": [
+    458.7,
+    1039.125
+   ],
+   "length_um": 206.74699999999999
+  },
+  {
+   "idx": 92,
+   "kind": "wg_heater",
+   "bit": 0,
+   "pins": {
+    "opt1": 111,
+    "opt2": 22
+   },
+   "center": [
+    600.0,
+    1062.75
+   ],
+   "length_um": 120.0,
+   "role": "A07"
+  },
+  {
+   "idx": 93,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 98,
+    "opt2": 91,
+    "opt3": 95
+   },
+   "center": [
+    320.0,
+    512.75
+   ]
+  },
+  {
+   "idx": 94,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 104,
+    "opt2": 112
+   },
+   "center": [
+    533.7,
+    986.375
+   ],
+   "length_um": 356.74699999999996
+  },
+  {
+   "idx": 95,
+   "kind": "wg_heater",
+   "bit": 0,
+   "pins": {
+    "opt1": 112,
+    "opt2": 24
+   },
+   "center": [
+    750.0,
+    962.75
+   ],
+   "length_um": 120.0,
+   "role": "A06"
+  },
+  {
+   "idx": 96,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 113,
+    "opt2": 114
+   },
+   "center": [
+    1775.0,
+    964.125
+   ],
+   "length_um": 129.347
+  },
+  {
+   "idx": 97,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 115,
+    "opt2": 116
+   },
+   "center": [
+    1775.0,
+    861.375
+   ],
+   "length_um": 129.347
+  },
+  {
+   "idx": 98,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 119,
+    "opt2": 117,
+    "opt3": 118
+   },
+   "center": [
+    1800.0,
+    512.75
+   ]
+  },
+  {
+   "idx": 99,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 117,
+    "opt2": 120
+   },
+   "center": [
+    1775.0,
+    564.125
+   ],
+   "length_um": 129.347
+  },
+  {
+   "idx": 100,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 118,
+    "opt2": 121
+   },
+   "center": [
+    1775.0,
+    461.375
+   ],
+   "length_um": 129.347
+  },
+  {
+   "idx": 101,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 5,
+    "opt2": 122,
+    "opt3": 123
+   },
+   "center": [
+    1850.0,
+    712.75
+   ]
+  },
+  {
+   "idx": 102,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 122,
+    "opt2": 124
+   },
+   "center": [
+    1825.0,
+    814.125
+   ],
+   "length_um": 229.347
+  },
+  {
+   "idx": 103,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 123,
+    "opt2": 119
+   },
+   "center": [
+    1825.0,
+    611.375
+   ],
+   "length_um": 229.347
+  },
+  {
+   "idx": 104,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 124,
+    "opt2": 113,
+    "opt3": 115
+   },
+   "center": [
+    1800.0,
+    912.75
+   ]
+  },
+  {
+   "idx": 105,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 29,
+    "opt2": 125
+   },
+   "center": [
+    1426.3,
+    786.375
+   ],
+   "length_um": 676.747
+  },
+  {
+   "idx": 106,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 114,
+    "opt2": 23,
+    "opt3": 25
+   },
+   "center": [
+    1750.0,
+    1012.75
+   ]
+  },
+  {
+   "idx": 107,
+   "kind": "wg_heater",
+   "bit": 0,
+   "pins": {
+    "opt1": 31,
+    "opt2": 126
+   },
+   "center": [
+    1200.0,
+    662.75
+   ],
+   "length_um": 120.0,
+   "role": "A03"
+  },
+  {
+   "idx": 108,
+   "kind": "ebeam_bdc_te1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 41,
+    "opt2": 39,
+    "opt3": 43,
+    "opt4": 45
+   },
+   "center": [
+    2002.775,
+    1040.4
+   ]
+  },
+  {
+   "idx": 109,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 126,
+    "opt2": 127
+   },
+   "center": [
+    1501.3,
+    639.125
+   ],
+   "length_um": 526.7470000000001
+  },
+  {
+   "idx": 110,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 116,
+    "opt2": 27,
+    "opt3": 125
+   },
+   "center": [
+    1750.0,
+    812.75
+   ]
+  },
+  {
+   "idx": 111,
+   "kind": "wg_heater",
+   "bit": 0,
+   "pins": {
+    "opt1": 33,
+    "opt2": 128
+   },
+   "center": [
+    1350.0,
+    562.75
+   ],
+   "length_um": 120.0,
+   "role": "A02"
+  },
+  {
+   "idx": 112,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 128,
+    "opt2": 129
+   },
+   "center": [
+    1576.3,
+    586.375
+   ],
+   "length_um": 376.74699999999996
+  },
+  {
+   "idx": 113,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 120,
+    "opt2": 127,
+    "opt3": 129
+   },
+   "center": [
+    1750.0,
+    612.75
+   ]
+  },
+  {
+   "idx": 114,
+   "kind": "wg_heater",
+   "bit": 0,
+   "pins": {
+    "opt1": 35,
+    "opt2": 130
+   },
+   "center": [
+    1500.0,
+    462.75
+   ],
+   "length_um": 120.0,
+   "role": "A01"
+  },
+  {
+   "idx": 115,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 130,
+    "opt2": 131
+   },
+   "center": [
+    1651.3,
+    439.125
+   ],
+   "length_um": 226.74699999999999
+  },
+  {
+   "idx": 116,
+   "kind": "ebeam_y_1550",
+   "bit": 0,
+   "pins": {
+    "opt1": 121,
+    "opt2": 131,
+    "opt3": 132
+   },
+   "center": [
+    1750.0,
+    412.75
+   ]
+  },
+  {
+   "idx": 117,
+   "kind": "wg_heater",
+   "bit": 0,
+   "pins": {
+    "opt1": 37,
+    "opt2": 133
+   },
+   "center": [
+    1650.0,
+    362.75
+   ],
+   "length_um": 120.0,
+   "role": "A00"
+  },
+  {
+   "idx": 118,
+   "kind": "Waveguide",
+   "bit": 0,
+   "pins": {
+    "opt1": 133,
+    "opt2": 132
+   },
+   "center": [
+    1726.3,
+    386.375
+   ],
+   "length_um": 76.747
+  }
+ ]
+}

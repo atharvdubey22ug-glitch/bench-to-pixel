@@ -73,6 +73,7 @@ class TDCircuit:
             if model == "gc":
                 c["_fibre"] = port_of[(c["idx"], "o0")]
         P = len(ports)
+        self.ports = ports                 # (component idx, port name) of each port
         rows, cols, vals = [], [], []
         for blk in blocks:
             for a, b, v in blk:            # out[a] = S[a,b] in[b]   (sax: (in, out) keys are symmetric/reciprocal)
