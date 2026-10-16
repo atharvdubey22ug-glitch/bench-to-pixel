@@ -1,0 +1,407 @@
+<div class="wrap">
+  <div class="top">
+    <a class="brand" href="https://atharvdubey22ug-glitch.github.io/bench-to-pixel/" aria-label="Back to Bench to Pixel">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#111a1e"/><path d="M8 40 L28 24 L56 24" stroke="#ff5a47" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="28" cy="24" r="5" fill="#eba340"/></svg>
+      Bench to Pixel <span class="t">/ parity</span>
+    </a>
+    <nav class="crumb" aria-label="Related pages">
+      <a href="https://atharvdubey22ug-glitch.github.io/bench-to-pixel/alu/">4-bit ALU</a>
+      <a href="https://atharvdubey22ug-glitch.github.io/bench-to-pixel/encrypt/">Encrypt: light vs silicon</a>
+      <a href="https://github.com/atharvdubey22ug-glitch/bench-to-pixel/blob/main/CONCEPT.md">The idea</a>
+    </nav>
+  </div>
+
+  <header class="hero">
+    <h1>Eight bits, <em>one pass</em> of light</h1>
+    <p class="lede">The full adder's light-only cascade failed: interference XORs that switch beams on and off cannot feed one another. This chip encodes each bit as a <strong>phase</strong> instead, 0 or π, on one beam. Phases add, so eight sections in a row compute b1 XOR b2 XOR … XOR b8, the parity, with no detector in between. <strong>Click the sections</strong>: the levels are from the simulated light of the drawn chip.</p>
+  </header>
+
+  <section class="panel" aria-labelledby="liveTitle">
+    <h2 id="liveTitle" hidden>The chip, live</h2>
+    <div class="chiprow">
+      <div class="port"><b>Laser</b><span>split in two</span></div>
+      <div class="arms">
+        <div class="secs" id="secs" role="group" aria-label="Input bits: one phase section each"></div>
+        <div class="ref"><span>reference arm: same length, no sections, phase 0</span></div>
+      </div>
+      <div class="outs" aria-live="polite">
+        <div class="lamp"><i id="lampP"></i><span>Parity</span><b id="valP"></b></div>
+        <div class="lamp"><i id="lampN"></i><span>Not parity</span><b id="valN"></b></div>
+      </div>
+    </div>
+    <div class="answer">
+      <div style="display:grid;gap:10px">
+        <div class="big" id="big"></div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+      <div class="row">
+        <button class="btn" type="button" id="all0">All 0</button>
+        <button class="btn" type="button" id="all1">All 1</button>
+        <button class="btn" type="button" id="rand">Random</button>
+        <div class="field">
+          <label class="lab" for="corner">Process corner</label>
+          <select id="corner"></select>
+        </div>
+      </div>
+    </div>
+    <p class="cap" id="liveCap"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="whyTitle">
+    <h2 id="whyTitle">Why this cascades and the full adder did not</h2>
+    <div class="two">
+      <div class="card badc">
+        <h3>Bits as beams on and off (the full adder)</h3>
+        <svg viewBox="0 0 320 150" role="img" aria-label="Two arrows nearly opposite each other: the light leaving XOR 1 for only A and for only B, 172 degrees apart.">
+          <circle cx="80" cy="75" r="56" fill="none" stroke="#22313a" stroke-width="1.5"/>
+          <line x1="24" y1="75" x2="136" y2="75" stroke="#22313a"/>
+          <line x1="80" y1="75" x2="134" y2="75" stroke="#ff5a47" stroke-width="3" marker-end="url(#ah)"/>
+          <line x1="80" y1="75" x2="27" y2="67" stroke="#eba340" stroke-width="3" marker-end="url(#ah2)"/>
+          <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#ff5a47"/></marker><marker id="ah2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#eba340"/></marker></defs>
+          <text x="160" y="58" fill="#e3ebed" font-family="JetBrains Mono,monospace" font-size="12">only A: 0°</text>
+          <text x="160" y="80" fill="#eba340" font-family="JetBrains Mono,monospace" font-size="12" id="relPh">only B: 172°</text>
+          <text x="160" y="110" fill="#8b9ea5" font-family="JetBrains Mono,monospace" font-size="11">a third beam can cancel</text>
+          <text x="160" y="126" fill="#8b9ea5" font-family="JetBrains Mono,monospace" font-size="11">one of these, not both</text>
+        </svg>
+        <p>An XOR made by switching beams leaves "only A" and "only B" with nearly opposite phase. Both mean 1, but they are different light. A second XOR that adds the carry-in beam can cancel one of them and doubles the other: in the best case it still leaves <strong id="bestWorst">1.9×</strong> a full "1" of light where there should be darkness. So the full adder detects XOR 1 and re-applies it electronically.</p>
+      </div>
+      <div class="card goodc">
+        <h3>Bits as phase on one beam (this chip)</h3>
+        <svg viewBox="0 0 320 150" role="img" aria-label="An arrow that flips between 0 and 180 degrees at each section with a 1, so it always lies on one axis.">
+          <line x1="10" y1="75" x2="310" y2="75" stroke="#22313a"/>
+          <g font-family="JetBrains Mono,monospace" font-size="11" fill="#8b9ea5" text-anchor="middle">
+            <text x="40" y="28">in</text><text x="105" y="28">bit 1</text><text x="170" y="28">bit 0</text><text x="235" y="28">bit 1</text><text x="295" y="28">out</text>
+            <text x="40" y="132">0</text><text x="105" y="132">π</text><text x="170" y="132">π</text><text x="235" y="132">0</text><text x="295" y="132">0</text>
+          </g>
+          <g stroke-width="3">
+            <line x1="27" y1="75" x2="53" y2="75" stroke="#ff5a47" marker-end="url(#ah)"/>
+            <line x1="118" y1="75" x2="92" y2="75" stroke="#ff5a47" marker-end="url(#ah)"/>
+            <line x1="183" y1="75" x2="157" y2="75" stroke="#ff5a47" marker-end="url(#ah)"/>
+            <line x1="222" y1="75" x2="248" y2="75" stroke="#ff5a47" marker-end="url(#ah)"/>
+          </g>
+          <rect x="92" y="40" width="26" height="12" rx="3" fill="#eba340"/><rect x="157" y="40" width="26" height="12" rx="3" fill="none" stroke="#5d6f77"/><rect x="222" y="40" width="26" height="12" rx="3" fill="#eba340"/>
+          <text x="295" y="80" fill="#e3ebed" font-family="JetBrains Mono,monospace" font-size="12" text-anchor="middle">even</text>
+        </svg>
+        <p>Here every 1 flips the phase of the same light by π. Whatever came before, the light is still at 0 or π: <strong>it is itself a valid bit for the next section</strong>. Only the very end turns phase into brightness, against the reference arm. The cascade that failed with beams works with phase.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="costTitle">
+    <h2 id="costTitle">What it costs: the errors add up too</h2>
+    <p class="small">Nothing between the sections restores the signal. If a section's drive gives π plus a small error, the next section adds its own error on top. Calibration on this chip leaves well under 1° per section; a fast modulator's swing drifts and has to be trimmed. Set the error and the length of the chain.</p>
+    <div class="ctl">
+      <div class="field">
+        <label class="lab" for="sig">Drive error per section</label>
+        <input type="range" id="sig" min="0" max="10" step="0.5" value="2">
+        <div class="read"><span>error</span><b id="sigV"></b></div>
+      </div>
+      <div class="field">
+        <label class="lab" for="nsec">Sections in the chain</label>
+        <input type="range" id="nsec" min="1" max="32" step="1" value="8">
+        <div class="read"><span>input bits</span><b id="nsecV"></b></div>
+      </div>
+      <div class="field">
+        <span class="lab" id="kindLab">Kind of error</span>
+        <div class="seg" role="radiogroup" aria-labelledby="kindLab">
+          <input type="radio" name="kind" id="kR" value="random" checked><label for="kR">Random</label>
+          <input type="radio" name="kind" id="kS" value="systematic"><label for="kS">Same on every section</label>
+        </div>
+      </div>
+    </div>
+    <canvas class="chart" id="costChart" aria-label="On/off ratio of the worst input against the number of sections"></canvas>
+    <div class="row" id="costRead"></div>
+    <p class="cap">On/off of the worst input (the one whose errors add the most), for 95% of chips. The ceiling is the calibrated chip at the corner chosen above. The cross is the full adder's light-only cascade at two stages.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="spTitle">
+    <h2 id="spTitle">How fast: eight live bit streams</h2>
+    <p class="small">Time-domain simulation of the drawn circuit with eight independent random bit streams, one per section, read straight off the PARITY output. Light reaches section 8 about <b id="skewV">15 ps</b> after section 1, so each input's electrical line is made that much longer (aligned). The sections are treated as fast phase modulators placed where the heaters are.</p>
+    <div class="ctl">
+      <div class="field"><span class="lab" id="ioLab">Modulators and photodiode</span>
+        <div class="seg" role="radiogroup" aria-labelledby="ioLab" id="ioSeg">
+          <input type="radio" name="io" id="io0" value="lithium_niobate_100GHz" checked><label for="io0">100 GHz</label>
+          <input type="radio" name="io" id="io1" value="silicon_50GHz"><label for="io1">50 GHz</label>
+          <input type="radio" name="io" id="io2" value="ideal"><label for="io2">Ideal</label>
+        </div></div>
+      <div class="field"><span class="lab" id="mdLab">Inputs</span>
+        <div class="seg" role="radiogroup" aria-labelledby="mdLab">
+          <input type="radio" name="md" id="md0" value="aligned" checked><label for="md0">8, aligned</label>
+          <input type="radio" name="md" id="md1" value="unaligned"><label for="md1">8, unaligned</label>
+          <input type="radio" name="md" id="md2" value="wire"><label for="md2">1 only (no logic)</label>
+        </div></div>
+      <div class="field"><span class="lab" id="rtLab">Bit rate (Gb/s)</span>
+        <div class="seg" role="radiogroup" aria-labelledby="rtLab" id="rtSeg"></div></div>
+    </div>
+    <div class="speed">
+      <canvas class="chart" id="eye" aria-label="Eye diagram of the parity output"></canvas>
+      <div style="display:grid;gap:14px">
+        <div class="verdict" id="eyeV"></div>
+        <dl class="facts" id="eyeF"></dl>
+        <div class="race">
+          <span class="lab">First answer bit out, after its inputs arrive</span>
+          <div class="racebar"><span>light</span><span class="tr"><i id="barO" style="background:var(--laser)"></i></span><b id="latO"></b></div>
+          <div class="racebar"><span>electronics</span><span class="tr"><i id="barE" style="background:var(--beam)"></i></span><b id="latE"></b></div>
+          <p class="cap" id="raceCap"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="chipTitle">
+    <div class="chippic">
+      <img id="layout" alt="Layout of the parity chip: three grating couplers on the left, a long signal arm with eight heater sections and a bias heater under a row of ten probe pads, a mirror-image reference arm below, and a coupler on the right." width="1600" height="580">
+      <div style="display:grid;gap:14px">
+        <h2 id="chipTitle">The chip</h2>
+        <p class="small">Drawn in KLayout with the SiEPIC EBeam process design kit (Applied Nanotools): 220 nm silicon waveguides and titanium-tungsten heaters. On this process the sections are heaters, slow but enough to test the logic on a real die.</p>
+        <dl class="facts" id="chipF"></dl>
+      </div>
+    </div>
+  </section>
+
+  <div class="notes">
+    <section>
+      <h3>What is real here</h3>
+      <p>The layout passes the foundry's checks. The light levels come from a circuit simulation of the extracted layout with the design kit's component models, at nine process corners, with heater-to-heater spread, crosstalk and a random arm offset on every simulated die, calibrated using only the grating-coupler reading. The speed runs use the same circuit in the time domain. The electronic latency is a lower-bound model. Nothing is fabricated yet.</p>
+    </section>
+    <section>
+      <h3>What it is good for</h3>
+      <p>Parity is the simplest error check: one extra bit that says whether a word has an odd number of 1s, and the building block of checksums and CRCs. Here it is computed on data that is already light, in one pass. The larger point is the encoding: <strong>phase lets interference logic chain stages without going back to electronics</strong>, which the beam-switching gates of the paper cannot do.</p>
+    </section>
+    <section>
+      <h3>What it does not solve</h3>
+      <ul>
+        <li>No gain: errors add along the chain, so each drive must be trimmed to about 1–2%.</li>
+        <li>Real fast modulators are millimetres long, not 120 µm, so lining the inputs up in time is a real design job.</li>
+        <li>The inputs start as electrical signals. An electronic XOR tree is only three gates deep; the gain is only for data that is already a fast optical stream.</li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="src">
+    <strong style="color:var(--muted);font-weight:500">Sources</strong>
+    <ol>
+      <li>Layout, simulation and results: <a href="https://github.com/atharvdubey22ug-glitch/bench-to-pixel/blob/main/chip/README.md#phase-encoded-parity">chip/README.md, phase-encoded parity</a> (<code>klayout/parity_siepic.py</code>, <code>parity_sim.py</code>, <code>speed/parity_speed.py</code>).</li>
+      <li>The bench experiment: <cite>Using Polarisation and Interference for Optical Computing</cite>, Atharv Dubey, Sanya Davalbhakta and Proteep Mallik, Student Research Journal 2024, Azim Premji University.</li>
+      <li>Process design kit: <a href="https://github.com/SiEPIC/SiEPIC_EBeam_PDK">SiEPIC EBeam PDK</a>.</li>
+      <li>What the project shows, and what it doesn't: <a href="https://github.com/atharvdubey22ug-glitch/bench-to-pixel/blob/main/CONCEPT.md">CONCEPT.md</a>.</li>
+    </ol>
+  </div>
+</div>
+
+<script type="application/json" id="data">/*DATA*/</script>
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const D = JSON.parse($("data").textContent);
+  $("layout").src = "/*LAYOUT*/";
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const C = { ink: css("--ink"), line: css("--line"), fg: css("--fg"), muted: css("--muted"), faint: css("--faint"), laser: css("--laser"), beam: css("--beam"), petg: css("--petg") };
+  const val = n => document.querySelector(`input[name="${n}"]:checked`).value;
+  function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  const fmtW = uw => uw >= 10 ? `${uw.toFixed(0)} µW` : uw >= 1 ? `${uw.toFixed(1)} µW` : uw >= 0.01 ? `${uw.toFixed(3)} µW` : `${(uw * 1e3).toFixed(1)} nW`;
+  const fmtT = s => s < 1e-9 ? `${(s * 1e12).toFixed(0)} ps` : `${(s * 1e9).toFixed(2)} ns`;
+  const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight"];
+
+  // ---------------------------------------------------------------- live chip
+  const NAMES = ["220nm_x_500nm", "210nm_x_480nm", "210nm_x_500nm", "210nm_x_520nm", "220nm_x_480nm", "220nm_x_520nm", "230nm_x_480nm", "230nm_x_500nm", "230nm_x_520nm"];
+  for (const k of NAMES) {
+    if (!D.corners[k]) continue;
+    const [t, w] = k.replace(/nm/g, "").split("_x_");
+    const o = document.createElement("option");
+    o.value = k; o.textContent = `${t} nm Si, ${w} nm wide${k === "220nm_x_500nm" ? " (nominal)" : ""}`;
+    $("corner").appendChild(o);
+  }
+  let bits = [1, 0, 1, 1, 0, 0, 1, 0];
+  const dial = (ph, on) => {
+    const a = ph ? Math.PI : 0, x = 17 + 11 * Math.cos(a), y = 17 - 11 * Math.sin(a);
+    const col = on ? C.laser : C.faint;
+    return `<svg viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="14" fill="none" stroke="${C.line}" stroke-width="1.5"/><line x1="17" y1="17" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${col}" stroke-width="3" stroke-linecap="round"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="${col}"/></svg>`;
+  };
+  function buildSecs() {
+    const g = $("secs"); g.innerHTML = "";
+    for (let k = 0; k < 8; k++) {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "sec"; b.dataset.k = k;
+      b.addEventListener("click", () => { bits[k] ^= 1; live(); });
+      g.appendChild(b);
+    }
+    const bias = document.createElement("div");
+    bias.className = "sec bias"; bias.id = "bias";
+    g.appendChild(bias);
+  }
+  buildSecs();
+  function lampStyle(el, uw, maxuw) {
+    const lv = Math.max(0, Math.min(1, (Math.log10(Math.max(uw, 1e-4)) + 2) / (Math.log10(maxuw) + 2)));
+    el.style.opacity = (0.12 + 0.88 * lv).toFixed(2);
+    el.style.boxShadow = `0 0 ${(4 + 20 * lv).toFixed(0)}px ${(lv * 5).toFixed(0)}px rgba(255,90,71,${(0.6 * lv).toFixed(2)})`;
+    el.style.background = lv > 0.15 ? C.laser : C.faint;
+  }
+  function live() {
+    const cor = D.corners[$("corner").value];
+    const idx = bits.reduce((s, b, k) => s + (b << k), 0);
+    const pP = cor.parity[idx], pN = cor.nparity[idx];
+    const mx = Math.max(...cor.parity);
+    let cum = 0;
+    $("secs").querySelectorAll("button.sec").forEach((b, k) => {
+      cum ^= bits[k];
+      b.setAttribute("aria-pressed", bits[k] ? "true" : "false");
+      b.setAttribute("aria-label", `Section ${k + 1}, input bit ${bits[k]}. Phase after it: ${cum ? "pi" : "0"}`);
+      b.title = `S${k + 1}: ${cor.calibration.on_mW[k].toFixed(1)} mW on its heater gives π on this die`;
+      b.innerHTML = `<span class="nm">S${k + 1}</span><b>${bits[k]}</b>${dial(cum, cum)}<span class="ph">${cum ? "π" : "0"}</span>`;
+    });
+    $("bias").innerHTML = `<span class="nm">bias</span><b style="font-size:13px;color:var(--petg)">${cor.calibration.bias_mW.toFixed(0)}<small style="font-size:10px"> mW</small></b>${dial(0, false)}<span class="ph">trim</span>`;
+    $("bias").title = "The bias heater cancels this die's random phase between the arms, so all-zero inputs give a dark PARITY output.";
+    lampStyle($("lampP"), pP, mx); lampStyle($("lampN"), pN, mx);
+    $("valP").textContent = fmtW(pP); $("valN").textContent = fmtW(pN);
+    const n1 = bits.reduce((a, b) => a + b, 0), want = n1 % 2, got = pP > pN ? 1 : 0;
+    $("big").innerHTML = `<span>${bits.join("")}</span><span class="op">→ ${WORDS[n1]} 1${n1 === 1 ? "" : "s"} →</span><span class="res">${got}</span>`;
+    $("verdict").innerHTML = (got === want ? `<span class="pill ok">Correct</span>` : `<span class="pill bad">Wrong</span>`) +
+      `<span class="small">${want ? "odd" : "even"} number of 1s · on/off ${(10 * Math.log10(Math.max(pP, pN) / Math.min(pP, pN))).toFixed(0)} dB · worst of 256 inputs on ${cor.dies} dies here: ${cor.worst_on_off_dB.toFixed(0)} dB</span>`;
+    $("liveCap").textContent = `Dials show the light's phase after each section. It is always 0 or π, so each section hands a clean bit to the next. Levels at the outputs for 1 mW of laser into the chip, on a simulated die calibrated from its own grating-coupler readings (bias ${cor.calibration.bias_mW.toFixed(1)} mW; a 1 is ${Math.min(...cor.calibration.on_mW).toFixed(1)}–${Math.max(...cor.calibration.on_mW).toFixed(1)} mW per heater).`;
+    cost();
+  }
+  $("all0").addEventListener("click", () => { bits = bits.map(() => 0); live(); });
+  $("all1").addEventListener("click", () => { bits = bits.map(() => 1); live(); });
+  let rs = 7;
+  $("rand").addEventListener("click", () => { const r = mulberry32(rs++ * 7919); bits = bits.map(() => (r() < 0.5 ? 1 : 0)); live(); });
+  $("corner").addEventListener("change", live);
+  $("bestWorst").textContent = `${D.cascade.amplitude_encoded.best_worst_case_dark_level.toFixed(1)}×`;
+  $("relPh").textContent = `only B: ${D.cascade.amplitude_encoded.relative_phase_A_only_vs_B_only_deg.toFixed(0)}°`;
+
+  // ---------------------------------------------------------------- canvas helpers
+  function setup(cv) {
+    const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+    g.font = `11px ${css("--f-mono")}`;
+    return { g, w, h };
+  }
+
+  // ---------------------------------------------------------------- cost of errors
+  function gauss(r) { let u = 0; while (u === 0) u = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * r()); }
+  function curve(sig, kind, floorDb) {
+    const f = Math.pow(10, -floorDb / 10), out = [];
+    const er = tot => { const c = Math.cos(tot / 2) ** 2, s = Math.sin(tot / 2) ** 2; return 10 * Math.log10((c * (1 - f) + 1e-12) / (s + f)); };
+    const r = mulberry32(42);
+    for (let n = 1; n <= 32; n++) {
+      if (kind === "systematic" || sig === 0) { out.push(er(sig * Math.PI * n)); continue; }
+      const v = [];
+      for (let d = 0; d < 1200; d++) {
+        let p = 0, m = 0;
+        for (let k = 0; k < n; k++) { const e = sig * Math.PI * gauss(r); if (e > 0) p += e; else m -= e; }
+        v.push(er(Math.max(p, m)));
+      }
+      v.sort((a, b) => a - b);
+      out.push(v[Math.floor(0.05 * v.length)]);
+    }
+    return out;
+  }
+  let costKey = "", costData = null;
+  function cost() {
+    const sig = +$("sig").value / 100, n = +$("nsec").value, kind = val("kind");
+    const floorDb = D.corners[$("corner").value].worst_on_off_dB;
+    $("sigV").textContent = `${(sig * 100).toFixed(1)}% of π (${(sig * 180).toFixed(1)}°)`;
+    $("nsecV").textContent = `${n}`;
+    const key = `${sig}|${kind}|${floorDb}`;
+    if (key !== costKey) { costData = curve(sig, kind, floorDb); costKey = key; }
+    const y = costData[n - 1];
+    const eyeOpen = Math.max(0, 1 - 2 / (1 + Math.pow(10, y / 10)));
+    const state = y >= 10 ? ["ok", "Clean decision"] : y >= 3 ? ["warn", "Marginal"] : ["bad", "Fails"];
+    $("costRead").innerHTML = `<span class="pill ${state[0]}">${state[1]}</span><span class="small">${n} section${n > 1 ? "s" : ""}: worst input on/off <strong>${y.toFixed(1)} dB</strong>, eye about ${(100 * eyeOpen).toFixed(0)}% open</span>`;
+    const { g, w, h } = setup($("costChart"));
+    const L = 44, R = 12, T = 14, B = 30, x0 = L, x1 = w - R, y0 = h - B, y1 = T;
+    const X = v => x0 + (v - 1) / 31 * (x1 - x0), Y = v => y0 - (Math.max(-12, Math.min(48, v)) + 12) / 60 * (y0 - y1);
+    g.strokeStyle = C.line; g.fillStyle = C.faint; g.lineWidth = 1;
+    for (const t of [-10, 0, 10, 20, 30, 40]) { g.beginPath(); g.moveTo(x0, Y(t)); g.lineTo(x1, Y(t)); g.stroke(); g.textAlign = "right"; g.fillText(`${t}`, x0 - 6, Y(t) + 4); }
+    g.textAlign = "center";
+    for (const t of [1, 4, 8, 12, 16, 20, 24, 28, 32]) g.fillText(`${t}`, X(t), y0 + 16);
+    g.fillText("sections", (x0 + x1) / 2, h - 2);
+    g.save(); g.translate(11, (y0 + y1) / 2); g.rotate(-Math.PI / 2); g.fillText("on/off, dB", 0, 0); g.restore();
+    g.setLineDash([5, 5]); g.strokeStyle = C.muted;
+    g.beginPath(); g.moveTo(x0, Y(floorDb)); g.lineTo(x1, Y(floorDb)); g.stroke(); g.setLineDash([]);
+    g.fillStyle = C.muted; g.textAlign = "right"; g.fillText(`calibrated chip, ${floorDb.toFixed(0)} dB`, x1 - 4, Y(floorDb) - 6);
+    g.strokeStyle = C.laser; g.lineWidth = 2.2; g.beginPath();
+    costData.forEach((v, i) => { const px = X(i + 1), py = Y(v); i ? g.lineTo(px, py) : g.moveTo(px, py); }); g.stroke();
+    g.fillStyle = C.laser; g.beginPath(); g.arc(X(n), Y(y), 5.5, 0, 2 * Math.PI); g.fill();
+    g.strokeStyle = C.ink; g.lineWidth = 2; g.stroke();
+    const amp = 10 * Math.log10(1 / D.cascade.amplitude_encoded.best_worst_case_dark_level);
+    g.strokeStyle = C.petg; g.lineWidth = 2.5; const ax = X(2), ay = Y(amp);
+    g.beginPath(); g.moveTo(ax - 5, ay - 5); g.lineTo(ax + 5, ay + 5); g.moveTo(ax + 5, ay - 5); g.lineTo(ax - 5, ay + 5); g.stroke();
+    g.fillStyle = C.petg; g.textAlign = "left"; g.fillText("beam-switching cascade", ax + 10, ay + 4);
+  }
+  ["sig", "nsec"].forEach(id => $(id).addEventListener("input", cost));
+  document.querySelectorAll("input[name=kind]").forEach(i => i.addEventListener("change", cost));
+
+  // ---------------------------------------------------------------- speed
+  const S = D.speed;
+  $("skewV").textContent = `${S.skew_ps.S8.toFixed(1)} ps`;
+  const decoded = {};
+  function traces(key) {
+    if (!decoded[key]) {
+      const s = atob(S.eyes[key].b64), a = new Uint8Array(s.length);
+      for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i);
+      decoded[key] = a;
+    }
+    return decoded[key];
+  }
+  let rate = 100;
+  function rates() {
+    const io = val("io"), md = val("md");
+    const rs = Object.keys(S.eyes).filter(k => k.startsWith(`${io}|${md}|`)).map(k => +k.split("|")[2]).sort((a, b) => a - b);
+    if (!rs.includes(rate)) rate = rs.reduce((b, r) => Math.abs(r - rate) < Math.abs(b - rate) ? r : b, rs[0]);
+    $("rtSeg").innerHTML = rs.map(r => `<input type="radio" name="rt" id="rt${r}" value="${r}" ${r === rate ? "checked" : ""}><label for="rt${r}">${r}</label>`).join("");
+    document.querySelectorAll("input[name=rt]").forEach(i => i.addEventListener("change", () => { rate = +i.value; speed(); }));
+  }
+  function speed() {
+    const io = val("io"), md = val("md"), key = `${io}|${md}|${rate}`, e = S.eyes[key];
+    const a = traces(key), P = S.points;
+    const { g, w, h } = setup($("eye"));
+    const L = 44, R = 10, T = 12, B = 30, x0 = L, x1 = w - R, y0 = h - B, y1 = T;
+    const X = t => x0 + (t + 1) / 2 * (x1 - x0), Y = ua => y0 - ua / S.full_uA * (y0 - y1);
+    g.strokeStyle = C.line; g.fillStyle = C.faint; g.lineWidth = 1;
+    for (const t of [0, 1000, 2000]) { g.beginPath(); g.moveTo(x0, Y(t)); g.lineTo(x1, Y(t)); g.stroke(); g.textAlign = "right"; g.fillText(`${t / 1000} mA`, x0 - 6, Y(t) + 4); }
+    g.textAlign = "center";
+    for (const t of [-1, -0.5, 0, 0.5, 1]) g.fillText(`${t}`, X(t), y0 + 16);
+    g.fillText(`time, bit periods (one bit = ${(1000 / rate).toFixed(rate > 100 ? 1 : 0)} ps)`, (x0 + x1) / 2, h - 2);
+    g.strokeStyle = e.ok ? C.beam : "#ff8a7c"; g.globalAlpha = 0.35; g.lineWidth = 1.1;
+    for (let k = 0; k < e.n; k++) {
+      g.beginPath();
+      for (let i = 0; i < P; i++) { const px = X(-1 + 2 * i / (P - 1)), py = Y(a[k * P + i] / 255 * S.full_uA); i ? g.lineTo(px, py) : g.moveTo(px, py); }
+      g.stroke();
+    }
+    g.globalAlpha = 1;
+    const ioName = { ideal: "ideal", silicon_50GHz: "50 GHz", lithium_niobate_100GHz: "100 GHz" }[io];
+    const best = S.summary[io][md];
+    $("eyeV").innerHTML = (e.ok ? `<span class="pill ok">Open</span>` : `<span class="pill bad">Closed</span>`) +
+      `<span class="small">${md === "wire" ? "one stream, no logic" : "parity of 8 streams"} at ${rate} Gb/s, ${ioName} modulators</span>`;
+    const ber = e.Q > 0 ? 0.5 * erfc(e.Q / Math.SQRT2) : 0.5;
+    $("eyeF").innerHTML = `<dt>Eye opening</dt><dd>${e.open_pct > 0 ? e.open_pct.toFixed(0) + "%" : "closed"} <small>of the 1 level</small></dd>
+      <dt>Eye width</dt><dd>${e.width_pct.toFixed(0)}% <small>of a bit</small></dd>
+      <dt>Q</dt><dd>${e.Q > 0 ? e.Q.toFixed(0) : "–"} <small>${e.Q >= 7 ? "error rate below 1e-12" : ber < 0.5 ? "error rate " + ber.toExponential(0) : "wrong bits"}</small></dd>
+      <dt>Fastest</dt><dd>${best ? best + " Gb/s" : "below 25 Gb/s"} <small>here, Q ≥ 7, eye ≥ 30% wide</small></dd>`;
+    // latency race: light (first section to fibre) vs a CMOS chip doing the same parity on 8 serial streams
+    const lo = S.latency_first_ps * 1e-12;
+    const W = Math.ceil(rate * 1e9 / 1.5e9), f = rate * 1e9 / W, le = 3 / f;
+    const m = Math.max(lo, le);
+    $("barO").style.width = `${Math.max(1.5, 100 * lo / m).toFixed(1)}%`; $("barE").style.width = `${(100 * le / m).toFixed(1)}%`;
+    $("latO").textContent = fmtT(lo); $("latE").textContent = `≥ ${fmtT(le)}`;
+    $("raceCap").textContent = `Light: section 1 to the output fibre, ${(S.coupler_to_fibre_ps).toFixed(0)} ps of it the waveguide to the edge coupler. Electronics: eight ${rate} Gb/s streams deserialised into ${W}-bit words at a 1.5 GHz clock, a three-level XOR tree, serialised again: at least three word times.`;
+  }
+  function erfc(x) { const t = 1 / (1 + 0.5 * Math.abs(x)); const y = t * Math.exp(-x * x - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 + t * (-0.18628806 + t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277))))))))); return x >= 0 ? y : 2 - y; }
+  document.querySelectorAll("input[name=io],input[name=md]").forEach(i => i.addEventListener("change", () => { rates(); speed(); }));
+
+  // ---------------------------------------------------------------- chip facts
+  const ch = D.chip;
+  $("chipF").innerHTML = `<dt>Die</dt><dd>${(ch.die_um[0] / 1000).toFixed(2)} × ${(ch.die_um[1] / 1000).toFixed(2)} mm</dd>
+    <dt>Parts</dt><dd>${ch.components}: 3 grating couplers, a Y-branch, a coupler, 9 heaters, 14 waveguides; 10 probe pads</dd>
+    <dt>Arms</dt><dd>${ch.arm_um.toFixed(3)} µm and ${ch.ref_um.toFixed(3)} µm <small>(on/off stays above ${D.spectral["+-10nm"].toFixed(0)} dB over ±10 nm of wavelength)</small></dd>
+    <dt>Checks</dt><dd>SiEPIC functional verification ${ch.errors} errors; process DRC 0 violations</dd>
+    <dt>Status</dt><dd>Designed and simulated, not fabricated</dd>`;
+
+  live(); rates(); speed();
+  let rz = 0;
+  window.addEventListener("resize", () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(() => { costKey = costKey; cost(); speed(); }); });
+})();
+</script>

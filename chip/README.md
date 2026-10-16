@@ -1,4 +1,4 @@
-# Optical full adder chip and 4-bit ALU
+# Optical full adder chip, 4-bit ALU and parity chip
 
 A silicon photonic version of the full adder in *Using Polarisation and Interference for Optical Computing* (Section 4.2, Figures 15–16), designed for the SiEPIC EBeam process run by Applied Nanotools: 220 nm silicon waveguides, TiW heaters (M1) and a metal routing layer (M2).
 
@@ -8,7 +8,9 @@ The layout is a native KLayout / SiEPIC-Tools design, `klayout/EBeam_heaters_ath
 
 Four copies of it make a 4-bit ALU (ADD, SUB, AND, OR, XOR) on one 3.72 × 3.08 mm die: see [4-bit ALU](#4-bit-alu) below.
 
-The 4-bit ALU can be tried as a calculator on the [ALU page](../alu/), and the project is summarised in [`CONCEPT.md`](../CONCEPT.md).
+A third chip fixes the full adder's cascade problem by encoding bits as phase: eight inputs, one pass of light, no detection in between. See [Phase-encoded parity](#phase-encoded-parity) below.
+
+The 4-bit ALU can be tried as a calculator on the [ALU page](../alu/), the parity chip on the [parity page](../parity/), and the project is summarised in [`CONCEPT.md`](../CONCEPT.md).
 
 How fast the interference logic itself can compute is in [`speed/`](speed/README.md): a single-pass version of the paper's XOR runs at 200 Gb/s with 100 GHz modulators and adds 5 ps.
 
@@ -177,6 +179,76 @@ The stressed die has far more variation between bits than a real 3.7 mm die. It 
 
 **Speed.** The interference logic is fast; the heaters are not (see [`speed/`](speed/README.md) for the logic at 200 Gb/s). Each carry hop is one comparator and one heater switching time. A 4-bit add therefore takes about five heater switching times (set the inputs, then four hops), which is tens of microseconds per hop for thermal heaters. Like the single adder, the ALU shows the logic, not speed.
 
+## Phase-encoded parity
+
+![Parity chip layout](figures/parity_layout.png)
+
+`klayout/EBeam_heaters_atharvdubey_Parity8.gds` (and `.oas`) computes the parity of eight bits, b1 XOR b2 XOR … XOR b8, in one pass of light. It is the answer to the full adder's [cascade failure](#one-change-from-figure-15). XORs that switch beams on and off leave "only A" and "only B" 172° apart in phase, so a second XOR cannot use their light. Here every bit is a phase, 0 or π, on the same beam:
+
+```
+laser -> Y-branch -> signal arm:    S1  S2  S3  S4  S5  S6  S7  S8  bias  --\
+                  -> reference arm: plain waveguide, the mirror image       --- coupler -> PARITY
+                                                                                        -> NOT PARITY
+```
+
+Phases add, so the light leaving section k carries π × (b1 + … + bk), which is the parity so far. It is always 0 or π, so it is a valid input for section k+1 with no detection in between. Only the coupler at the end turns phase into brightness, against the reference arm.
+
+**Layout.** The die is 1.82 × 0.65 mm with 28 components: 3 grating couplers (laser in the middle, PARITY above, NOT PARITY below, `DFT_Phot1x` rules), a Y-branch, a broadband coupler, 9 heaters and 14 waveguides. The heaters are 120 µm long at a 150 µm pitch and chained on 10 probe pads (heater k between pads k and k+1). The power in each heater can still be set independently. The reference arm is drawn as the mirror image of the signal arm, so the two lengths (1631.844 and 1631.843 µm) cancel. All checks pass (`klayout/parity_build_report.json`, `klayout/parity/drc/`):
+
+- SiEPIC functional verification: 0 errors;
+- PDK DRC decks: 0 violations on all three;
+- `verify.py`: every rule passes, with 10 nets each carrying one pad and each heater on two nets;
+- no waveguide crossings, no unconnected optical pins.
+
+**Simulation** (`parity_sim.py`, results in `parity_results.json`). The circuit is read from the SiEPIC extraction and solved with the PDK component models, as for the full adder. Each simulated die also gets the imperfections of a real one:
+
+- heater efficiency of π per 25 mW, spread ±10% heater to heater;
+- a random phase between the arms (uniform over 2π);
+- thermal crosstalk: 5% and 1% onto the neighbouring sections, 2% onto the reference arm.
+
+Each die is calibrated from what can be measured: the PARITY grating coupler, read with 0.2% noise, while one heater at a time is swept on a 16-bit 0–80 mW driver. The bias is set where PARITY is darkest with all inputs at 0. Each section's 1 is the first power that makes PARITY brightest.
+
+| | Result |
+|---|---|
+| All 256 inputs, 20 dies at each of 9 corners (±10 nm silicon, ±20 nm width) | every input correct on all 180 dies |
+| Worst on/off ratio, by corner | 27 dB (210 nm / 520 nm) to 39 dB; set by the coupler's split ratio |
+| Phase error left by calibration | under 0.2° per section |
+| On/off ratio across wavelength (balanced arms) | above 37 dB over ±10 nm, above 30 dB over ±20 nm |
+
+Crosstalk needs no correction. All the sections sit on one arm, so the heat a section spreads onto its neighbours adds to the same arm's phase, and calibrating each heater on its own already includes it.
+
+![Every input after calibration](figures/parity_levels.png)
+
+**What it costs.** Nothing between the sections restores the signal, so phase errors add the way the bits do. Suppose each section's 1 is π plus a random error (a fast modulator's drive swing, not trimmed). The worst input is the one whose errors add the most. For 95% of dies, its on/off ratio is:
+
+| Error per section | 1 section | 4 | 8 | 16 |
+|---|---|---|---|---|
+| 2% of π, random | 24 dB | 17 dB | 13 dB | 9 dB |
+| 5% of π, random | 16 dB | 9 dB | 4 dB | fails |
+| 2% of π, the same on every section | 30 dB | 18 dB | 12 dB | 5 dB |
+
+The full circuit model at 8 sections agrees with this simple sum to within 0.7 dB. For comparison, the beam-switching cascade already fails at two stages: its best case leaves 1.9× a "1" of light where it should be dark. Phase encoding removes that structural failure but not the need for accuracy. Each drive must be trimmed to about 1–2%, and digital electronics, which restores every bit, has no such limit.
+
+![Error accumulation](figures/parity_accumulation.png)
+
+**Speed** (`speed/parity_speed.py`, results in `speed/parity_speed_results.json`). The same time-domain model as the XOR study, with eight independent random bit streams. Light reaches section 8 about 14.7 ps after section 1, so each input's drive is delayed by its section's position ("aligned"). That is a fixed length of electrical line per input.
+
+| Modulators and receiver | One stream, no logic | 8-input parity, aligned | 8-input parity, unaligned |
+|---|---|---|---|
+| ideal | 400 Gb/s | 400 Gb/s, 0.01 dB penalty | 25 Gb/s |
+| 100 GHz | 200 Gb/s | 150 Gb/s | 25 Gb/s |
+| 50 GHz | 150 Gb/s | 75 Gb/s | 25 Gb/s |
+
+The interference itself adds nothing: with ideal modulators eight inputs cost 0.01 dB over a plain waveguide up to 400 Gb/s. With band-limited modulators, every phase edge is slow and leaves a small error for a fraction of the bit. With eight sections those errors add, the same way static errors do. So parity loses one rate step to a single stream at 100 GHz and half the rate at 50 GHz. The 2-input XOR reaches 200 and 125 Gb/s. A 5% random drive error at 100 Gb/s closes the eye from 96% to 84%, which is still open.
+
+The first section's bit reaches the PARITY fibre after 46 ps, 26 ps of which is the waveguide to the edge of the chip. An electronic chip doing the same job on eight 100 Gb/s streams with a 1.5 GHz clock must deserialise, compute and serialise: at least 2 ns.
+
+![Parity eye diagrams](figures/parity_eyes.png)
+
+![Parity eye opening against rate](figures/parity_rates.png)
+
+The [parity page](../parity/) lets you set the inputs, the drive error and the bit rate on the simulated chip.
+
 ## Testing a fabricated chip
 
 1. Align the fibre array on the loopback pair.
@@ -193,10 +265,11 @@ The stressed die has far more variation between bits than a real 3.7 mm die. It 
 ## Limits
 
 - No full-wave electromagnetic simulation beyond what the PDK models contain.
-- Heater thermal crosstalk is not modelled; heaters are at least 90 µm apart.
+- Heater thermal crosstalk is not modelled for the full adder and ALU; heaters are at least 90 µm apart. It is modelled for the parity chip, where calibration absorbs it.
 - Heater power and switching speed depend on the TiW process and must be measured. Thermal switches settle in tens of microseconds, so this chip shows the logic, not speed.
 - Waveguide loss (3 dB/cm) is an assumption.
-- The die area must fit the run's submission template. At 1.87 × 1.60 mm (full adder) and 3.72 × 3.08 mm (ALU), both are larger than the 605 × 410 µm cells of the SiEPIC course runs.
+- The die area must fit the run's submission template. At 1.87 × 1.60 mm (full adder), 3.72 × 3.08 mm (ALU) and 1.82 × 0.65 mm (parity), all are larger than the 605 × 410 µm cells of the SiEPIC course runs.
+- The parity chip's speed assumes fast phase modulators where the heaters are. Real ones are millimetres long, with travelling-wave electrodes, so the 150 µm section pitch and the input timing would be redesigned around them.
 - The ALU's carry chain and operation select are an electronic controller (comparators, heater drivers), modelled in `alu4_sim.py`, not drawn.
 
 ## Reproduce
@@ -207,10 +280,16 @@ python3 klayout/full_adder_siepic.py   # layout (.gds/.oas), SiEPIC verification
 python3 klayout/alu4_siepic.py         # 4-bit ALU layout, same checks
 python3 klayout/run_drc.py klayout/EBeam_heaters_atharvdubey_FullAdder.oas klayout/fa     # PDK DRC decks (needs the klayout executable)
 python3 klayout/run_drc.py klayout/EBeam_heaters_atharvdubey_ALU4.oas klayout/alu4
+python3 klayout/parity_siepic.py       # parity chip layout, same checks
+python3 klayout/run_drc.py klayout/EBeam_heaters_atharvdubey_Parity8.oas klayout/parity
 pip install -r requirements.txt
 python3 verify.py                      # design-rule and electrical checks (add a .gds path for the ALU)
 python3 full_adder_sim.py              # about 20 minutes; full_adder_results.json
 python3 alu4_sim.py                    # about 6 minutes; alu4_results.json
+python3 parity_sim.py                  # about 4 minutes; parity_results.json
+python3 speed/parity_speed.py          # about 6 minutes; speed/parity_speed_results.json
+python3 parity_figures.py              # parity figures (needs klayout and matplotlib)
+python3 parity_export_web.py           # ../parity/data.json for the page
 python3 figures.py
 python3 render_chip.py
 python3 alu4_figures.py

@@ -1,0 +1,84 @@
+{
+ "top_cell": "EBeam_heaters_atharvdubey_Parity8",
+ "die_um": [
+  1816.0,
+  651.0
+ ],
+ "siepic_verification_errors": 0,
+ "components": 28,
+ "waveguide_crossings": [],
+ "dangling_optical_pins": [],
+ "lengths_um": {
+  "laser_in": 52.6,
+  "arm_sig": 1631.844,
+  "arm_ref": 1631.843,
+  "par_out": 1885.143,
+  "npar_out": 1885.143
+ },
+ "section_pitch_um": 150.0,
+ "heater_pads": [
+  {
+   "name": "S1",
+   "between": [
+    "Parity_P0",
+    "Parity_P1"
+   ]
+  },
+  {
+   "name": "S2",
+   "between": [
+    "Parity_P1",
+    "Parity_P2"
+   ]
+  },
+  {
+   "name": "S3",
+   "between": [
+    "Parity_P2",
+    "Parity_P3"
+   ]
+  },
+  {
+   "name": "S4",
+   "between": [
+    "Parity_P3",
+    "Parity_P4"
+   ]
+  },
+  {
+   "name": "S5",
+   "between": [
+    "Parity_P4",
+    "Parity_P5"
+   ]
+  },
+  {
+   "name": "S6",
+   "between": [
+    "Parity_P5",
+    "Parity_P6"
+   ]
+  },
+  {
+   "name": "S7",
+   "between": [
+    "Parity_P6",
+    "Parity_P7"
+   ]
+  },
+  {
+   "name": "S8",
+   "between": [
+    "Parity_P7",
+    "Parity_P8"
+   ]
+  },
+  {
+   "name": "bias",
+   "between": [
+    "Parity_P8",
+    "Parity_P9"
+   ]
+  }
+ ]
+}

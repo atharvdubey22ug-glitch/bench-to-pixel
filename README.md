@@ -8,7 +8,9 @@ Open `index.html` in a browser. Scroll to zoom out; drag to look around.
 
 `alu/index.html` is a third page: the 4-bit optical ALU as a calculator (ADD, SUB, AND, OR, XOR), computing from each bit's simulated light levels (`alu/levels.json`, exported by `chip/alu4_export_web.py`; `alu/alu.js` reproduces `chip/alu4_sim.py`). Rebuild it with `python3 alu/build.py`.
 
-The chip designs (full adder, 4-bit ALU, single-pass XOR) and their simulations are in [`chip/`](chip/README.md). What the project shows, and what it doesn't, is summarised in [`CONCEPT.md`](CONCEPT.md).
+`parity/index.html` is a fourth page: the phase-encoded parity chip, eight input bits in one pass of light, with its light levels, the cost of drive errors and its eye diagrams from the simulation (`parity/data.json`, exported by `chip/parity_export_web.py`). Rebuild it with `python3 parity/build.py`.
+
+The chip designs (full adder, 4-bit ALU, single-pass XOR, phase-encoded parity) and their simulations are in [`chip/`](chip/README.md). What the project shows, and what it doesn't, is summarised in [`CONCEPT.md`](CONCEPT.md).
 
 ## What the page shows
 

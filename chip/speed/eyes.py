@@ -103,9 +103,16 @@ def experiment(tc, rate, setup, nbits=254, bw_mod=None, bw_rx=None, p_laser=10e-
         per[role] = w
     src = np.full(n, 1 + 0j)
     e = tc.run(n, per, tc.fibre[src_port], src, [out_port])[out_port]
+    r, folds, span = analyse(e, a_bits ^ b_bits, lead, spb, dt, rate, bw_rx, p_laser, tia_pA)
+    r.update(mode=mode, bw_mod_GHz=bw_mod / 1e9 if bw_mod else None)
+    return r, folds, span
+
+
+def analyse(e, want, lead, spb, dt, rate, bw_rx=None, p_laser=10e-3, tia_pA=20.0):
+    """Photocurrent from the output field e, aligned with the expected bits `want`; eye opening, width, Q."""
+    nbits, n = want.size, e.size
     i = F.DET["resp"] * p_laser * np.abs(e) ** 2              # photocurrent, A
     i = gfilter(i, dt, bw_rx)
-    want = a_bits ^ b_bits
     # latency: align the output with the expected bits (search a few bit periods of delay)
     dlys = np.arange(0, int(4 * spb) + int(200e-12 / dt), max(1, int(spb / 40)))
     cs = []
@@ -155,6 +162,6 @@ def experiment(tc, rate, setup, nbits=254, bw_mod=None, bw_rx=None, p_laser=10e-
     seg = int(round(2 * spb))
     folds = [i[int(t0 + k * spb) - seg // 4: int(t0 + k * spb) - seg // 4 + seg] for k in range(10, nbits - 6)]
     folds = np.array([f for f in folds if f.size == seg])
-    return dict(rate_Gbps=rate / 1e9, mode=mode, bw_mod_GHz=bw_mod / 1e9 if bw_mod else None, bw_rx_GHz=bw_rx / 1e9 if bw_rx else None,
+    return dict(rate_Gbps=rate / 1e9, bw_rx_GHz=bw_rx / 1e9 if bw_rx else None,
                 eye_opening_pct=100 * open_ / m1, eye_width_pct=100 * width, one_uA=m1 * 1e6, zero_uA=m0 * 1e6, Q=q, BER=ber,
                 sample_phase=phs, correct=bool(open_ > 0)), folds * 1e6, seg * dt * 1e12
