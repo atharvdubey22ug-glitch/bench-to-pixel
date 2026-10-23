@@ -318,10 +318,10 @@ One level is 16–23 µW of balanced output per mW of laser. To resolve one leve
 | Modulators and photodiodes | Every level apart (≥ 30% of the slot), aligned | Fires on 7 at Q ≥ 7, aligned | Unaligned |
 |---|---|---|---|
 | ideal | 200 G images/s | 200 | 25 (levels), 50 (decision) |
-| 100 GHz | 100 | 125 | 25 (levels), 50 (decision) |
+| 100 GHz | 100 | 100 | 25 (levels), 50 (decision) |
 | 50 GHz | 50 | 75 | 25 |
 
-One input toggling alone (no summing) keeps its levels apart to 200 Gb/s at 100 GHz. As in the parity chip, sixteen slow edges cost more than one. At 125 G images/s with 100 GHz modulators the levels still separate, over 28% of the slot. With ideal modulators at 400 Gb/s they separate over 23% of the slot and the decision becomes noise-limited at 10 mW. The first section's change reaches the output fibre after 59 ps, 29 ps of which is the waveguide to the edge. An electronic chip counting sixteen 100 Gb/s streams at a 1.5 GHz clock needs at least 2 ns.
+One input toggling alone (no summing) keeps its levels apart to 200 Gb/s at 100 GHz. As in the parity chip, sixteen slow edges cost more than one. At 125 G images/s with 100 GHz modulators the levels still separate, but over only 27% of the slot, and the decision's Q is 6.8. With ideal modulators at 400 Gb/s they separate over 10% of the slot and the decision becomes noise-limited at 10 mW (Q 5.3). The first section's change reaches the output fibre after 80 ps, 51 ps of which is the waveguide to the edge. An electronic chip counting sixteen 100 Gb/s streams at a 1.5 GHz clock needs at least 2 ns.
 
 ![Neuron eye diagrams](figures/perceptron_eyes.png)
 

@@ -33,8 +33,10 @@ LAM_UM = 1.55
 
 
 def _wg(length_um, corner=F.NOMINAL):
-    """Complex transmission at 1550 nm and group delay (s) of a strip waveguide, from the PDK model."""
-    d = 1e-4
+    """Complex transmission at 1550 nm and group delay (s) of a strip waveguide, from the PDK model.
+    The wavelength step is small enough that the phase moves well under pi between the three points
+    even for a 10 mm waveguide (a 0.1 nm step aliased the phase slope beyond about 2.5 mm)."""
+    d = 1e-6
     wl = jnp.array([LAM_UM - d, LAM_UM, LAM_UM + d])
     s = F.siepic.waveguide(wl=wl, length=length_um, loss=F.LOSS, width=corner[1], height=corner[0])
     t = np.asarray(s[("o0", "o1")])

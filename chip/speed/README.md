@@ -67,7 +67,7 @@ The one cost appears when the modulators are slow compared with the bit. If A tu
 
 ## Sixteen inputs: the optical neuron
 
-`perceptron_speed.py` runs the same model on the neuron chip (`../klayout/EBeam_heaters_atharvdubey_Perceptron16`). A stream of 3 × 5 pixel digit images drives its sixteen arms, one whole image per bit slot, with the weights holding a stored 7. The output is a ladder of levels, one per value of the weighted sum, and the neuron fires above a threshold. With the drives aligned to each section's place along its arm (up to 14.7 ps apart), every level stays apart to 100 G images/s with 100 GHz modulators, and the fires-on-7 decision holds at Q ≥ 7 to 125. With 50 GHz modulators it is 50 and 75, and 200 with ideal ones. Without alignment it fails above 25. Details in [the chip README](../README.md#optical-neuron).
+`perceptron_speed.py` runs the same model on the neuron chip (`../klayout/EBeam_heaters_atharvdubey_Perceptron16`). A stream of 3 × 5 pixel digit images drives its sixteen arms, one whole image per bit slot, with the weights holding a stored 7. The output is a ladder of levels, one per value of the weighted sum, and the neuron fires above a threshold. With the drives aligned to each section's place along its arm (up to 14.7 ps apart), every level stays apart to 100 G images/s with 100 GHz modulators, and the fires-on-7 decision holds at Q ≥ 7 to 100. With 50 GHz modulators it is 50 and 75, and 200 with ideal ones. Without alignment it fails above 25. Details in [the chip README](../README.md#optical-neuron).
 
 ## Limits
 
