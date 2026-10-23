@@ -49,24 +49,25 @@ from builder import Builder, USER, HEATER  # noqa: E402
 OUT = sys.argv[1] if len(sys.argv) > 1 else HERE
 TOP = f"EBeam_heaters_{USER}_Mesh8"
 N = 8
-P = 100.0                         # channel pitch; channel i at y = i P
+P = 100.0                         # mesh channel pitch; channel i at y = i P
+PE = 300.0                        # encoder pitch: a data heater is 270 um from the next channel
 YL = 3.5 * P                      # laser coupler and tree root
 BDC_LEN = 67.5                    # a broadband coupler's group delay as waveguide length (drawn 70.75 um),
                                   # from the PDK model's phase slope; see mesh_sim.path_delays()
 # tree (as in the neuron): root Y-branch at X1, levels DX apart, A lead before each turn
 X1, DX, A = 100.0, 50.0, 12.0
-H = [2 * P, P, P / 2]
+H = [2 * PE, PE, PE / 2]
 XLT = X1 + 2 * DX + 7.4 + A
 # encoders: Y-branch MZIs, arms +-AE, heater A on one arm and B on the other, offset in x
 XE0, AE, DS = 260.0, 30.0, 340.0
 L_EA = 280.0                      # straight arm length
-# mesh columns
-X_M = XE0 + 4 * DS + 20.0
+XC0 = XE0 + 4 * DS                # converger: encoder pitch -> mesh pitch, length-matched with meanders
+X_M = XC0 + 360.0
 AM = 20.0                         # MZI arms at +-AM about the coupler
 W = 762.0                         # column width
 SLOT = 140.0                      # x offset between the two heater slots
-Y_RT = (N - 1) * P + 50.0         # top output route (output 7)
-Y_RB0, Y_RB1 = -50.0, -70.0       # bottom output routes (outputs 0 and 1)
+Y_RT = YL + 3.5 * PE + 60.0       # top output route (output 7), above the encoders
+Y_RB0, Y_RB1 = YL - 3.5 * PE - 60.0, YL - 3.5 * PE - 80.0      # bottom output routes (outputs 0 and 1)
 Y_BUS_T, Y_BUS_B = Y_RT + 40.0, Y_RB1 - 40.0
 Y_PAD_T, Y_PAD_B = Y_BUS_T + 80.0, Y_BUS_B - 80.0      # pad centres
 
@@ -77,6 +78,10 @@ b.SHIFT = DCplxTrans(1, 0, False, 100.0, -Y_PAD_B + 100.0)
 ID = DCplxTrans()
 PATHS = []                         # (key, absolute points, length) of every waveguide drawn
 HEAT = {}                          # heater name -> dict(x0, y, mirrored, wires: [x_left, x_right], up)
+
+
+def yE(i):
+    return YL + (i - 3.5) * PE
 
 
 def wg(key, pts):
@@ -114,7 +119,7 @@ for lv in range(3):
                 wg(f"tree{lv}", [(x + 7.4, c + s * 2.75), (x + 7.4 + A, c + s * 2.75), (x + 7.4 + A, y), (x + DX - 7.4, y)])
                 nxt.append(y)
             else:
-                i = int(round(y / P))
+                i = int(round((y - YL) / PE + 3.5))
                 # leaf: turn onto channel i, run to this channel's encoder
                 u = i - 4 if i >= 4 else 3 - i                        # staircase step
                 wg(f"ch{i}_in", [(x + 7.4, c + s * 2.75), (XLT, c + s * 2.75), (XLT, y), (XE0 + u * DS, y)])
@@ -125,7 +130,7 @@ ENC = {}
 for i in range(N):
     up = i >= 4
     u = i - 4 if up else 3 - i
-    y = i * P
+    y = yE(i)
     xin = XE0 + u * DS
     xe = xin + 7.4
     b.place(b.C_Y, ID, xe, y)
@@ -141,8 +146,43 @@ for i in range(N):
         wg(key, [(xe + 7.4, y + sgn * 2.75), (xa0, y + sgn * 2.75), (xa0, ya), (x_h, ya)])
         heater(f"E{i}{arm}", x_h, ya, up, key)
         wg(key, [(x_h + HEATER, ya), (xa1, ya), (xa1, y + sgn * 2.75), (xe2 - 7.4, y + sgn * 2.75)])
-    wg(f"ch{i}_enc_out", [(xe2 + 7.4, y), (X_M, y)])
     ENC[i] = dict(step=u, x_in=xin, x_out=xe2 + 7.4)
+
+
+def converger(i, n=0, h=0.0, draw=True):
+    """Channel i from its encoder to the mesh: inner channels turn first; n meanders of height h
+    (toward the centre line) make up for the shorter vertical run."""
+    y0, y1 = yE(i), i * P
+    sg = -1.0 if i >= 4 else 1.0
+    xv = XC0 + 200.0 + (abs(i - 3.5) - 0.5) * 40.0
+    pts = [(ENC[i]["x_out"], y0), (XC0 + 10.0, y0)]
+    for k in range(n):
+        x0 = XC0 + 20.0 + k * 40.0
+        pts += [(x0, y0), (x0, y0 + sg * h), (x0 + 20.0, y0 + sg * h), (x0 + 20.0, y0)]
+    pts += [(xv, y0), (xv, y1), (X_M, y1)]
+    if draw:
+        return wg(f"ch{i}_enc_out", pts)
+    c = b.ly.create_cell("Waveguide", "EBeam", {"path": pya.DPath([DPoint(*q) for q in pts], 0.5), "waveguide_type": "Strip TE 1550 nm, w=500 nm"})
+    L = float(c.display_title().split("_")[-1])
+    b.ly.delete_cell(c.cell_index())
+    return L
+
+
+# total channel length (leaf -> mesh) must be equal: ch_in + encoder span + converger
+L0 = {i: converger(i, draw=False) + (ENC[i]["x_in"] - XLT) for i in range(N)}
+L_TARGET = max(L0.values())
+MEANDER = {}
+for i in range(N):
+    d = L_TARGET - L0[i]
+    if d < 0.01:
+        MEANDER[i] = (0, 0.0)
+        continue
+    n = int(math.ceil(d / 170.0))
+    l1, l2 = converger(i, n, 20.0, draw=False), converger(i, n, 60.0, draw=False)
+    MEANDER[i] = (n, 20.0 + (L_TARGET - (ENC[i]["x_in"] - XLT) - l1) * 40.0 / (l2 - l1))
+    assert MEANDER[i][1] <= 100.0, MEANDER
+for i in range(N):
+    converger(i, *MEANDER[i])
 
 # ---------------------------------------------------------------- mesh
 # (lower channel i, wires up?, slot) per column
@@ -312,6 +352,8 @@ report = dict(top_cell=TOP, die_um=r["die"], siepic_verification_errors=r["n_err
               min_pad_pitch_um=round(min(min(b_ - a_ for a_, b_ in zip(px[:-1], px[1:])) for px in (pad_x_top, pad_x_bot)), 2),
               channel_pitch_um=P, column_width_um=W, mzi_channel_path_um=round(L_MZI, 3), passthrough_bump_um=round(H_PASS, 3),
               passthrough_path_um=round(pass_len, 3), coupler_delay_as_length_um=BDC_LEN,
+              encoder_pitch_um=PE, converger_meanders={f"ch{i}": [MEANDER[i][0], round(MEANDER[i][1], 3)] for i in range(N)},
+              channel_lengths_um={f"ch{i}": round(Ls[f"ch{i}_in"] + Ls[f"enc{i}_A"] + Ls[f"ch{i}_enc_out"], 3) for i in range(N)},
               encoder_arm_lengths_um={f"E{i}": [round(Ls[f"enc{i}_A"], 3), round(Ls[f"enc{i}_B"], 3)] for i in range(N)},
               lengths_um={k: round(v, 3) for k, v in Ls.items()}, heater_pads=heater_pads, mzis=MZIS)
 with open(os.path.join(OUT, "mesh_build_report.json"), "w") as f:

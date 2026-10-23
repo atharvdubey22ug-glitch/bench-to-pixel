@@ -1,8 +1,8 @@
 {
  "top_cell": "EBeam_heaters_atharvdubey_Mesh8",
  "die_um": [
-  7947.0,
-  1251.0
+  8287.0,
+  2671.0
  ],
  "siepic_verification_errors": 0,
  "components": 455,
@@ -19,6 +19,51 @@
  "passthrough_bump_um": 58.948,
  "passthrough_path_um": 873.689,
  "coupler_delay_as_length_um": 67.5,
+ "encoder_pitch_um": 300.0,
+ "converger_meanders": {
+  "ch0": [
+   0,
+   0.0
+  ],
+  "ch1": [
+   2,
+   53.103
+  ],
+  "ch2": [
+   3,
+   69.77
+  ],
+  "ch3": [
+   4,
+   78.103
+  ],
+  "ch4": [
+   4,
+   78.103
+  ],
+  "ch5": [
+   3,
+   69.77
+  ],
+  "ch6": [
+   2,
+   53.103
+  ],
+  "ch7": [
+   0,
+   0.0
+  ]
+ },
+ "channel_lengths_um": {
+  "ch0": 2632.338,
+  "ch1": 2632.336,
+  "ch2": 2632.338,
+  "ch3": 2632.335,
+  "ch4": 2632.335,
+  "ch5": 2632.338,
+  "ch6": 2632.336,
+  "ch7": 2632.338
+ },
  "encoder_arm_lengths_um": {
   "E0": [
    348.294,
@@ -55,40 +100,40 @@
  },
  "lengths_um": {
   "laser_in": 92.6,
-  "tree0": 458.694,
-  "tree1": 517.388,
-  "ch7_in": 1116.747,
-  "ch6_in": 776.747,
-  "ch5_in": 436.747,
-  "ch4_in": 96.747,
-  "ch3_in": 96.747,
-  "ch2_in": 436.747,
-  "ch1_in": 776.747,
-  "ch0_in": 1116.747,
+  "tree0": 1258.694,
+  "tree1": 1317.388,
+  "ch7_in": 1216.747,
+  "ch6_in": 876.747,
+  "ch5_in": 536.747,
+  "ch4_in": 196.747,
+  "ch3_in": 196.747,
+  "ch2_in": 536.747,
+  "ch1_in": 876.747,
+  "ch0_in": 1216.747,
   "enc0_A": 348.294,
   "enc0_B": 348.294,
-  "ch0_enc_out": 30.4,
   "enc1_A": 348.294,
   "enc1_B": 348.294,
-  "ch1_enc_out": 370.4,
   "enc2_A": 348.294,
   "enc2_B": 348.294,
-  "ch2_enc_out": 710.4,
   "enc3_A": 348.294,
   "enc3_B": 348.294,
-  "ch3_enc_out": 1050.4,
   "enc4_A": 348.294,
   "enc4_B": 348.294,
-  "ch4_enc_out": 1050.4,
   "enc5_A": 348.294,
   "enc5_B": 348.294,
-  "ch5_enc_out": 710.4,
   "enc6_A": 348.294,
   "enc6_B": 348.294,
-  "ch6_enc_out": 370.4,
   "enc7_A": 348.294,
   "enc7_B": 348.294,
-  "ch7_enc_out": 30.4,
+  "ch0_enc_out": 1067.297,
+  "ch1_enc_out": 1407.295,
+  "ch2_enc_out": 1747.297,
+  "ch3_enc_out": 2087.294,
+  "ch4_enc_out": 2087.294,
+  "ch5_enc_out": 1747.297,
+  "ch6_enc_out": 1407.295,
+  "ch7_enc_out": 1067.297,
   "c0_ch0": 344.547,
   "c0_ch1": 344.547,
   "c0_m0_theta_arm": 329.094,
@@ -270,9 +315,9 @@
   "out4_term": 10.0,
   "out5_term": 10.0,
   "out6_term": 10.0,
-  "route_o7": 8132.793,
-  "route_o0": 8132.793,
-  "route_o1": 8205.793
+  "route_o7": 9892.793,
+  "route_o0": 9892.793,
+  "route_o1": 9965.793
  },
  "heater_pads": [
   {
