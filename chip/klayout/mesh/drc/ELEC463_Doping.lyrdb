@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<report-database>
+ <description>DRC ELEC463-2018 Chip2</description>
+ <original-file/>
+ <generator>drc: script='klayout/mesh/drc/ELEC463_Doping.drc'</generator>
+ <top-cell>EBeam_heaters_atharvdubey_Mesh8</top-cell>
+ <tags>
+ </tags>
+ <categories>
+  <category>
+   <name>Si_width</name>
+   <description>Si minimum feature size violation; min 60 nm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>Si_space</name>
+   <description>Si minimum space violation; min 60 nm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>M_width</name>
+   <description>Metal minimum feature size violation; min 3 µm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>M_space</name>
+   <description>Metal minimum space violation; min 5 µm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>Npp_width</name>
+   <description>Doping minimum feature size violation; min 3 µm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>Npp_space</name>
+   <description>Doping minimum space violation; min 5 µm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>M_Si_separation</name>
+   <description>Metal-Si minimum separation violation; min 4 µm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>Npp_Si_separation</name>
+   <description>Npp-Si minimum separation violation; min 4 µm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>M_Npp_overlap</name>
+   <description>Metal-Npp minimum overlap violation; min 7 µm</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>Boundary</name>
+   <description>devices are out of boundary</description>
+   <categories>
+   </categories>
+  </category>
+ </categories>
+ <cells>
+  <cell>
+   <name>EBeam_heaters_atharvdubey_Mesh8</name>
+   <variant/>
+   <references>
+   </references>
+  </cell>
+ </cells>
+ <items>
+ </items>
+</report-database>
