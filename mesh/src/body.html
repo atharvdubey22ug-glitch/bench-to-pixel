@@ -1,0 +1,324 @@
+<div class="wrap">
+  <div class="top">
+    <a class="brand" href="https://atharvdubey22ug-glitch.github.io/bench-to-pixel/" aria-label="Back to Bench to Pixel">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#111a1e"/><path d="M8 40 L28 24 L56 24" stroke="#ff5a47" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="28" cy="24" r="5" fill="#eba340"/></svg>
+      Bench to Pixel <span class="t">/ matrix</span>
+    </a>
+    <nav class="crumb" aria-label="Related pages">
+      <a href="https://atharvdubey22ug-glitch.github.io/bench-to-pixel/perceptron/">Neuron</a>
+      <a href="https://atharvdubey22ug-glitch.github.io/bench-to-pixel/parity/">Parity</a>
+      <a href="https://atharvdubey22ug-glitch.github.io/bench-to-pixel/alu/">4-bit ALU</a>
+      <a href="https://github.com/atharvdubey22ug-glitch/bench-to-pixel/blob/main/CONCEPT.md">The idea</a>
+    </nav>
+  </div>
+
+  <header class="hero">
+    <h1>A layer of a neural network, made of <em>light</em></h1>
+    <p class="lede">Eight numbers go in as light. A mesh of 28 interferometers mixes them, and photodiodes read what comes out: <strong>one layer of a network, 64 multiply-adds, in one pass of light</strong>. Two passes, with a little electronics in between, read handwritten digits. Draw one below. The chip's answers on this page come from a simulated chip that was calibrated and programmed using nothing but its own three outputs.</p>
+  </header>
+
+  <section class="panel" aria-labelledby="drawTitle">
+    <h2 id="drawTitle" hidden>Draw a digit</h2>
+    <div class="duo">
+      <div class="pad">
+        <span class="lab" id="padLab">Draw a digit (0 to 9)</span>
+        <canvas class="cv" id="cv" width="280" height="280" aria-labelledby="padLab"></canvas>
+        <div class="row"><button class="btn" type="button" id="clear">Clear</button></div>
+        <span class="lab" id="tLab">Or pick a test digit (MNIST)</span>
+        <div class="thumbs" id="thumbs" role="group" aria-labelledby="tLab"></div>
+      </div>
+      <div class="ans" aria-live="polite">
+        <div class="big" id="big"></div>
+        <div class="verdict" id="verdict"></div>
+        <div class="scores" id="scores" role="group" aria-label="Score of each digit: chip (bar) and software (white mark)"></div>
+        <p class="cap" id="scCap">Bar: the chip. White mark: the same network in software. Scores are softmax of the network's outputs.</p>
+      </div>
+    </div>
+    <div class="flow">
+      <div class="field">
+        <span class="lab">Into the chip: 7 features and a constant (cyan)</span>
+        <div class="feat" id="feat"></div>
+      </div>
+      <div class="field">
+        <span class="lab">Out of layer 1: seven detected intensities (red: chip, white: software)</span>
+        <div class="feat" id="hid"></div>
+      </div>
+    </div>
+    <p class="cap" id="flowCap"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="howTitle">
+    <h2 id="howTitle">What one pass of light does</h2>
+    <ol class="steps">
+      <li><strong>Inputs.</strong> A 1-to-8 splitter feeds eight Mach-Zehnder encoders. Each has a heater on both arms, driven in opposite directions (push-pull), so it sends on cos(Δ/2) of its light at a fixed phase: any value from −1 to +1, sign included.</li>
+      <li><strong>The mesh.</strong> Eight columns of 2 × 2 interferometers, 28 in all, each with an internal phase θ and an input phase φ. With its 56 heaters set, the mesh multiplies the eight input fields by an 8 × 8 unitary matrix U: every output is a weighted sum of every input, with complex weights.</li>
+      <li><strong>Detection.</strong> A photodiode reads |U<sub>k</sub> · x|², the squared magnitude of row k times the input. That square is the network's nonlinearity in layer 1, and with a constant on the eighth input it contains terms linear in the features too.</li>
+      <li><strong>Three rows at a time.</strong> The test rules for this fabrication run allow one laser coupler and three detector couplers per circuit, so only outputs 7, 0 and 1 reach a fibre. A layer is read in pages of three rows: the mesh is set so the wanted rows land on those three outputs. Seven hidden units take three settings, ten digit scores take four. A process with on-chip photodiodes would read a whole unitary in one pass.</li>
+      <li><strong>Between layers.</strong> Electronics turn the seven intensities into z = clip(a·h + b, 0, 1) and send them, with a constant, back in as layer 2's inputs. The largest of the ten detected scores is the answer.</li>
+    </ol>
+    <p class="small" id="calNote"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="cornTitle">
+    <h2 id="cornTitle">Chip against software, on 10,000 test digits</h2>
+    <div class="two">
+      <svg class="chart" id="corners" viewBox="0 0 640 300" role="img" aria-labelledby="cornTitle cornCap"></svg>
+      <div class="field">
+        <p class="small" id="cornText"></p>
+        <p class="cap" id="cornCap"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="spTitle">
+    <h2 id="spTitle">How fast</h2>
+    <div class="two">
+      <svg class="chart" id="speed" viewBox="0 0 640 300" role="img" aria-labelledby="spTitle spCap"></svg>
+      <div class="field">
+        <p class="small" id="spText"></p>
+        <dl class="facts" id="spFacts"></dl>
+        <p class="cap" id="spCap"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="chipTitle">
+    <h2 id="chipTitle">The chip</h2>
+    <div class="chippic">
+      <img id="layout" alt="Layout of the mesh chip: grating couplers at the left, a 1-to-8 splitter tree, eight encoders in a staircase, a converger, eight columns of interferometers, wires to rows of probe pads at the top and bottom">
+      <dl class="facts" id="facts"></dl>
+    </div>
+  </section>
+
+  <section class="panel notes" aria-label="Notes">
+    <section>
+      <h3>What is simulated</h3>
+      <ul>
+        <li>The circuit is read from the SiEPIC extraction of the drawn layout and solved with the EBeam PDK's component models at nine process corners. Reflections in the splitter tree and encoders are solved exactly; the forward model agrees with the full scattering solution to <span id="mc"></span> of full scale.</li>
+        <li>Each die gets random phases on every waveguide, ±10% heater efficiency, thermal crosstalk along the drawn paths, 16-bit drivers and detector noise.</li>
+        <li>Calibration and programming see only the three detector readings.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>What it is not</h3>
+      <ul>
+        <li>The features (7 principal components of the 28 × 28 image) are computed in electronics, and that takes more arithmetic (5,488 multiply-adds) than the two optical layers (136).</li>
+        <li>The heaters are thermal: reprogramming takes microseconds, and the speed study assumes fast modulators at the encoders.</li>
+        <li>The weights are unitary and complex, read as squared magnitudes; this is not a general real-valued matrix.</li>
+        <li>Optical meshes for neural networks are not new (MIT 2017, Lightmatter and others). The new part here is the full chain from verified layout to calibrated network, in the open.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>Files</h3>
+      <p class="src">Layout <code>chip/klayout/mesh_siepic.py</code>, network <code>chip/mesh_net.py</code>, simulation and calibration <code>chip/mesh_sim.py</code>, speed <code>chip/speed/mesh_speed.py</code>, in <a href="https://github.com/atharvdubey22ug-glitch/bench-to-pixel">bench-to-pixel</a>. Data: MNIST (LeCun, Cortes and Burges). Layout: Clements et al., Optica 3, 1460 (2016).</p>
+    </section>
+  </section>
+</div>
+
+<script type="application/json" id="data">/*DATA*/</script>
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const D = JSON.parse($("data").textContent);
+  $("layout").src = "/*LAYOUT*/";
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const C = { ink: css("--ink"), line: css("--line"), fg: css("--fg"), muted: css("--muted"), faint: css("--faint"), laser: css("--laser"), beam: css("--beam"), petg: css("--petg") };
+  const pct = (v, d = 1) => `${(v * 100).toFixed(d)}%`;
+  const NF = 7, NI = 8;
+
+  // ---------------------------------------------------------------- network (mesh_net.forward) in software and on the chip
+  const cx = p => ({ re: p[0], im: p[1] });
+  const P1 = D.net.pages1.map(cx), P2 = D.net.pages2.map(cx);
+  function soft(k, x) {                           // |t . x|^2 for each row of page k
+    const p = k < P1.length ? P1[k] : P2[k - P1.length];
+    return p.re.map((re, r) => { let a = 0, b = 0; for (let j = 0; j < NI; j++) { a += re[j] * x[j]; b += p.im[r][j] * x[j]; } return a * a + b * b; });
+  }
+  function chip(k, x) {                           // x^T Q x: the simulated chip's measured response (mesh_export_web.py)
+    return D.chip.Q[k].map(Q => { let s = 0; for (let i = 0; i < NI; i++) for (let j = 0; j < NI; j++) s += x[i] * Q[i][j] * x[j]; return s; });
+  }
+  function forward(x, layer) {
+    const h = [];
+    for (let k = 0; k < P1.length; k++) h.push(...layer(k, x));
+    const z = h.map((v, i) => Math.min(1, Math.max(0, D.net.a[i] * v + D.net.b[i])));
+    z.push(1);
+    const s = [];
+    for (let k = 0; k < P2.length; k++) s.push(...layer(P1.length + k, z));
+    const logit = s.map((v, i) => D.net.k * v + D.net.c[i]);
+    return { h, z, s, logit };
+  }
+  function features(img) {                        // img: 784 values 0..1 -> 7 clipped principal components + 1
+    const f = D.features, x = [];
+    for (let k = 0; k < NF; k++) {
+      let s = 0; const c = f.comp[k];
+      for (let i = 0; i < 784; i++) s += (img[i] - f.mean[i]) * c[i];
+      x.push(Math.min(1, Math.max(-1, s / f.sd[k] / f.scale)));
+    }
+    x.push(1);
+    return x;
+  }
+  const softmax = v => { const m = Math.max(...v), e = v.map(a => Math.exp(a - m)), s = e.reduce((a, b) => a + b, 0); return e.map(a => a / s); };
+  const argmax = v => v.indexOf(Math.max(...v));
+
+  // ---------------------------------------------------------------- drawing -> 28 x 28, centred like MNIST
+  const cv = $("cv"), g = cv.getContext("2d");
+  function clearPad() { g.fillStyle = "#000"; g.fillRect(0, 0, 280, 280); }
+  clearPad();
+  let drawing = false, last = null, dirty = false;
+  const pos = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * 280 / r.width, (e.clientY - r.top) * 280 / r.height]; };
+  cv.addEventListener("pointerdown", e => { drawing = true; last = pos(e); cv.setPointerCapture(e.pointerId); stroke(last, last); });
+  cv.addEventListener("pointermove", e => { if (!drawing) return; const p = pos(e); stroke(last, p); last = p; });
+  const end = () => { if (drawing) { drawing = false; run(fromPad()); } };
+  cv.addEventListener("pointerup", end); cv.addEventListener("pointercancel", end);
+  function stroke(a, b) {
+    g.strokeStyle = "#fff"; g.lineWidth = 22; g.lineCap = "round"; g.lineJoin = "round";
+    g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); dirty = true;
+    if (!pending) { pending = true; requestAnimationFrame(() => { pending = false; if (dirty) run(fromPad()); }); }
+  }
+  let pending = false;
+  $("clear").addEventListener("click", () => { clearPad(); dirty = false; selThumb(-1); show(null); });
+  function fromPad() {
+    const im = g.getImageData(0, 0, 280, 280).data;
+    let x0 = 280, y0 = 280, x1 = -1, y1 = -1;
+    for (let y = 0; y < 280; y++) for (let x = 0; x < 280; x++) if (im[(y * 280 + x) * 4] > 30) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+    if (x1 < 0) return null;
+    const w = x1 - x0 + 1, h = y1 - y0 + 1, sc = 20 / Math.max(w, h);
+    const t = document.createElement("canvas"); t.width = t.height = 28;
+    const tg = t.getContext("2d"); tg.fillStyle = "#000"; tg.fillRect(0, 0, 28, 28); tg.imageSmoothingQuality = "high";
+    const dw = w * sc, dh = h * sc;
+    tg.drawImage(cv, x0, y0, w, h, (28 - dw) / 2, (28 - dh) / 2, dw, dh);
+    let d = tg.getImageData(0, 0, 28, 28).data, img = new Float64Array(784), m = 0, mx = 0, my = 0;
+    for (let i = 0; i < 784; i++) { img[i] = d[i * 4] / 255; m += img[i]; mx += img[i] * (i % 28); my += img[i] * Math.floor(i / 28); }
+    const sx = Math.round(14 - mx / m - 0.5), sy = Math.round(14 - my / m - 0.5), out = new Float64Array(784);
+    for (let y = 0; y < 28; y++) for (let x = 0; x < 28; x++) { const X = x - sx, Y = y - sy; if (X >= 0 && X < 28 && Y >= 0 && Y < 28) out[y * 28 + x] = img[Y * 28 + X]; }
+    return out;
+  }
+
+  // ---------------------------------------------------------------- test digits
+  const digs = D.digits.img.map(b => { const s = atob(b), a = new Float64Array(784); for (let i = 0; i < 784; i++) a[i] = s.charCodeAt(i) / 255; return a; });
+  const tb = $("thumbs");
+  digs.forEach((img, n) => {
+    const b = document.createElement("button"); b.type = "button";
+    b.setAttribute("aria-label", `Test digit ${n + 1}: a ${D.digits.label[n]}`);
+    const c = document.createElement("canvas"); c.width = c.height = 28;
+    const cg = c.getContext("2d"), id = cg.createImageData(28, 28);
+    for (let i = 0; i < 784; i++) { const v = Math.round(img[i] * 255); id.data.set([v, v, v, 255], i * 4); }
+    cg.putImageData(id, 0, 0); b.appendChild(c);
+    b.addEventListener("click", () => { selThumb(n); paint(img); run(img, D.digits.label[n]); });
+    tb.appendChild(b);
+  });
+  function selThumb(n) { [...tb.children].forEach((b, i) => b.classList.toggle("sel", i === n)); }
+  function paint(img) {
+    const t = document.createElement("canvas"); t.width = t.height = 28; const tg = t.getContext("2d"), id = tg.createImageData(28, 28);
+    for (let i = 0; i < 784; i++) { const v = Math.round(img[i] * 255); id.data.set([v, v, v, 255], i * 4); }
+    tg.putImageData(id, 0, 0); clearPad(); g.imageSmoothingEnabled = false; g.drawImage(t, 0, 0, 280, 280); g.imageSmoothingEnabled = true; dirty = false;
+  }
+
+  // ---------------------------------------------------------------- show
+  function bars(el, vals, ticks, cls, max, names, signed) {
+    el.innerHTML = vals.map((v, i) => {
+      const t = ticks ? ticks[i] : null;
+      let bar, tick = "";
+      if (signed) { const y = 50 - v * 50; bar = `<i style="top:${Math.min(50, y)}%;height:${Math.abs(v) * 50}%"></i>`; }
+      else { bar = `<i style="bottom:0;height:${Math.min(100, v / max * 100)}%"></i>`; if (t != null) tick = `<u style="bottom:calc(${Math.min(100, t / max * 100)}% - 1px)"></u>`; }
+      return `<div class="fb"><div class="col ${cls}">${bar}${tick}</div><span class="nm">${names[i]}</span><span class="v">${v.toFixed(signed ? 2 : 3)}</span></div>`;
+    }).join("");
+  }
+  function show(img, label) {
+    if (!img) {
+      $("big").innerHTML = `<span class="op" style="color:var(--muted);font-size:.5em">Draw a digit or pick one</span>`;
+      $("verdict").innerHTML = ""; $("scores").innerHTML = ""; $("feat").innerHTML = ""; $("hid").innerHTML = ""; $("flowCap").textContent = "";
+      return;
+    }
+    const x = features(img), A = forward(x, chip), B = forward(x, soft);
+    const pa = softmax(A.logit), pb = softmax(B.logit), wa = argmax(A.logit), wb = argmax(B.logit);
+    $("big").innerHTML = `<span><small>chip</small> <span class="res">${wa}</span></span><span><small>software</small> ${wb}</span>`;
+    const same = wa === wb ? `<span class="pill ok">same answer</span>` : `<span class="pill warn">chip and software differ</span>`;
+    const lab = label != null ? (wa === label ? `<span class="pill ok">correct: it is a ${label}</span>` : `<span class="pill bad">wrong: it is a ${label}</span>`) : "";
+    $("verdict").innerHTML = same + lab;
+    $("scores").innerHTML = pa.map((p, d) => `<div class="sc${d === wa ? " win" : ""}"><b>${d}</b><div class="tr"><i style="width:${(p * 100).toFixed(1)}%"></i><u style="left:calc(${(pb[d] * 100).toFixed(1)}% - 1px)"></u></div><span>${pct(p, 0)}</span><span class="s">${pct(pb[d], 0)}</span></div>`).join("");
+    bars($("feat"), x, null, "", 1, ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "1"], true);
+    const hm = Math.max(...A.h, ...B.h, 1e-9);
+    bars($("hid"), A.h, B.h, "h", hm, ["h1", "h2", "h3", "h4", "h5", "h6", "h7"], false);
+    $("flowCap").textContent = `Layer 1 is read in three settings of the mesh (h1–h3, h4–h6, h7). Its outputs, through the electronics, are layer 2's inputs; layer 2 takes four settings for the ten scores. Chip: the example die at ${D.chip.corner[0]}/${D.chip.corner[1]} nm, its response measured after calibration.`;
+  }
+  function run(img, label) { show(img, label); }
+  show(null);
+
+  // ---------------------------------------------------------------- text from the results
+  const S = D.summary, F = D.facts, dm = D.die_model, sw = D.software;
+  $("mc").textContent = pct(Math.max(D.model_check.nominal.max_relative_difference, D.model_check.corner_210_480.max_relative_difference), 1);
+  $("calNote").innerHTML = `<strong>Calibration, from the three detectors only.</strong> Each encoder's two heaters are swept together and fitted with the push-pull model; its zero is then refined, and the encoder's output phase is turned a quarter period to measure imaginary parts. Each mesh heater is swept to measure its period. Then each page is programmed by Levenberg–Marquardt on measured data: 36 inputs (each alone and every pair, plus their quarter-turned versions) give the three rows the mesh is producing, every heater is nudged to measure how they move, and the heaters are adjusted until the rows match. About ${(F.measurements_per_die / 1e6).toFixed(1)} million readings per die, roughly a minute at heater speed.`;
+  $("cornText").innerHTML = `The same network in software scores <strong>${pct(sw.acc, 2)}</strong>. On ${S.dies} simulated dies across nine process corners the chip scores <strong>${pct(S.accuracy_min, 1)} to ${pct(D.dies.reduce((a, d) => Math.max(a, d.a), 0), 1)}</strong> (mean ${pct(S.accuracy_mean, 2)}) and gives the software's answer on <strong>${pct(S.agreement_mean, 1)}</strong> of digits on average, ${pct(S.agreement_min, 1)} on the worst die. For scale: a linear classifier on the same seven features gets ${pct(sw.linear, 1)}, an electronic network with seven hidden units ${pct(sw.mlp, 1)}.`;
+  $("cornCap").textContent = "Dots: one die each, calibrated and programmed from its three outputs, then tested on all 10,000 MNIST test digits with detector noise. White: mean per corner. Red: software.";
+  // corners chart
+  (() => {
+    const svg = $("corners"), W = 640, H = 300, L = 54, R = 14, T = 16, B = 46;
+    const accs = D.dies.map(d => d.a), lo = Math.floor(Math.min(...accs) * 100 - 0.5), hi = Math.ceil(sw.acc * 100 + 0.5);
+    const X = i => L + (i + 0.5) * (W - L - R) / 9, Y = v => T + (hi - v * 100) / (hi - lo) * (H - T - B);
+    let s = "";
+    for (let v = lo; v <= hi; v++) s += `<line x1="${L}" x2="${W - R}" y1="${Y(v / 100)}" y2="${Y(v / 100)}" stroke="${C.line}"/><text x="${L - 8}" y="${Y(v / 100) + 4}" fill="${C.muted}" font-size="11" text-anchor="end" font-family="JetBrains Mono">${v}%</text>`;
+    D.corners.forEach((c, i) => {
+      const ds = D.dies.filter(d => d.c[0] === c.corner[0] && d.c[1] === c.corner[1]);
+      ds.forEach((d, j) => s += `<circle cx="${X(i) + (j - (ds.length - 1) / 2) * 4}" cy="${Y(d.a)}" r="2.6" fill="${C.beam}" opacity=".8"/>`);
+      s += `<line x1="${X(i) - 18}" x2="${X(i) + 18}" y1="${Y(c.acc[1])}" y2="${Y(c.acc[1])}" stroke="${C.fg}" stroke-width="2"/>`;
+      s += `<text x="${X(i)}" y="${H - B + 18}" fill="${C.muted}" font-size="10.5" text-anchor="middle" font-family="JetBrains Mono">${c.corner[0]}/${c.corner[1]}</text>`;
+    });
+    s += `<line x1="${L}" x2="${W - R}" y1="${Y(sw.acc)}" y2="${Y(sw.acc)}" stroke="${C.laser}" stroke-width="1.5"/><text x="${W - R - 4}" y="${Y(sw.acc) - 6}" fill="${C.laser}" font-size="11" text-anchor="end" font-family="JetBrains Mono">software ${pct(sw.acc, 2)}</text>`;
+    s += `<text x="${(L + W - R) / 2}" y="${H - 8}" fill="${C.faint}" font-size="10.5" text-anchor="middle" font-family="JetBrains Mono">corner: silicon thickness / waveguide width (nm)</text>`;
+    svg.innerHTML = s;
+  })();
+  // speed
+  (() => {
+    const sp = D.speed, svg = $("speed"), W = 640, H = 300, L = 54, R = 14, T = 16, B = 46;
+    const runs = sp.runs.filter(r => r.al);
+    const accs = runs.flatMap(r => [r.acc, r.acc10, r.acc100]).concat([sp.dc.accuracy]);
+    const lo = Math.max(0, Math.floor(Math.min(...accs) * 10) / 10 - 0.1), hi = Math.min(1, Math.ceil(Math.max(...accs) * 20) / 20 + 0.02);
+    const lx = Math.log(25), rx = Math.log(400);
+    const X = r => L + (Math.log(r) - lx) / (rx - lx) * (W - L - R), Y = v => T + (hi - v) / (hi - lo) * (H - T - B);
+    let s = "";
+    for (let v = Math.ceil(lo * 10) / 10; v <= hi + 1e-9; v += 0.1) s += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${C.line}"/><text x="${L - 8}" y="${Y(v) + 4}" fill="${C.muted}" font-size="11" text-anchor="end" font-family="JetBrains Mono">${Math.round(v * 100)}%</text>`;
+    [25, 50, 100, 200, 400].forEach(r => s += `<text x="${X(r)}" y="${H - B + 18}" fill="${C.muted}" font-size="11" text-anchor="middle" font-family="JetBrains Mono">${r}</text>`);
+    s += `<line x1="${L}" x2="${W - R}" y1="${Y(sp.dc.accuracy)}" y2="${Y(sp.dc.accuracy)}" stroke="${C.laser}" stroke-width="1.5"/><text x="${L + 6}" y="${Y(sp.dc.accuracy) - 6}" fill="${C.laser}" font-size="11" font-family="JetBrains Mono">same chip, slow: ${pct(sp.dc.accuracy, 1)}</text>`;
+    const io = [["ideal", C.fg, "ideal, no noise"], ["lithium_niobate_100GHz", C.beam, "100 GHz, no noise"], ["silicon_50GHz", C.petg, "50 GHz, no noise"]];
+    const line = (rs, key, col, dash) => { s += `<polyline fill="none" stroke="${col}" stroke-width="2" ${dash ? `stroke-dasharray="${dash}"` : ""} points="${rs.map(r => `${X(r.rate)},${Y(r[key])}`).join(" ")}"/>`; rs.forEach(r => s += `<circle cx="${X(r.rate)}" cy="${Y(r[key])}" r="2.6" fill="${col}"/>`); };
+    io.forEach(([k, col, nm], n) => {
+      const rs = runs.filter(r => r.io === k).sort((a, b) => a.rate - b.rate);
+      line(rs, "acc", col, null);
+      s += `<text x="${L + 10}" y="${H - B - 12 - (4 - n) * 15}" fill="${col}" font-size="11" font-family="JetBrains Mono">${nm}</text>`;
+    });
+    const r100 = runs.filter(r => r.io === "lithium_niobate_100GHz").sort((a, b) => a.rate - b.rate);
+    line(r100, "acc100", C.beam, "6 4");
+    line(r100, "acc10", C.beam, "2 4");
+    s += `<text x="${L + 10}" y="${H - B - 12 - 15}" fill="${C.beam}" font-size="11" font-family="JetBrains Mono">100 GHz, 100 mW laser (dashed)</text>`;
+    s += `<text x="${L + 10}" y="${H - B - 12}" fill="${C.beam}" font-size="11" font-family="JetBrains Mono">100 GHz, 10 mW laser (dotted)</text>`;
+    s += `<text x="${(L + W - R) / 2}" y="${H - 8}" fill="${C.faint}" font-size="10.5" text-anchor="middle" font-family="JetBrains Mono">digits per second through each page (billions)</text>`;
+    svg.innerHTML = s;
+    const best = (k, n) => sp.summary[k][`agree95_${n}`];
+    const at = (k, rate) => sp.runs.find(r => r.io === k && r.al && r.rate === rate);
+    $("spText").innerHTML = `Every page of the network run in the time domain, 256 test digits streaming through the encoders one per symbol slot. Without noise, the chip still gives its slow answer on at least 95% of the digits up to <strong>${best("ideal", "noiseless")}</strong> billion digits per second with ideal modulators, <strong>${best("lithium_niobate_100GHz", "noiseless")}</strong> with 100 GHz modulators and photodiodes and <strong>${best("silicon_50GHz", "noiseless")}</strong> with 50 GHz. Photodiode noise is the harder limit. Only about half a percent of the laser reaches a detector from one input (an eight-way split, two grating couplers, ten-millimetre routes), so with 100 GHz parts it takes 100 mW of laser to hold that up to ${best("lithium_niobate_100GHz", "100mW")} G/s. With 10 mW the answers agree on only ${Math.round(100 * at("lithium_niobate_100GHz", 25).agree10)}% of digits even at 25 G/s.`;
+    const lt = sp.latency;
+    $("spFacts").innerHTML = `<dt>Latency</dt><dd>${lt.to_mesh_output_ps.toFixed(0)} ps <small>first encoder to the mesh output; ${lt.to_fibre_ps.toFixed(0)} ps to the output fibre</small></dd>` +
+      `<dt>Per pass</dt><dd>64 multiply-adds <small>(8 x 8), one page reads 24 of them</small></dd>`;
+    $("spCap").textContent = "The encoders on this process are slow thermal heaters; the study treats them as push-pull modulators of the same placement. Mesh settings hold still while a page runs.";
+  })();
+  $("facts").innerHTML = [
+    ["Process", "SiEPIC EBeam (silicon, 220 nm), TiW heaters"],
+    ["Die", `${(F.die_um[0] / 1000).toFixed(2)} × ${(F.die_um[1] / 1000).toFixed(2)} mm <small>${F.components} components</small>`],
+    ["Mesh", `${F.mzis} Mach-Zehnder interferometers, Clements layout <small>56 heaters</small>`],
+    ["Encoders", `8 Y-branch interferometers, push-pull <small>16 heaters, ${F.encoder_pitch_um} µm apart</small>`],
+    ["Pads", `${F.pads} <small>two chains, ${F.heaters} heaters</small>`],
+    ["Paths", `every channel ${F.channel_um.toFixed(2)} µm to the mesh <small>pass-throughs lengthened to match the couplers' delay</small>`],
+    ["Checks", "SiEPIC verification 0 errors, PDK DRC 0 violations, no crossings"],
+  ].map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join("");
+
+  // ---------------------------------------------------------------- self-check against the Python export
+  window.__check = () => D.check.map(c => {
+    const A = forward(c.x, chip), B = forward(c.x, soft);
+    const md = (u, v) => Math.max(...u.map((a, i) => Math.abs(a - v[i])));
+    return { i: c.i, h_chip: md(A.h, c.h_chip), h_soft: md(B.h, c.h_soft), logit_chip: md(A.logit, c.logit_chip), logit_soft: md(B.logit, c.logit_soft) };
+  });
+  // start on the first test digit
+  selThumb(0); paint(digs[0]); run(digs[0], D.digits.label[0]);
+})();
+</script>

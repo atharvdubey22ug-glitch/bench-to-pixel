@@ -12,7 +12,9 @@ Open `index.html` in a browser. Scroll to zoom out; drag to look around.
 
 `perceptron/index.html` is a fifth page: the optical neuron. Draw a 3 × 5 pixel digit and the simulated chip compares it with ten stored digits, one pass of light each (`perceptron/data.json`, exported by `chip/perceptron_export_web.py`; the page repeats `chip/perceptron_sim.py`'s arithmetic). Rebuild it with `python3 perceptron/build.py`.
 
-The chip designs (full adder, 4-bit ALU, single-pass XOR, phase-encoded parity, optical neuron) and their simulations are in [`chip/`](chip/README.md). What the project shows, and what it doesn't, is summarised in [`CONCEPT.md`](CONCEPT.md).
+`mesh/index.html` is a sixth page: the optical matrix processor, an 8 × 8 interferometer mesh running a two-layer handwritten-digit network. Draw a digit and compare the simulated chip's answer with the same network in software (`mesh/data.json`, exported by `chip/mesh_export_web.py`). Rebuild it with `python3 mesh/build.py`.
+
+The chip designs (full adder, 4-bit ALU, single-pass XOR, phase-encoded parity, optical neuron, matrix processor) and their simulations are in [`chip/`](chip/README.md). What the project shows, and what it doesn't, is summarised in [`CONCEPT.md`](CONCEPT.md).
 
 ## What the page shows
 

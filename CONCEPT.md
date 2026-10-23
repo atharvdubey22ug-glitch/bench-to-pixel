@@ -25,17 +25,23 @@ The trade-off: optics offers time-of-flight latency and very large bandwidth per
    - With 3 × 5 pixel digits stored as weights, the chip picks the same digit as an ideal neuron on all 180 simulated dies across the process corners.
    - It needs a three-step calibration from the output readings alone (phases, a heater-crosstalk map the driver cancels, a balance weight on one photodiode). With it every output level stays distinct on all 180 dies; without it they merge on some dies.
    - With aligned drives and 100 GHz modulators, one neuron takes a whole image per bit slot: every output level stays distinct to 100 G images/s, and so does its yes/no decision.
-7. **Four interactive pages.**
+7. **A layer of a neural network made of light** (`chip/README.md#optical-matrix-processor`). An 8 × 8 mesh of 28 Mach-Zehnder interferometers (Clements layout) multiplies eight encoded inputs by a programmable unitary matrix in one pass; photodiodes read the squared magnitudes. A two-layer network (7 principal components of MNIST plus a bias, square-law layers, a clipped ramp in electronics between them) runs on it.
+   - The test rules allow three detector couplers, so a layer is read three rows at a time ("pages"); fixing three rows of a unitary costs nothing in accuracy.
+   - Calibration from those three outputs alone: encoder fits, heater periods, and measured-feedback programming of each page. Fitting only what real inputs see often got stuck; fitting the complex rows first (with a quarter-turn on the encoders) halved the restarts.
+   - On 90 simulated dies across nine corners the chip scores 84.1%–85.6% on the 10,000 test digits against 85.67% in software, and gives the software's answer on 96.8% of digits on average.
+   - At speed, noise rather than bandwidth is the limit: about 0.5% of the laser reaches a detector, so it takes about 100 mW of laser at 50 G digits/s with 100 GHz parts.
+8. **Five interactive pages.**
    - [`encrypt/`](encrypt/): one-time-pad encryption on the simulated optical XOR against a modelled electronic SerDes chip, with first-bit latency 19 ps against at least 2 ns.
    - [`alu/`](alu/): the 4-bit ALU computing ADD, SUB, AND, OR and XOR from each bit's simulated light levels, including what happens without per-bit calibration.
    - [`parity/`](parity/): the parity chip live, the cost of drive errors along the chain, and its eye diagrams at up to 400 Gb/s.
    - [`perceptron/`](perceptron/): draw a digit and read the neuron chip's ten scores, how exact its sum is, and its eye diagrams.
+   - [`mesh/`](mesh/): draw a digit and compare the matrix chip's answer with the same network in software, across process corners and symbol rates.
 
 ## Questions to expect
 
 - **"Isn't a CMOS gate also a few picoseconds?"** Yes. The difference is not gate delay but that CMOS cannot operate serially at line rate, so it pays the deserialisation cost. Per-gate bandwidth is the real distinction.
 - **"Is throughput higher?"** No. Both keep up with the line rate. The gain is latency, and simplicity: one coupler against an array of gates plus serialiser–deserialiser circuits.
-- **"Does it scale to general computing?"** Not as digital logic. Interference gates lack gain and need a common phase reference. Phase encoding lets XORs chain (the parity chip), but errors accumulate without regeneration, and AND/OR still need a nonlinearity or electronics. Linear operations scale better: the neuron chip adds sixteen weighted inputs in one pass, and the field is moving toward optical matrix–vector multiplication for neural networks. Linear operations, such as optical matrix–vector multiplication for neural networks, scale better, and that is where the field is moving.
+- **"Does it scale to general computing?"** Not as digital logic. Interference gates lack gain and need a common phase reference. Phase encoding lets XORs chain (the parity chip), but errors accumulate without regeneration, and AND/OR still need a nonlinearity or electronics. Linear operations scale better: the neuron chip adds sixteen weighted inputs in one pass, the matrix chip runs a whole network layer, and optical matrix–vector multiplication for neural networks is where the field is moving.
 - **"What is measured and what is simulated?"** The bench gates were measured. Everything on chip is simulated from the foundry's component models, the electronic latency is a lower-bound model, and nothing has been fabricated.
 
 ## The open question

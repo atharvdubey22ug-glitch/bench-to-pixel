@@ -1,4 +1,4 @@
-# Optical full adder chip, 4-bit ALU, parity chip and optical neuron
+# Optical full adder chip, 4-bit ALU, parity chip, optical neuron and matrix processor
 
 A silicon photonic version of the full adder in *Using Polarisation and Interference for Optical Computing* (Section 4.2, Figures 15–16), designed for the SiEPIC EBeam process run by Applied Nanotools: 220 nm silicon waveguides, TiW heaters (M1) and a metal routing layer (M2).
 
@@ -12,7 +12,9 @@ A third chip fixes the full adder's cascade problem by encoding bits as phase: e
 
 A fourth puts the phase sections side by side: sixteen inputs summed in one pass, a binary-weight neuron that recognises 3 × 5 pixel digits. See [Optical neuron](#optical-neuron) below.
 
-The 4-bit ALU can be tried as a calculator on the [ALU page](../alu/), the parity chip on the [parity page](../parity/), the neuron on the [neuron page](../perceptron/), and the project is summarised in [`CONCEPT.md`](../CONCEPT.md).
+A fifth is a whole network layer: an 8 × 8 programmable interferometer mesh that, with a little electronics between two passes, reads handwritten digits (MNIST). See [Optical matrix processor](#optical-matrix-processor) below.
+
+The 4-bit ALU can be tried as a calculator on the [ALU page](../alu/), the parity chip on the [parity page](../parity/), the neuron on the [neuron page](../perceptron/), the matrix processor on the [matrix page](../mesh/), and the project is summarised in [`CONCEPT.md`](../CONCEPT.md).
 
 How fast the interference logic itself can compute is in [`speed/`](speed/README.md): a single-pass version of the paper's XOR runs at 200 Gb/s with 100 GHz modulators and adds 5 ps.
 
@@ -331,6 +333,91 @@ One input toggling alone (no summing) keeps its levels apart to 200 Gb/s at 100 
 
 The [neuron page](../perceptron/) lets you draw a digit and read the ten scores from the simulated chip.
 
+## Optical matrix processor
+
+![Mesh chip layout](figures/mesh_layout.png)
+
+`klayout/EBeam_heaters_atharvdubey_Mesh8.gds` (and `.oas`) is one layer of a neural network: an 8 × 8 programmable interferometer mesh. Eight numbers enter as light, the mesh multiplies them by an 8 × 8 unitary matrix (64 complex multiply-adds), and photodiodes read the squared magnitudes. The neuron put sixteen fixed ±1 weights on one output; this chip has continuous, programmable weights on eight outputs.
+
+```
+laser -> 1x8 Y-branch tree -> 8 encoders -> converger -> 8 x 8 mesh (28 Mach-Zehnder interferometers) -> outputs 7, 0, 1
+         (300 um pitch)       push-pull     to 100 um   column c couples channels (i, i+1), i = c mod 2     to detectors
+```
+
+- **Encoders.** Each channel has a Y-branch Mach-Zehnder with a heater on each arm. Driven push-pull (one arm up, the other down by the same phase, so their sum stays fixed) it sends on cos(Δ/2) of its light at a fixed phase: a signed value from −1 to +1.
+- **Mesh.** The Clements layout: eight columns of 2 × 2 interferometers (two broadband couplers, an internal phase θ on one arm) with an input phase φ on one channel, 56 heaters in all. Set, it is an 8 × 8 unitary U, and output k carries U<sub>k</sub> · x. Channels 0 and 7 skip every other column; their pass-throughs are lengthened so every input-to-output path has the same delay (873.69 µm per column, the couplers counted at their PDK group delay of 67.5 µm of waveguide).
+- **Three outputs.** The SiEPIC Phot1x test rules allow one laser coupler with at most one detector coupler above it and two below. Outputs 7, 0 and 1 go to those three couplers; outputs 2 to 6 end in terminators. A layer is read in pages of three rows: the mesh is programmed so the wanted rows land on outputs 7, 0 and 1. Fixing three rows of a unitary leaves enough free phases that this costs nothing in accuracy. With an on-chip photodiode on every output, one setting would give eight rows.
+
+**Layout.** The die is 8.29 × 2.67 mm with 455 components: 4 grating couplers, 23 Y-branches, 56 broadband couplers, 5 terminators, 72 heaters and 295 waveguides, with 74 probe pads.
+
+- **Encoder pitch.** The encoders sit 300 µm apart (the mesh channels are 100 µm apart). A data-driven heater is then 270 µm from the next channel and shifts its phase by at most about 0.04 rad over a full swing; at the mesh's 100 µm pitch (70 µm from arm to channel) it would be about a quarter of a radian, a 25% error on the neighbouring input. A converger brings the channels to the mesh's pitch, inner channels turning first, with meanders so that all eight paths from the splitter to the mesh are 2632.34 µm (within 3 nm).
+- **Heater slots.** In each column, the interferometers whose wires go up and those whose wires go down use two different x slots, so every heater's wires run straight to the pad rows, crossing waveguides only where they have no heater. The encoders form a staircase for the same reason. All upper heaters are chained on one row of 41 pads, all lower heaters on 33 (heater k between pads k and k + 1).
+- **Checks** (`klayout/mesh_build_report.json`, `klayout/mesh/drc/`): SiEPIC functional verification 0 errors; PDK DRC 0 violations on all three decks; `verify.py`: every rule passes (74 nets, each with one pad; 72 heaters, each on two nets); no waveguide crossings and no unconnected optical pins.
+
+**Circuit model** (`mesh_sim.py`). The circuit is read from the SiEPIC extraction. The input section (laser coupler, tree and encoders) is solved with all its reflections: the PDK Y-branch reflects 0.6% back into its branch ports, so each encoder's arms are a weak cavity and the encoders couple through the tree. The mesh and output routes are propagated forward. Against the full SAX scattering solution with every reflection, on random heater settings, the two agree to 0.4% of the largest output.
+
+A simulated die adds a random phase on every waveguide (every interferometer, encoder and channel starts at an unknown phase), heater efficiency π per 25 mW ±10%, thermal crosstalk from every heater onto every waveguide near it (5% at 100 µm, 60 µm decay length, integrated along the drawn paths), 16-bit 0–80 mW drivers, and 0.2% reading noise (of one input's full light on one detector, the noise 0.3 mW of laser gives with 1 MHz detection), at the nine process corners. The corners move the couplers' split from 44/56 to 53/47.
+
+**Calibration, from the three detectors only.**
+
+1. **Encoders.** A 2-D sweep of each encoder's two heaters is fitted with the push-pull model, which gives the drive for any signed value. Each zero is then refined with the other encoders at zero, fitting both the full- and half-period terms so the others' leftover light does not pull it. The phase-sum shift that turns an encoder's output a quarter period is measured against a partner.
+2. **Mesh heater periods.** Each mesh heater is swept over the driver's range.
+3. **Pages.** For three wanted rows t<sub>d</sub>, detector d reads x<sup>T</sup> Re(H<sub>d</sub>) x for real inputs, with H<sub>d</sub> = conj(m<sub>d</sub>) m<sub>d</sub><sup>T</sup>. H is measured with 36 inputs (each alone and every pair) plus the 28 pairs with one input turned a quarter period. The heaters are found by Levenberg–Marquardt on those measurements, with the Jacobian measured too (each heater nudged in turn), so crosstalk and coupler errors are part of what is fitted. Rows are added one at a time against the complex rows, then Re H alone is matched (what real inputs use; it also removes the quarter-turn calibration's error). Fitting Re H from the start gets stuck often, because a row and its complex conjugate give the same Re H. A fit that stays above the noise is shaken or restarted; 2.4 fits per page on average, every page reached the target.
+
+A layer's output is then read as R<sub>d</sub> divided by the sum of the single-input readings, which is |t<sub>d</sub> · x|² whatever each encoder's and detector's own loss. About 3.9 million readings per die, roughly a minute of measuring at heater speed.
+
+**The network** (`mesh_net.py`, `mesh_net.json`). MNIST digits are reduced in electronics to their first 7 principal components (scaled so 2.5 standard deviations is 1, clipped to ±1). With a constant 1 as the eighth input (a bias: the square-law layers then also contain terms linear in the features) they are the chip's input x.
+
+- Layer 1 (chip): seven outputs h<sub>k</sub> = |t<sub>k</sub> · x|², pages of 3, 3 and 1 rows.
+- Between the layers (electronics): z<sub>k</sub> = clip(a<sub>k</sub> h<sub>k</sub> + b<sub>k</sub>, 0, 1), plus a constant 1.
+- Layer 2 (chip): ten outputs |u<sub>c</sub> · z|², one per digit, pages of 3, 3, 3 and 1. The largest (after one scale and ten offsets) is the answer.
+
+It is trained in software with exactly this structure, each page the first rows of a unitary (Adam, 60 epochs). In software it scores **85.67%** on the 10,000 test digits. On the same 7 features, a linear classifier gets 76.52% and an electronic network with 7 hidden ReLU units 79.65%.
+
+**Results** (`mesh_results.json`). 90 dies, 10 per corner: each calibrated, programmed with all seven pages, then tested on all 10,000 test digits with detector noise.
+
+| Corner (silicon / width, nm) | Accuracy, mean (min–max) | Same answer as software, mean (worst die) | Layer-1 error (RMS) | Row error, median / worst page |
+|---|---|---|---|---|
+| 210 / 480 | 84.73% (84.32%–85.10%) | 95.9% (94.7%) | 3.7% | 3.7% / 6.4% |
+| 210 / 500 | 84.81% (84.25%–85.21%) | 96.2% (95.1%) | 2.9% | 3.0% / 6.5% |
+| 210 / 520 | 85.22% (84.95%–85.42%) | 97.4% (96.5%) | 2.5% | 2.4% / 9.1% |
+| 220 / 480 | 84.80% (84.32%–85.11%) | 96.2% (95.0%) | 3.5% | 3.0% / 8.5% |
+| 220 / 500 | 85.13% (84.84%–85.31%) | 97.3% (96.5%) | 2.6% | 2.2% / 6.0% |
+| 220 / 520 | 85.20% (84.85%–85.56%) | 97.5% (96.3%) | 2.1% | 2.3% / 5.8% |
+| 230 / 480 | 85.07% (84.71%–85.31%) | 97.0% (96.3%) | 2.8% | 2.5% / 8.8% |
+| 230 / 500 | 85.09% (84.09%–85.41%) | 97.2% (94.5%) | 2.4% | 2.2% / 8.2% |
+| 230 / 520 | 85.05% (84.56%–85.42%) | 97.0% (94.8%) | 2.8% | 2.0% / 7.2% |
+
+![Accuracy of every simulated die](figures/mesh_corners.png)
+
+Every die of every corner was calibrated and all of its pages reached the target. The chip scores 84.09% to 85.56% (mean 85.01%) against the software's 85.67%, and gives the software's answer on 96.8% of the digits on average (94.5% on the worst die). The digits it answers differently are ones the network itself is unsure of: on the nominal example die, 95% of the 189 are digits to which the software gives its top answer less than 60% probability (14% of all test digits are like that). The weakest corners are 210/480, 220/480 and 210/500 (84.73% at 210/480), where the PDK's Y-branch couples the most light between its two branch ports (0.5–0.9%, against 0.3% at nominal). The encoders' response then strays further from input times weight, and no mesh setting can undo that. That residual, not the noise, sets the rows' error of 2–4%: a noiseless fit stops at the same place.
+
+![Layer-1 outputs, chip against software](figures/mesh_hidden.png)
+
+**Speed** (`speed/mesh_speed.py`, results in `speed/mesh_speed_results.json`). The time-domain model of the other studies (`td.py`: the extraction as a delay-line scattering network, reflections included) on the nominal chip without fabrication errors, programmed noiselessly. Every page of the network runs in the time domain: 256 test digits stream through the encoders, one per symbol slot, layer 2 fed with electronics computed from layer 1's sampled outputs, with photodiode noise at 10 mW and 100 mW of laser, and without. Each encoder's drive is delayed by its place along the channels (up to 16.2 ps apart).
+
+| Modulators and photodiodes | Layer-1 error < 5%, up to | Slow chip's answer on ≥ 95% of digits: no noise | 100 mW laser | 10 mW laser |
+|---|---|---|---|---|
+| ideal | 100 G digits/s | 100 G digits/s | 100 G digits/s | not reached |
+| 100 GHz | 75 G digits/s | 75 G digits/s | 50 G digits/s | not reached |
+| 50 GHz | 50 G digits/s | 50 G digits/s | 50 G digits/s | not reached |
+
+The slow chip (the same programmed die, read at DC) scores 82.8% on these 256 digits; at 100 G digits/s with 100 GHz parts and no noise the chip at speed still scores 82.8%, though it now gives the slow chip's answer on 93.4% of digits. Noise is the harder limit. Only about half a percent of the laser reaches a detector from one input: an eight-way split, two grating couplers and output routes up to 9.9 mm long. With 10 mW into the fibre the chip agrees with its slow self on only 48% of digits even at 25 G digits/s (100 GHz parts); 100 mW holds 95.3% at 50. On-chip photodiodes at the mesh outputs would skip one coupler and the routes.
+
+A digit's change at the first encoder reaches the mesh output after 117 ps and the output fibre after 255 ps (138 ps of which is the route back to the coupler column). Without aligning the drives, the inputs reach the mesh up to 16 ps apart, and at 100 G digits/s with 100 GHz parts the accuracy falls to 39.5%.
+
+![Accuracy against symbol rate](figures/mesh_speed.png)
+
+**What it is not.**
+
+- The features take more arithmetic than the chip: 5,488 multiply-adds for the principal components against 136 in the two optical layers. A real system would feed the chip's encoders from the sensor or an earlier optical layer.
+- The weights are complex and unitary, and read as squared magnitudes. A general real matrix needs two meshes and attenuators (W = U Σ V<sup>†</sup>) plus coherent detection.
+- The heaters take microseconds to settle, so changing pages is slow. The speed study holds the mesh still and assumes fast modulators only at the encoders.
+- Each page is its own unitary, so this network needs seven mesh settings per digit even with a photodiode on every output. A network trained with one unitary per layer would need two, and scores about 83% in software instead of 85.7%.
+- Programmable interferometer meshes for neural networks are not new (Shen et al., Nature Photonics 2017; Lightmatter and others). What this adds is the open chain from a verified foundry layout to a calibrated network on simulated dies.
+
+The [matrix page](../mesh/) runs the network in the browser: draw a digit and compare the chip's answer with the software's.
+
 ## Testing a fabricated chip
 
 1. Align the fibre array on the loopback pair.
@@ -350,9 +437,10 @@ The [neuron page](../perceptron/) lets you draw a digit and read the ten scores 
 - Heater thermal crosstalk is not modelled for the full adder and ALU; heaters are at least 90 µm apart. It is modelled for the parity chip, where calibration absorbs it.
 - Heater power and switching speed depend on the TiW process and must be measured. Thermal switches settle in tens of microseconds, so this chip shows the logic, not speed.
 - Waveguide loss (3 dB/cm) is an assumption.
-- The die area must fit the run's submission template. At 1.87 × 1.60 mm (full adder), 3.72 × 3.08 mm (ALU), 1.82 × 0.65 mm (parity) and 2.10 × 2.13 mm (neuron), all are larger than the 605 × 410 µm cells of the SiEPIC course runs.
+- The die area must fit the run's submission template. At 1.87 × 1.60 mm (full adder), 3.72 × 3.08 mm (ALU), 1.82 × 0.65 mm (parity) and 2.10 × 2.13 mm (neuron) and 8.29 × 2.67 mm (matrix processor), all are larger than the 605 × 410 µm cells of the SiEPIC course runs.
 - The parity chip's speed assumes fast phase modulators where the heaters are. Real ones are millimetres long, with travelling-wave electrodes, so the 150 µm section pitch and the input timing would be redesigned around them.
 - The ALU's carry chain and operation select are an electronic controller (comparators, heater drivers), modelled in `alu4_sim.py`, not drawn.
+- The matrix processor's within-die variation is modelled as random phases, heater spread and crosstalk; its couplers are identical at each corner (the PDK models corners, not device-to-device mismatch).
 
 ## Reproduce
 
@@ -378,6 +466,13 @@ python3 perceptron_sim.py              # about 80 minutes on two cores; perceptr
 python3 speed/perceptron_speed.py      # about 15 minutes; speed/perceptron_speed_results.json
 python3 perceptron_export_web.py       # ../perceptron/data.json for the page
 python3 perceptron_figures.py          # neuron figures (needs klayout and matplotlib; after the export)
+python3 klayout/mesh_siepic.py         # matrix processor layout, same checks
+python3 klayout/run_drc.py klayout/EBeam_heaters_atharvdubey_Mesh8.oas klayout/mesh
+python3 mesh_net.py                    # train the digit network (downloads MNIST to data/); mesh_net.json
+python3 mesh_sim.py                    # about 2 hours on two cores; mesh_results.json (check: python3 mesh_sim.py check)
+python3 speed/mesh_speed.py            # about 30 minutes on two cores; speed/mesh_speed_results.json
+python3 mesh_export_web.py             # ../mesh/data.json for the page
+python3 mesh_figures.py                # matrix processor figures (needs klayout and matplotlib)
 python3 figures.py
 python3 render_chip.py
 python3 alu4_figures.py

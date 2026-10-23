@@ -1,2 +1,4 @@
 __pycache__/
 chip/data/
+chip/.mesh_parts.jsonl
+chip/speed/.mesh_speed_state.pkl

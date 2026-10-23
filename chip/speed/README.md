@@ -69,6 +69,10 @@ The one cost appears when the modulators are slow compared with the bit. If A tu
 
 `perceptron_speed.py` runs the same model on the neuron chip (`../klayout/EBeam_heaters_atharvdubey_Perceptron16`). A stream of 3 × 5 pixel digit images drives its sixteen arms, one whole image per bit slot, with the weights holding a stored 7. The output is a ladder of levels, one per value of the weighted sum, and the neuron fires above a threshold. With the drives aligned to each section's place along its arm (up to 14.7 ps apart), every level stays apart to 100 G images/s with 100 GHz modulators, and the fires-on-7 decision holds at Q ≥ 7 to 100. With 50 GHz modulators it is 50 and 75, and 200 with ideal ones. Without alignment it fails above 25. Details in [the chip README](../README.md#optical-neuron).
 
+## A network layer: the 8 × 8 mesh
+
+`mesh_speed.py` runs the same model on the matrix processor (`../klayout/EBeam_heaters_atharvdubey_Mesh8`), programmed with the digit network of `../mesh_net.py`. Every page of the network runs in the time domain: 256 MNIST test digits stream through the eight encoders, one per symbol slot, and layer 2 is fed with what the electronics compute from layer 1's sampled outputs. Without noise the chip still gives its slow answer on at least 95% of the digits up to 100 G digits/s with ideal modulators, 75 with 100 GHz modulators and photodiodes, and 50 with 50 GHz. Noise sets the harder limit: only about 0.5% of the laser reaches a detector from one input, so 10 mW into the fibre is not enough at any rate simulated, and 100 mW holds the 95% to 50 G digits/s with 100 GHz parts. A change at the first encoder reaches the mesh output after 117 ps. Details in [the chip README](../README.md#optical-matrix-processor).
+
 ## Limits
 
 - The modulators are lumped phase sections at the heaters' places. Real high-speed modulators are longer (millimetres for silicon depletion) and need travelling-wave electrodes. Their bandwidth is modelled as a Gaussian filter: ideal, 50 GHz or 100 GHz.
@@ -85,4 +89,5 @@ python3 speed_study.py                            # about 8 minutes; speed_resul
 python3 figures.py
 python3 parity_speed.py                           # about 6 minutes; parity_speed_results.json, parity_eyes.npz
 python3 perceptron_speed.py                       # about 15 minutes; perceptron_speed_results.json, perceptron_eyes.npz
+python3 mesh_speed.py                             # about 30 minutes on two cores; mesh_speed_results.json, mesh_eyes.npz
 ```
