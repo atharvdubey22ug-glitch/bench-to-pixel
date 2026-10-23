@@ -24,7 +24,7 @@ The trade-off: optics offers time-of-flight latency and very large bandwidth per
 6. **A neuron made of light** (`chip/README.md#optical-neuron`). The parity chip's phase sections are put side by side instead of in a row. Sixteen arms each carry one input as a phase, 0 or π, set by whether the input agrees with its weight. A combiner tree adds the sixteen fields in one pass, and balanced detection against a reference reads the signed sum. That is a binary-weight neuron (the XNOR-and-count unit of binarised neural networks), and the optical version of the bench's carry gate, where polarisers set the weights.
    - With 3 × 5 pixel digits stored as weights, the chip picks the same digit as an ideal neuron on all 180 simulated dies across the process corners.
    - It needs a three-step calibration from the output readings alone (phases, a heater-crosstalk map the driver cancels, a balance weight on one photodiode). With it every output level stays distinct on all 180 dies; without it they merge on some dies.
-   - With aligned drives and 100 GHz modulators, one neuron takes a whole image per bit slot: every output level stays distinct to 100 G images/s, and its yes/no decision holds to 125.
+   - With aligned drives and 100 GHz modulators, one neuron takes a whole image per bit slot: every output level stays distinct to 100 G images/s, and so does its yes/no decision.
 7. **Four interactive pages.**
    - [`encrypt/`](encrypt/): one-time-pad encryption on the simulated optical XOR against a modelled electronic SerDes chip, with first-bit latency 19 ps against at least 2 ns.
    - [`alu/`](alu/): the 4-bit ALU computing ADD, SUB, AND, OR and XOR from each bit's simulated light levels, including what happens without per-bit calibration.
